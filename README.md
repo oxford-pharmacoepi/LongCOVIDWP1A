@@ -21,6 +21,6 @@
 
 ## Instructions
 
-Under Iterative Versions, there is a single R file (longCOVID-CD-11MAY2022.R) that contains the CohortDiagnostics run. The current code runs using a public WebAPI and is dependent on OHDSI libraries [CohortDiagnostics](https://github.com/ohdsi/cohortdiagnostics] (using Release v2.2.4) and [DatabaseConnector](https://github.com/OHDSI/DatabaseConnector) (using Release v5.0.2).
+Under Iterative Versions, there is a single R file (longCOVID-CD-11MAY2022.R) that contains the CohortDiagnostics run. The current code runs using a public WebAPI and is dependent on OHDSI libraries [CohortDiagnostics](https://github.com/ohdsi/cohortdiagnostics) (using Release v2.2.4) and [DatabaseConnector](https://github.com/OHDSI/DatabaseConnector) (using Release v5.0.2).
 
 Note: eventually we'll have to change this to be a self-contained R package but the current approach pulls from a public WebAPI that, provided a user can access the internet, should be executable in your local environment. Updates will be made as bandwidth permits.
