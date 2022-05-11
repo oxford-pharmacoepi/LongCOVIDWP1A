@@ -13,14 +13,14 @@ Sys.setenv("DATABASECONNECTOR_JAR_FOLDER" = "~/jdbcDrivers")
 library(DatabaseConnector)
 library(CohortDiagnostics)
 
-cdmDatabaseSchema <- "public"
+cdmDatabaseSchema <- "insert-your-databaseSchema"
 cohortDatabaseSchema <- "results"
 cohortTable <- "longcovid"
-databaseId <- "p20_059_cdm_aurum"
-vocabularyDatabaseSchema <- "p20_059_cdm_aurum"
+databaseId <- "databasename"
+vocabularyDatabaseSchema <- "insert-your-databaseSchema"
 
 
-outputFolder <- "/home/kkostka/phenotypeLC-1X"
+outputFolder <- "a location in R studio to hold results, example -- /home/kkostka/phenotypeLC-1X"
 exportFolder <- outputFolder
 
 
