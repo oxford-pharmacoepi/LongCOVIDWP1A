@@ -158,24 +158,19 @@ have_look_2
 rm(have_look, have_look_2)
 
 # we exclude these subjects from influenza covid
-repeated_influenza_ids <- repeated_influenza %>%select(subject_id) %>% pull()
-
 influenza_covid <- influenza_covid %>%
-  filter(!(subject_id%in%repeated_influenza_ids))
+anti_join(repeated_influenza %>% select(subject_id) %>% distinct())
 # we add them again with the clean repeated influenza
-
 influenza_covid <- union_all(influenza_covid, repeated_influenza)
 
 # similarly, we exclude all people with an influenza dx during our study period from the main df
-influenza_ids <- influenza_covid %>% select(subject_id) %>% distinct() %>% pull()
 covid_infection <- covid_infection %>%
-  filter(!(subject_id %in% influenza_ids)) %>%
+anti_join(influenza_covid %>% select(subject_id) %>% distinct()) %>%
   mutate(influenza_start_date=as.Date(NA))%>%
   compute()
 # we add them again with the cleaned df for influenza
 covid_infection <- union_all(covid_infection, influenza_covid)
-rm(influenza_covid, influenza_ids, repeated_influenza, repeated_influenza_ids)
-
+rm(influenza_covid,  repeated_influenza)
 
 # add date one year after infection
 covid_infection <- covid_infection %>%
@@ -341,8 +336,6 @@ repeated_influenza <-  influenza_covid %>%
   ungroup() %>%
   compute()
 
-have_look <- repeated_influenza %>%collect()
-
 # we keep the first influenza record
 repeated_influenza <- repeated_influenza %>%
   group_by(subject_id) %>%
@@ -353,24 +346,15 @@ repeated_influenza <- repeated_influenza %>%
   select(-seq2) %>%
   compute()
 
-## there is a warning but it seems to be working fine... 
-have_look_2 <- repeated_influenza %>%collect()
-have_look_2
-rm(have_look, have_look_2)
-
 # we exclude these subjects from influenza covid
-repeated_influenza_ids <- repeated_influenza %>%select(subject_id) %>% pull()
-
 influenza_covid <- influenza_covid %>%
-  filter(!(subject_id%in%repeated_influenza_ids))
+  anti_join(repeated_influenza %>%select(subject_id) %>% distinct())
 # we add them again with the clean repeated influenza
-
 influenza_covid <- union_all(influenza_covid, repeated_influenza)
 
 # similarly, we exclude all people with an influenza dx during our study period from the main df
-influenza_ids <- influenza_covid %>% select(subject_id) %>% distinct() %>% pull()
 confirmed_infection <- confirmed_infection %>%
-  filter(!(subject_id %in% influenza_ids)) %>%
+  anti_join(influenza_covid %>% select(subject_id) %>% distinct()) %>%
   mutate(influenza_start_date=as.Date(NA))%>%
   compute()
 # we add them again with the cleaned df for influenza
@@ -452,11 +436,538 @@ confirmed_infection %>% select(subject_id)%>% distinct() %>%tally() #425423subje
 
 ## Tested negative cohorts  --- pendent ----
 ### PCR and antigen negative _all events 
-# tested_negative_all_id <- cohorts_ids %>% 
-#                          filter(str_detect(name, "Tested_Negative_all")) %>%
- #                         select(cohort_definition_id) %>% pull()
 
-#
+# covid infections to use for censoring
+new_infection_id  <- cohorts_ids %>%
+                    filter(str_detect(name, "New_Infection")) %>% 
+                    select(cohort_definition_id) %>% pull()
+
+covid_infection_cens <- covid_cohorts %>%
+  filter(cohort_definition_id==new_infection_id ) %>%
+  arrange(subject_id, desc(as.Date(cohort_start_date))) %>% 
+  group_by(subject_id) %>% 
+  arrange(cohort_start_date) %>%
+  distinct() %>%
+  ungroup() %>%
+  rename(covid_infection_date = cohort_start_date) %>%
+  select(subject_id, covid_infection_date)%>%
+  compute()
+
+# tested negative 
+id_interest <- 29
+
+generate_tested_negative_cohort <- function(id_interest){
+  # get the cohort of interst
+ working_cohort <- control_cohorts %>%
+  filter(cohort_definition_id== id_interest) %>%
+  compute()
+ 
+  message(paste0("working on cleaning Covid-19 infections"))
+
+ # first, clean covid infectiosn for censoring -- people can have more than infection recorded
+ covid_negative <- covid_infection_cens %>%
+  inner_join(working_cohort) %>%
+  distinct() %>%
+  compute()
+
+# we check if we have people with more than one influenza infection after cohort start  
+# it's cohorts in which all columns are identical aside from influenza_date
+repeated_covid <-  covid_negative %>%
+  group_by_at(vars(-covid_infection_date)) %>% 
+  filter(n() > 1) %>%
+  ungroup() %>%
+  compute()
+
+# we keep the first covid record
+repeated_covid <- repeated_covid %>%
+  group_by(subject_id) %>%
+  arrange(covid_infection_date) %>%
+  mutate(seq= row_number()) %>%
+  ungroup() %>%
+  filter(seq==1) %>%
+  select(-seq) %>%
+  compute()
+
+# we exclude these subjects from covid_negative
+# repeated_covid_ids <- repeated_covid  %>%select(subject_id) %>% pull()
+
+covid_negative <- covid_negative %>%
+  anti_join(repeated_covid %>% select(subject_id) %>% distinct())
+# we add them again with the clean repeated covid
+covid_negative <- union_all(covid_negative, repeated_covid)
+# similarly, we exclude all people with a covid dx during our study period from the main df
+working_cohort <- working_cohort %>%
+    anti_join(covid_negative %>% select(subject_id) %>% distinct()) %>%
+  mutate(covid_infection_date=as.Date(NA))%>%
+  compute()
+# we add them again with the cleaned df for covid
+working_cohort <- union_all(working_cohort, covid_negative)
+
+  message(paste0("working on cleaning influenza infections"))
+## same proces now for influenza - but we also get rid of prior influenza diagnoses
+influenza_covid <- influenza_cohort %>%
+  inner_join(working_cohort) %>%
+  filter(influenza_start_date>cohort_start_date) %>%
+  distinct() %>%
+  compute()
+
+# we check if we have people with more than one influenza infection after cohort start  
+# it's cohorts in which all columns are identical aside from influenza_date
+repeated_influenza <-  influenza_covid %>%
+  group_by_at(vars(-influenza_start_date)) %>% 
+  filter(n() > 1) %>%
+  ungroup() %>%
+  compute()
+
+# we keep the first influenza record
+repeated_influenza <- repeated_influenza %>%
+  group_by(subject_id) %>%
+  arrange(influenza_start_date) %>%
+  mutate(seq2= row_number()) %>%
+  ungroup() %>%
+  filter(seq2==1) %>%
+  select(-seq2) %>%
+  compute()
+
+# we exclude these subjects from influenza covid
+influenza_covid <- influenza_covid %>%
+  anti_join(repeated_influenza %>% select(subject_id)%>% distinct())
+# we add them again with the clean repeated influenza
+influenza_covid <- union_all(influenza_covid, repeated_influenza)
+
+# similarly, we exclude all people with an influenza dx during our study period from the main df
+working_cohort <- working_cohort %>%
+  anti_join(influenza_covid %>% select(subject_id)%>% distinct()) %>%
+  mutate(influenza_start_date=as.Date(NA))%>%
+  compute()
+# we add them again with the cleaned df for influenza
+working_cohort <- union_all(working_cohort, influenza_covid)
+
+# add date one year after infection
+working_cohort <- working_cohort %>%
+mutate(one_year_date = cohort_start_date+lubridate::days(365))%>%
+compute()
+
+# add cohort end date, considering censoring options
+# death, observation end, next covid infection, influenza, one year followup
+working_cohort <- working_cohort %>% 
+  mutate(cohort_end_date = pmin(observation_period_end_date, 
+                                death_date, 
+                                covid_infection_date-lubridate::days(1), # trec un dia
+                                influenza_start_date, 
+                                one_year_date,
+                                na.rm = TRUE)) %>%
+  mutate(follow_up = cohort_end_date - cohort_start_date) %>% # this give me an interval 
+  mutate(follow_up_days= sql("EXTRACT(epoch FROM follow_up)/(60*60*24)")) %>%
+  compute()
+
+working_cohort <- working_cohort %>% 
+  select(cohort_definition_id, subject_id, cohort_start_date, 
+         cohort_end_date, follow_up_days) %>%
+  compute()
+
+  message(paste0("working on excluding people without sufficent follow-up"))
+# keep only cohort start dates prior to the last admissible index date (2nd september for SIDIAP)
+working_cohort <- working_cohort %>% 
+  filter(cohort_start_date<=end_index_date) %>%
+  compute()
+
+# we exclude people with less than 120 days of follow-up
+exclusion_table <- tibble(N_current=working_cohort %>%tally()%>%collect()%>%pull(), 
+                          exclusion_reason="initial pop",
+                          cohort_definition_id = working_cohort %>%
+                                                 select(cohort_definition_id) %>% 
+                          distinct() %>%pull(),
+                          symptom=NA)
+
+working_cohort <- working_cohort %>% 
+  filter(!(follow_up_days<120))%>%
+  compute()
+
+exclusion_table<-rbind(exclusion_table,
+                       tibble(N_current=working_cohort  %>%tally()%>%collect()%>%pull(), 
+                          exclusion_reason="Less than 120 days of follow-up",
+                          cohort_definition_id = working_cohort  %>%
+                                                 select(cohort_definition_id) %>% 
+                            distinct() %>%pull(),
+                         symptom= NA))
+
+
+result <- list(working_cohort, exclusion_table) 
+result
+
+}
+
+tested_negative_all_id <- cohorts_ids %>% 
+                          filter(str_detect(name, "Tested_Negative_all")) %>%
+                          select(cohort_definition_id) %>% pull()
+
+tested_negative_earliest_id <- cohorts_ids %>% 
+                          filter(str_detect(name, "Tested_Negative_earliest")) %>%
+                          select(cohort_definition_id) %>% pull()
+
+tested_negative_earliest <- generate_tested_negative_cohort(id_interest = tested_negative_earliest_id)
+
+
+## add covid infections for  censoring
+
+# since people in the tested negative cohorts never had an infection before, we don't need to worry about potential infections before cohort start date (it's impossible)
+# however, people could have more than one covid infection
+covid_negative <- covid_infection_cens %>%
+  inner_join(working_cohort)%>%
+  compute()
+
+# we check if we have people with more than one covid infection after cohort start  
+# it's cohorts in which all columns are identical aside from influenza_date
+repeated_covid <-  covid_negative %>%
+  group_by_at(vars(-covid_infection_date)) %>% 
+  filter(n() > 1) %>%
+  ungroup() %>%
+  compute()
+
+have_look <- repeated_covid %>%collect()
+
+
+# similarly, we exclude all people with an influenza dx during our study period from the main df
+covid_ids <- covid_negative %>% select(subject_id) %>% distinct() %>% pull()
+working_cohort <- working_cohort %>%
+  filter(!(subject_id %in% influenza_ids)) %>%
+  mutate(influenza_start_date=as.Date(NA))%>%
+  compute()
+# we add them again with the cleaned df for influenza
+working_cohort <- union_all(working_cohort, influenza_covid)
+rm(influenza_covid, influenza_ids, repeated_influenza, repeated_influenza_ids)
+
+
+
+
+
+# however this is not the case for influenza - we have only excluded influenza infections
+# in the 6 weeks prior - so we need to get rid of those influenza
+influenza_covid <- influenza_cohort %>%
+  inner_join(working_cohort) %>%
+  filter(influenza_start_date>cohort_start_date) %>%
+  distinct() %>%
+  compute()
+
+# we check if we have people with more than one influenza infection after cohort start  
+# it's cohorts in which all columns are identical aside from influenza_date
+repeated_influenza <-  influenza_covid %>%
+  group_by_at(vars(-influenza_start_date)) %>% 
+  filter(n() > 1) %>%
+  ungroup() %>%
+  compute()
+
+have_look <- repeated_influenza %>%collect()
+
+# we keep the first influenza record
+repeated_influenza <- repeated_influenza %>%
+  group_by(subject_id) %>%
+  arrange(influenza_start_date) %>%
+  mutate(seq2= row_number()) %>%
+  ungroup() %>%
+  filter(seq2==1) %>%
+  select(-seq2) %>%
+  compute()
+
+## there is a warning about ordering but it seems to be working fine... 
+have_look_2 <- repeated_influenza %>%collect()
+have_look_2
+rm(have_look, have_look_2)
+
+# we exclude these subjects from influenza covid
+repeated_influenza_ids <- repeated_influenza %>%select(subject_id) %>% pull()
+
+influenza_covid <- influenza_covid %>%
+  filter(!(subject_id%in%repeated_influenza_ids))
+# we add them again with the clean repeated influenza
+
+influenza_covid <- union_all(influenza_covid, repeated_influenza)
+
+# similarly, we exclude all people with an influenza dx during our study period from the main df
+influenza_ids <- influenza_covid %>% select(subject_id) %>% distinct() %>% pull()
+working_cohort <- working_cohort %>%
+  filter(!(subject_id %in% influenza_ids)) %>%
+  mutate(influenza_start_date=as.Date(NA))%>%
+  compute()
+# we add them again with the cleaned df for influenza
+working_cohort <- union_all(working_cohort, influenza_covid)
+rm(influenza_covid, influenza_ids, repeated_influenza, repeated_influenza_ids)
+
+
+# add date one year after infection
+working_cohort <- working_cohort %>%
+mutate(one_year_date = cohort_start_date+lubridate::days(365))%>%
+compute()
+
+# add cohort end date, considering censoring options
+# death, observation end, next covid infection, influenza, one year followup
+working_cohort <- working_cohort %>% 
+  mutate(cohort_end_date = pmin(observation_period_end_date, 
+                                death_date, 
+                                covid_infection_date-lubridate::days(1), # trec un dia
+                                # pq si no una el cohort_end_date de la persona amb reinifeccion
+                                # es igual q el cohort_start_date de la seguent infeccio
+                                influenza_start_date, 
+                                one_year_date,
+                                na.rm = TRUE)) %>%
+  mutate(follow_up = cohort_end_date - cohort_start_date) %>% # this give me an interval 
+  # turn this interval into a number of days 
+  ## no he trobat com fer-ho amb dbplyr aixi q he buscat la manera en sql
+  mutate(follow_up_days= sql("EXTRACT(epoch FROM follow_up)/(60*60*24)")) %>%
+  compute()
+
+
+working_cohort <- working_cohort %>% 
+  select(cohort_definition_id, subject_id, cohort_start_date, 
+         cohort_end_date, seq, follow_up_days) %>%
+  compute()
+
+# we check numbers make sense -
+ working_cohort %>%   tally()  # 3092270 tested negative rows
+## check that follow_up_days make sense
+summary( working_cohort %>% select(follow_up_days) %>% distinct() %>%collect()) 
+
+# keep only cohort start dates prior to the last admissible index date (2nd september for SIDIAP)
+working_cohort <- working_cohort %>% 
+  filter(cohort_start_date<=end_index_date) %>%
+  compute()
+
+working_cohort %>%tally()  # 2477955
+
+
+# we exclude people with less than 120 days of follow-up
+exclusion_table <- tibble(N_current=working_cohort %>%tally()%>%collect()%>%pull(), 
+                          exclusion_reason="initial pop",
+                          cohort= "Tested negative, all events",
+                          cohort_definition_id = covid_infection %>%
+                                                 select(cohort_definition_id) %>% 
+                            distinct() %>%pull(),
+                          symptom=NA)
+
+working_cohort <- working_cohort %>% 
+  filter(!(follow_up_days<120))%>%
+  compute()
+#check follow-up days are fine
+summary(working_cohort  %>% select(follow_up_days) %>% distinct() %>%collect()) 
+
+exclusion_table<-rbind(exclusion_table,
+                       tibble(N_current=covid_infection %>%tally()%>%collect()%>%pull(), 
+                          exclusion_reason="Less than 120 days of follow-up",
+                          cohort = "Tested negative, all events",
+                          cohort_definition_id = covid_infection %>%
+                                                 select(cohort_definition_id) %>% 
+                            distinct() %>%pull(),
+                         symptom= NA))
+
+
+working_cohort %>%tally()  #2436677 negative tests with 120 days follow up min
+working_cohort %>% select(subject_id)%>% distinct() %>%tally() #16076454 subjects
+
+tested_negative_earliest_check <- working_cohort %>% 
+select(-seq) %>%
+arrange(cohort_start_date) %>%
+  group_by(subject_id) %>%
+  mutate(seq=row_number()) %>%
+  ungroup() %>%
+  filter(seq==1) %>%
+  select(-seq) %>%
+  compute()
+
+tested_negative_earliest_check %>%tally()  #16076454 negative tests with 120 days follow up min
+tested_negative_earliest_check %>% select(subject_id)%>% distinct() %>%tally() #16076454 subjects
+
+### PCR and antigen negative _earliest events 
+# earliest event should have the same number of people than using earliest event atlas cohort
+ tested_negative_earliest_id <- cohorts_ids %>% 
+                          filter(str_detect(name, "Tested_Negative_earliest")) %>%
+                          select(cohort_definition_id) %>% pull()
+
+tested_negative_earliest <- control_cohorts %>%
+  filter(cohort_definition_id== tested_negative_earliest_id) 
+
+covid_negative <- covid_infection_cens %>%
+  inner_join(tested_negative_earliest) %>%
+  select(-seq) %>%
+  distinct() %>%
+  compute()
+
+# we check if we have people with more than one influenza infection after cohort start  
+# it's cohorts in which all columns are identical aside from influenza_date
+repeated_covid <-  covid_negative %>%
+  group_by_at(vars(-covid_infection_date)) %>% 
+  filter(n() > 1) %>%
+  ungroup() %>%
+  compute()
+
+have_look <- repeated_covid %>%collect()
+nrow(have_look)
+View(have_look)
+# we keep the first influenza record
+repeated_covid <- repeated_covid %>%
+  group_by(subject_id) %>%
+  arrange(covid_infection_date) %>%
+  mutate(seq2= row_number()) %>%
+  ungroup() %>%
+  filter(seq2==1) %>%
+  select(-seq2) %>%
+  compute()
+
+## there is a warning about ordering but it seems to be working fine... 
+have_look_2 <- repeated_covid %>%collect()
+View(have_look_2)
+nrow(have_look_2)/length(unique(have_look_2$subject_id))
+rm(have_look, have_look_2)
+
+# we exclude these subjects from covid_negative
+repeated_covid_ids <- repeated_covid  %>%select(subject_id) %>% pull()
+
+covid_negative <- covid_negative %>%
+  filter(!(subject_id%in%repeated_covid_ids))
+# we add them again with the clean repeated covid
+covid_negative <- union_all(covid_negative, repeated_covid)
+
+# similarly, we exclude all people with a covid dx during our study period from the main df
+covid_ids <- covid_negative %>% select(subject_id) %>% distinct() %>% pull()
+tested_negative_earliest <- tested_negative_earliest %>%
+  filter(!(subject_id %in% covid_ids)) %>%
+  mutate(covid_infection_date=as.Date(NA))%>%
+  compute()
+# we add them again with the cleaned df for covid
+tested_negative_earliest <- union_all(tested_negative_earliest, covid_negative)
+
+
+## same proces now for influenza
+# however this is not the case for influenza - we have only excluded influenza infections
+# in the 6 weeks prior - so we need to get rid of those influenza
+influenza_covid <- influenza_cohort %>%
+  inner_join(tested_negative_earliest) %>%
+  filter(influenza_start_date>cohort_start_date) %>%
+  distinct() %>%
+  compute()
+
+# we check if we have people with more than one influenza infection after cohort start  
+# it's cohorts in which all columns are identical aside from influenza_date
+repeated_influenza <-  influenza_covid %>%
+  group_by_at(vars(-influenza_start_date)) %>% 
+  filter(n() > 1) %>%
+  ungroup() %>%
+  compute()
+
+have_look <- repeated_influenza %>%collect()
+
+# we keep the first influenza record
+repeated_influenza <- repeated_influenza %>%
+  group_by(subject_id) %>%
+  arrange(influenza_start_date) %>%
+  mutate(seq2= row_number()) %>%
+  ungroup() %>%
+  filter(seq2==1) %>%
+  select(-seq2) %>%
+  compute()
+
+## there is a warning about ordering but it seems to be working fine... 
+have_look_2 <- repeated_influenza %>%collect()
+have_look_2
+rm(have_look, have_look_2)
+
+# we exclude these subjects from influenza covid
+repeated_influenza_ids <- repeated_influenza %>%select(subject_id) %>% pull()
+
+influenza_covid <- influenza_covid %>%
+  filter(!(subject_id%in%repeated_influenza_ids))
+# we add them again with the clean repeated influenza
+
+influenza_covid <- union_all(influenza_covid, repeated_influenza)
+
+# similarly, we exclude all people with an influenza dx during our study period from the main df
+influenza_ids <- influenza_covid %>% select(subject_id) %>% distinct() %>% pull()
+tested_negative_earliest <- tested_negative_earliest %>%
+  filter(!(subject_id %in% influenza_ids)) %>%
+  mutate(influenza_start_date=as.Date(NA))%>%
+  compute()
+# we add them again with the cleaned df for influenza
+tested_negative_earliest <- union_all(tested_negative_earliest, influenza_covid)
+rm(influenza_covid, influenza_ids, repeated_influenza, repeated_influenza_ids)
+
+
+# add date one year after infection
+tested_negative_earliest <- tested_negative_earliest %>%
+mutate(one_year_date = cohort_start_date+lubridate::days(365))%>%
+compute()
+
+# add cohort end date, considering censoring options
+# death, observation end, next covid infection, influenza, one year followup
+tested_negative_earliest <- tested_negative_earliest %>% 
+  mutate(cohort_end_date = pmin(observation_period_end_date, 
+                                death_date, 
+                                covid_infection_date-lubridate::days(1), # trec un dia
+                                # pq si no una el cohort_end_date de la persona amb reinifeccion
+                                # es igual q el cohort_start_date de la seguent infeccio
+                                influenza_start_date, 
+                                one_year_date,
+                                na.rm = TRUE)) %>%
+  mutate(follow_up = cohort_end_date - cohort_start_date) %>% # this give me an interval 
+  # turn this interval into a number of days 
+  ## no he trobat com fer-ho amb dbplyr aixi q he buscat la manera en sql
+  mutate(follow_up_days= sql("EXTRACT(epoch FROM follow_up)/(60*60*24)")) %>%
+  compute()
+
+
+ids_repes <- c(1297,1617,3225)
+
+a <- tested_negative_earliest %>% 
+  filter(subject_id %in% ids_repes) %>%
+  collect()
+# comprovem q el meu sql ha funcionat be
+glimpse(tested_negative_earliest)
+
+tested_negative_earliest <- tested_negative_earliest %>% 
+  select(cohort_definition_id, subject_id, cohort_start_date, 
+         cohort_end_date, follow_up_days) %>%
+  compute()
+
+# we check numbers make sense -
+ tested_negative_earliest %>%   tally()  # 1832297tested negative rows
+## check that follow_up_days make sense
+summary( tested_negative_earliest %>% select(follow_up_days) %>% distinct() %>%collect()) 
+
+# keep only cohort start dates prior to the last admissible index date (2nd september for SIDIAP)
+tested_negative_earliest <- tested_negative_earliest %>% 
+  filter(cohort_start_date<=end_index_date) %>%
+  compute()
+
+tested_negative_earliest %>%tally()  # 1620656
+
+
+# we exclude people with less than 120 days of follow-up
+exclusion_table <- tibble(N_current=tested_negative_earliest %>%tally()%>%collect()%>%pull(), 
+                          exclusion_reason="initial pop",
+                          cohort= "Tested negative, earliest event",
+                          cohort_definition_id = tested_negative_earliest %>%
+                                                 select(cohort_definition_id) %>% 
+                            distinct() %>%pull(),
+                          symptom=NA)
+
+tested_negative_earliest <- tested_negative_earliest %>% 
+  filter(!(follow_up_days<120))%>%
+  compute()
+#check follow-up days are fine
+summary(tested_negative_earliest  %>% select(follow_up_days) %>% distinct() %>%collect()) 
+
+exclusion_table<-rbind(exclusion_table,
+                       tibble(N_current=tested_negative_earliest  %>%tally()%>%collect()%>%pull(), 
+                          exclusion_reason="Less than 120 days of follow-up",
+                          cohort = "Tested negative, earliest",
+                          cohort_definition_id = tested_negative_earliest  %>%
+                                                 select(cohort_definition_id) %>% 
+                            distinct() %>%pull(),
+                         symptom= NA))
+
+
+tested_negative_earliest %>%tally()  #2436677 negative tests with 120 days follow up min
+tested_negative_earliest %>% select(subject_id)%>% distinct() %>%tally() #16076454 subjects
+
 
 
 ## Symptoms  ----
