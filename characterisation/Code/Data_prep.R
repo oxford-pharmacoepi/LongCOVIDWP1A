@@ -45,7 +45,8 @@ end_index_date      <- as.Date("2021-09-02", "%Y-%m-%d")
 
 # Cohort ids -----
 # Cohort ids are in csv with all cohorts ids
-cohorts_ids  <- read.csv2(here("ATLAS Cohort Definitions_LongCovid.csv"))
+cohorts_ids  <- read.csv2(here("ATLAS Cohort Definitions_LongCovid.csv")) %>%
+  mutate(name= paste(sub(".*LongCov-ER_", "", name)))
 covid_ids    <- cohorts_ids %>% filter(type=="covid-19") %>% select(cohort_definition_id) %>% pull()
 influenza_id <- cohorts_ids %>% filter(type=="influenza") %>% select(cohort_definition_id) %>% pull()
 controls_ids <- cohorts_ids %>% filter(type=="control") %>% select(cohort_definition_id) %>% pull()
@@ -217,7 +218,6 @@ covid_infection %>%tally()  # 912829
 # we exclude people with less than 120 days of follow-up
 exclusion_table <- tibble(N_current=covid_infection %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="initial pop",
-                          cohort= "New COVID-19 infections",
                           cohort_definition_id = covid_infection %>%
                                                  select(cohort_definition_id) %>% 
                             distinct() %>%pull(),
@@ -232,7 +232,6 @@ summary(covid_infection %>% select(follow_up_days) %>% distinct() %>%collect())
 exclusion_table<-rbind(exclusion_table,
                        tibble(N_current=covid_infection %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="Less than 120 days of follow-up",
-                          cohort = "New COVID-19 infections",
                           cohort_definition_id = covid_infection %>%
                                                  select(cohort_definition_id) %>% 
                             distinct() %>%pull(),
@@ -263,7 +262,6 @@ cohorts_ids <- rbind(cohorts_ids,
 exclusion_table<-rbind(exclusion_table,
                        tibble(N_current=first_infection %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="initial pop",
-                          cohort = "First COVID-19 infection",
                           cohort_definition_id = first_infection%>%
                                                   select(cohort_definition_id) %>% 
                             distinct() %>%pull(),
@@ -283,7 +281,6 @@ reinfections %>% select(subject_id)%>% distinct() %>%tally() #70752
 exclusion_table<-rbind(exclusion_table,
                        tibble(N_current=reinfections %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="initial pop",
-                          cohort = "Reinfections",
                           cohort_definition_id = reinfections %>%
                                                  select(cohort_definition_id) %>%
                             distinct() %>%pull(),
@@ -408,7 +405,6 @@ confirmed_infection %>%tally()  # 452647
 exclusion_table <- rbind(exclusion_table,
                          tibble(N_current=confirmed_infection %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="initial pop",
-                          cohort= "New COVID-19 confirmed infections",
                           cohort_definition_id = confirmed_infection %>%
                             select(cohort_definition_id) %>% distinct() %>%pull(),
                           symptom=NA))
@@ -423,7 +419,6 @@ summary(confirmed_infection %>% select(follow_up_days) %>% distinct() %>%collect
 exclusion_table<-rbind(exclusion_table,
                        tibble(N_current=confirmed_infection %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="Less than 120 days of follow-up",
-                          cohort = "New COVID-19 confirmed infections",
                          cohort_definition_id = confirmed_infection %>%
                             select(cohort_definition_id) %>% distinct() %>%pull(),
                          symptom= NA))
@@ -452,9 +447,6 @@ covid_infection_cens <- covid_cohorts %>%
   rename(covid_infection_date = cohort_start_date) %>%
   select(subject_id, covid_infection_date)%>%
   compute()
-
-# tested negative 
-id_interest <- 29
 
 generate_tested_negative_cohort <- function(id_interest){
   # get the cohort of interst
@@ -606,13 +598,32 @@ tested_negative_earliest_id <- cohorts_ids %>%
                           filter(str_detect(name, "Tested_Negative_earliest")) %>%
                           select(cohort_definition_id) %>% pull()
 
+PCR_negative_earliest_id <- cohorts_ids %>% 
+                          filter(str_detect(name, "PCR_Negative_earliest")) %>%
+                          select(cohort_definition_id) %>% pull()
+PCR_negative_all_id <- cohorts_ids %>% 
+                          filter(str_detect(name, "PCR_Negative_all")) %>%
+                          select(cohort_definition_id) %>% pull()
+
+
+
 tested_negative_earliest <- generate_tested_negative_cohort(id_interest = tested_negative_earliest_id)
+tested_negative_all      <- generate_tested_negative_cohort(id_interest = tested_negative_all_id)
 
+PCR_negative_earliest    <- generate_tested_negative_cohort(id_interest = PCR_negative_earliest_id)
+PCR_negative_all         <- generate_tested_negative_cohort(id_interest = PCR_negative_all_id)
 
-## add covid infections for  censoring
+exclusion_table <- bind_rows(
+                              exclusion_table,
+                              tested_negative_earliest[[2]],
+                              tested_negative_all[[2]],
+                              PCR_negative_earliest[[2]],
+                              PCR_negative_all[[2]]
+                              ) 
 
-
-
+exclusion_table <- exclusion_table %>%
+  left_join(cohorts_ids %>% select(cohort_definition_id, name, type) %>%
+              mutate(cohort_definition_id=as.integer(cohort_definition_id)))
 
 ## Symptoms  ----
 ### parameters for loop
