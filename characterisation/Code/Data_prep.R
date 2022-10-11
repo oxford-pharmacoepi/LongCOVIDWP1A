@@ -461,7 +461,7 @@ generate_tested_negative_cohort <- function(id_interest){
   inner_join(working_cohort) %>%
   distinct() %>%
   compute()
-
+ 
 # we check if we have people with more than one influenza infection after cohort start  
 # it's cohorts in which all columns are identical aside from influenza_date
 repeated_covid <-  covid_negative %>%
@@ -619,9 +619,7 @@ exclusion_table <- bind_rows(
                               tested_negative_all[[2]],
                               PCR_negative_earliest[[2]],
                               PCR_negative_all[[2]]
-                              ) 
-
-exclusion_table <- exclusion_table %>%
+                              ) %>%
   left_join(cohorts_ids %>% select(cohort_definition_id, name, type) %>%
               mutate(cohort_definition_id=as.integer(cohort_definition_id)))
 
