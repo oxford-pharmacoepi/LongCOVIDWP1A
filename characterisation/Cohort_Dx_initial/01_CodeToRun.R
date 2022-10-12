@@ -58,7 +58,7 @@ cohortTableStem<-"er_cohorts_for_longcov"
 source(here("RunAnalysis.R"))
 
 # Review results -----
-CohortDiagnostics::preMergeDiagnosticsFiles(dataFolder = here("Results"))
-CohortDiagnostics::launchDiagnosticsExplorer(dataFolder = here("Results"))
+# CohortDiagnostics::preMergeDiagnosticsFiles(dataFolder = here("Results"))
+# CohortDiagnostics::launchDiagnosticsExplorer(dataFolder = here("Results"))
 
 
