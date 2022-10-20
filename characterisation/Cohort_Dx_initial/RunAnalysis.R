@@ -1,5 +1,7 @@
 # Get cohort details -----
-cohortJsonFiles <- list.files(here("1_InstantiateCohorts", "Cohorts"))
+ cohortJsonFiles <- list.files(here("1_InstantiateCohorts", "Cohorts"))
+#cohortJsonFiles <- list.files(here("1_InstantiateCohorts", "Covid_cohorts"))
+
 cohortJsonFiles <- cohortJsonFiles[str_detect(cohortJsonFiles,".json")]
 
 cohortDefinitionSet <- list()
@@ -46,24 +48,24 @@ CohortGenerator::exportCohortStatsTables(
     incremental = FALSE)
 
 # cohort diagnostics
-# executeDiagnostics(cohortDefinitionSet,
-#                    connectionDetails = connectionDetails,
-#                    cohortTable = cohortTableStem,
-#                    cohortDatabaseSchema = results_database_schema,
-#                    cdmDatabaseSchema = cdm_database_schema,
-#                    exportFolder = here("Results"),
-#                    databaseId = db.name,
-#                    minCellCount = 5,
-#                    runInclusionStatistics = FALSE, 
-#                    runOrphanConcepts = FALSE,
-#                    runTimeDistributions = FALSE, 
-#                    runVisitContext = FALSE,
-#                    runBreakdownIndexEvents = FALSE, 
-#                    runIncidenceRate = FALSE, 
-#                    runTimeSeries = FALSE, 
-#                    runCohortOverlap = FALSE, 
-#                    runCohortCharacterization = TRUE,
-#                    runTemporalCohortCharacterization = FALSE)
+executeDiagnostics(cohortDefinitionSet,
+                   connectionDetails = connectionDetails,
+                   cohortTable = cohortTableStem,
+                   cohortDatabaseSchema = results_database_schema,
+                   cdmDatabaseSchema = cdm_database_schema,
+                   exportFolder = here("Results"),
+                   databaseId = db.name,
+                   minCellCount = 5,
+                   runInclusionStatistics = FALSE,
+                   runOrphanConcepts = FALSE,
+                   runTimeDistributions = FALSE,
+                   runVisitContext = FALSE,
+                   runBreakdownIndexEvents = FALSE,
+                   runIncidenceRate = FALSE,
+                   runTimeSeries = FALSE,
+                   runCohortOverlap = FALSE,
+                   runCohortCharacterization = TRUE,
+                   runTemporalCohortCharacterization = FALSE)
 
 # drop cohort stats table
 CohortGenerator::dropCohortStatsTables(

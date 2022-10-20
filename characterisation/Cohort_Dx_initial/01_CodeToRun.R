@@ -1,7 +1,7 @@
 
 # install.packages("renv") # if not already installed, install renv from CRAN
 # renv::activate()
-renv::restore() # this should prompt you to install the various packages required for the study
+# renv::restore() # this should prompt you to install the various packages required for the study
 
 
 # packages -----
@@ -20,13 +20,24 @@ library(stringr)
 # database metadata and connection details -----
 
 # database connection details
-server<-Sys.getenv("SERVER_JUN22")
-user<-Sys.getenv("DB_USER_JUN22")
-password<- Sys.getenv("DB_PASSWORD_JUN22")
-port<-Sys.getenv("DB_PORT_JUN22") 
-host<-Sys.getenv("DB_HOST_JUN22") 
+ server<-Sys.getenv("SERVER_JUN22")
+ user<-Sys.getenv("DB_USER_JUN22")
+ password<- Sys.getenv("DB_PASSWORD_JUN22")
+ port<-Sys.getenv("DB_PORT_JUN22")
+ host<-Sys.getenv("DB_HOST_JUN22")
 # The name/ acronym for the database
-db.name<-Sys.getenv("SERVER_DBI_JUN22")
+server_dbi <-Sys.getenv("SERVER_DBI_JUN22")
+
+# sql dialect used with the OHDSI SqlRender package
+# schema that contains the OMOP CDM with patient-level data
+# schema that contains the vocabularie
+# schema where a results table will be created 
+
+ targetDialect             <- "postgresql" 
+ cdm_database_schema       <- "omop21t4_cmbd" 
+ vocabulary_database_schema<- "omop21t4_cmbd"
+ results_database_schema<- "results21t4_cmbd"
+
 
 
 
@@ -39,14 +50,16 @@ connectionDetails <- createConnectionDetails(dbms = "postgresql",
                                              port = port ,
                                              pathToDriver = here())
 
-# sql dialect used with the OHDSI SqlRender package
-# schema that contains the OMOP CDM with patient-level data
-# schema that contains the vocabularie
-# schema where a results table will be created 
-targetDialect             <- "postgresql" 
-cdm_database_schema       <- "omop21t4_cmbd" 
-vocabulary_database_schema<- "omop21t4_cmbd" 
-results_database_schema   <- "results21t4_cmbd"
+
+
+db <- dbConnect(RPostgres::Postgres(),
+                dbname = server_dbi,
+                port = port,
+                host = host, 
+                user = user, 
+                password = password)
+
+
 
 
 # stem for tables to be created in your results schema for this analysis

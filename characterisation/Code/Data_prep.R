@@ -108,7 +108,7 @@ new_infection_id <- cohorts_ids %>%
                     select(cohort_definition_id) %>% pull()
 
 covid_infection <- covid_cohorts %>%
-  filter(cohort_definition_id==new_infection_id) %>%
+  filter(cohort_definition_id==new_infection_id)%>%
   arrange(subject_id, desc(as.Date(cohort_start_date))) %>% 
   group_by(subject_id) %>% 
   arrange(cohort_start_date) %>%
@@ -633,8 +633,8 @@ excluded_list <- list()
 denominators_df <- tibble()
 ## parameters  For testing the loop/function
  #symptoms_ids <- c(1,2,3)  # for testing just 3 symptoms
- # i <- 1 # for testing - testing with only one symptom id
- # j <- 1 # for testing - washout window
+  i <- 1 # for testing - testing with only one symptom id
+  j <- 1 # for testing - washout window
  # cohort <- reinfections # for testing - cohort
 
 ## function including loop to generate all cohorts  
@@ -768,7 +768,6 @@ denominators_df
 }
 result <- list(cohorts_list, denominators_df, excluded_list)  
   }
-rm(denominators_df, output, excluded, excluded_list)
 ## function to generate any sypmtom cohort
 create_any_symptom <- function(list_cohorts){
 # we first bind the rows from the previous function result
@@ -795,13 +794,21 @@ first_infection_symp     <- creating_symptom_cohorts(cohort=first_infection)
 confirmed_infection_symp <- creating_symptom_cohorts(cohort=confirmed_infection)
 reinfections_symp        <- creating_symptom_cohorts(cohort=reinfections)
 
+tested_negative_earliest_symp <- creating_symptom_cohorts(cohort= tested_negative_earliest[1] )
+tested_negative_all_symp      <- creating_symptom_cohorts(cohort= tested_negative_all[1])
+PCR_negative_earliest_symp    <- creating_symptom_cohorts(cohort= PCR_negative_earliest[1])
+PCR_negative_all_symp         <- creating_symptom_cohorts(cohort= PCR_negative_all[1])
+
 
 # generate any symptom cohorts 
 covid_infection_any_symp     <- create_any_symptom(list_cohorts = covid_infection_symp)
 first_infection_any_symp     <- create_any_symptom(list_cohorts = first_infection_symp)
 confirmed_infection_any_symp <- create_any_symptom(list_cohorts = confirmed_infection_symp)
 reinfections_any_symp        <- create_any_symptom(list_cohorts = reinfections_symp)
-
+tested_negative_earliest_any_symp <- create_any_symptom(list_cohorts = tested_negative_earliest_symp )
+tested_negative_all_any_symp      <- create_any_symptom(list_cohorts = tested_negative_all_symp)
+PCR_negative_earliest_any_symp    <- create_any_symptom(list_cohorts = PCR_negative_earliest_symp )
+PCR_negative_all_any_symp         <- create_any_symptom(list_cohorts = PCR_negative_all_symp )
 
 # we add all the  cohorts together
 # fala afegir les tested negative + despres s'hauran d'afegir les "mare" amb nomes cohort id, subject id, cohort start i cohort end
