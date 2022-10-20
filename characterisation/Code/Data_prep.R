@@ -429,7 +429,7 @@ confirmed_infection %>% select(subject_id)%>% distinct() %>%tally() #425423subje
 
 
 
-## Tested negative cohorts  --- pendent ----
+## Tested negative cohorts 
 ### PCR and antigen negative _all events 
 
 # covid infections to use for censoring
@@ -609,12 +609,10 @@ PCR_negative_all_id <- cohorts_ids %>%
 
 tested_negative_earliest <- generate_tested_negative_cohort(id_interest = tested_negative_earliest_id)
 tested_negative_all      <- generate_tested_negative_cohort(id_interest = tested_negative_all_id)
-
 PCR_negative_earliest    <- generate_tested_negative_cohort(id_interest = PCR_negative_earliest_id)
 PCR_negative_all         <- generate_tested_negative_cohort(id_interest = PCR_negative_all_id)
 
-exclusion_table <- bind_rows(
-                              exclusion_table,
+exclusion_table <- bind_rows(exclusion_table,
                               tested_negative_earliest[[2]],
                               tested_negative_all[[2]],
                               PCR_negative_earliest[[2]],
@@ -623,6 +621,20 @@ exclusion_table <- bind_rows(
   left_join(cohorts_ids %>% select(cohort_definition_id, name, type) %>%
               mutate(cohort_definition_id=as.integer(cohort_definition_id)))
 
+#### guardar cohorts mare 
+# covid_infection_c <- covid_infection %>% collect()
+# reinfections_c <-    reinfections %>% collect()
+# tested_negative_all_c      <- tested_negative_all[[1]] %>% collect()
+# tested_negative_earliest_c <- tested_negative_earliest[[1]] %>% collect()
+# PCR_negative_all_c      <- PCR_negative_all[[1]] %>% collect()
+# PCR_negative_earliest_c <- PCR_negative_earliest[[1]] %>% collect()
+# 
+# save(covid_infection_c,reinfections_c, tested_negative_all_c, tested_negative_earliest_c,
+#      PCR_negative_all_c, PCR_negative_earliest_c, 
+#      file = "data/longCov_Main_cohorts.Rdata")
+# 
+# rm(covid_infection_c,reinfections_c, tested_negative_all_c, tested_negative_earliest_c,
+#      PCR_negative_all_c, PCR_negative_earliest_c)
 ## Symptoms  ----
 ### parameters for loop
 symptoms_ids <- cohorts_ids %>% filter(type=="symptom") %>% select(cohort_definition_id) %>% pull()
@@ -633,9 +645,10 @@ excluded_list <- list()
 denominators_df <- tibble()
 ## parameters  For testing the loop/function
  #symptoms_ids <- c(1,2,3)  # for testing just 3 symptoms
-  i <- 1 # for testing - testing with only one symptom id
-  j <- 1 # for testing - washout window
+   i <- 1 # for testing - testing with only one symptom id
+   j <- 1 # for testing - washout window
  # cohort <- reinfections # for testing - cohort
+cohort <- tested_negative_earliest[[1]] 
 
 ## function including loop to generate all cohorts  
 creating_symptom_cohorts <- function(cohort){
@@ -696,7 +709,6 @@ working_symptom <- cohort %>%
   mutate(cohort_end_date = ifelse(is.na(symptom_date), cohort_end_date,
                                     pmin(cohort_end_date, symptom_date))) %>%
   mutate(follow_up_days = cohort_end_date-cohort_start_date)%>%
-  select(-seq) %>%
   compute()
 
 working_symptom <- working_symptom %>%
@@ -788,44 +800,55 @@ any_symp_cohort <- bind_rows(list_cohorts[1]) %>%
   select(-seq)
 }
 
-# Covid cohorts
+# Covid cohorts & control cohorts 
 covid_infection_symp     <- creating_symptom_cohorts(cohort=covid_infection)
 first_infection_symp     <- creating_symptom_cohorts(cohort=first_infection)
 confirmed_infection_symp <- creating_symptom_cohorts(cohort=confirmed_infection)
 reinfections_symp        <- creating_symptom_cohorts(cohort=reinfections)
 
-tested_negative_earliest_symp <- creating_symptom_cohorts(cohort= tested_negative_earliest[1] )
-tested_negative_all_symp      <- creating_symptom_cohorts(cohort= tested_negative_all[1])
-PCR_negative_earliest_symp    <- creating_symptom_cohorts(cohort= PCR_negative_earliest[1])
-PCR_negative_all_symp         <- creating_symptom_cohorts(cohort= PCR_negative_all[1])
+tested_negative_earliest_symp <- creating_symptom_cohorts(cohort= tested_negative_earliest[[1]] )
+tested_negative_all_symp      <- creating_symptom_cohorts(cohort= tested_negative_all[[1]])
+PCR_negative_earliest_symp    <- creating_symptom_cohorts(cohort= PCR_negative_earliest[[1]])
+PCR_negative_all_symp         <- creating_symptom_cohorts(cohort= PCR_negative_all[[1]])
 
 
 # generate any symptom cohorts 
-covid_infection_any_symp     <- create_any_symptom(list_cohorts = covid_infection_symp)
-first_infection_any_symp     <- create_any_symptom(list_cohorts = first_infection_symp)
-confirmed_infection_any_symp <- create_any_symptom(list_cohorts = confirmed_infection_symp)
-reinfections_any_symp        <- create_any_symptom(list_cohorts = reinfections_symp)
+covid_infection_any_symp          <- create_any_symptom(list_cohorts = covid_infection_symp)
+first_infection_any_symp          <- create_any_symptom(list_cohorts = first_infection_symp)
+confirmed_infection_any_symp      <- create_any_symptom(list_cohorts = confirmed_infection_symp)
+reinfections_any_symp             <- create_any_symptom(list_cohorts = reinfections_symp)
 tested_negative_earliest_any_symp <- create_any_symptom(list_cohorts = tested_negative_earliest_symp )
 tested_negative_all_any_symp      <- create_any_symptom(list_cohorts = tested_negative_all_symp)
 PCR_negative_earliest_any_symp    <- create_any_symptom(list_cohorts = PCR_negative_earliest_symp )
 PCR_negative_all_any_symp         <- create_any_symptom(list_cohorts = PCR_negative_all_symp )
 
+any_symp_cohorts <- rbind(covid_infection_any_symp,
+                          first_infection_any_symp,
+                          confirmed_infection_any_symp,
+                          reinfections_any_symp,
+                          tested_negative_earliest_any_symp,
+                          tested_negative_all_any_symp,
+                          PCR_negative_earliest_any_symp,
+                          PCR_negative_all_any_symp
+)
 # we add all the  cohorts together
 # fala afegir les tested negative + despres s'hauran d'afegir les "mare" amb nomes cohort id, subject id, cohort start i cohort end
 cohorts_covid_index_date<- rbind(bind_rows(covid_infection_symp[1]),
                                  bind_rows(first_infection_symp[1]),
                                  bind_rows(confirmed_infection_symp[1]),
                                  bind_rows(reinfections_symp[1]),
-                                 covid_infection_any_symp,
-                                 first_infection_any_symp,
-                                 confirmed_infection_any_symp,
-                                 reinfections_any_symp 
+                                 bind_rows(tested_negative_earliest_symp[1]),
+                                 bind_rows(tested_negative_all_symp[1]),     
+                                 bind_rows(PCR_negative_earliest_symp[1]),  
+                                 bind_rows(PCR_negative_all_symp[1]),   
+                                 any_symp_cohorts
                                  )
 
 denominator <- rbind(covid_infection_symp[[2]],
                      first_infection_symp[[2]],
                      confirmed_infection_symp[[2]],
-                     reinfections_symp[[2]])
+                     reinfections_symp[[2]],
+                     testd)
 
 # hauria de tenir 2 cohorts (washout window) per cada simptoma i per cada covid base (4 cohorts)
 # mes les cohrots de any symptom -- q de moment no estan a denominator
