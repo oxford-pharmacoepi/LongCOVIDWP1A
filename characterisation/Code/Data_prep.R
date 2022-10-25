@@ -141,7 +141,7 @@ repeated_influenza <-  influenza_covid %>%
   ungroup() %>%
   compute()
 
-have_look <- repeated_influenza %>%collect()
+# have_look <- repeated_influenza %>%collect()
 
 # we keep the first influenza record
 repeated_influenza <- repeated_influenza %>%
@@ -154,9 +154,9 @@ repeated_influenza <- repeated_influenza %>%
   compute()
 
 ## there is a warning about ordering but it seems to be working fine... 
-have_look_2 <- repeated_influenza %>%collect()
-have_look_2
-rm(have_look, have_look_2)
+# have_look_2 <- repeated_influenza %>%collect()
+# have_look_2
+# rm(have_look, have_look_2)
 
 # we exclude these subjects from influenza covid
 influenza_covid <- influenza_covid %>%
@@ -196,7 +196,7 @@ covid_infection <- covid_infection %>%
   compute()
 
 # comprovem q el meu sql ha funcionat be
-glimpse(covid_infection)
+# glimpse(covid_infection)
 
 covid_infection <- covid_infection %>% 
   select(cohort_definition_id, subject_id, cohort_start_date, 
@@ -204,53 +204,53 @@ covid_infection <- covid_infection %>%
   compute()
 
 # we check numbers make sense -
-covid_infection %>% tally()  # 1183355 infections
+#covid_infection %>% tally()  # 1183355 infections
 ## check that follow_up_days make sense
-summary(covid_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
+#summary(covid_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
 
 # keep only cohort start dates prior to the last admissible index date (2nd september for SIDIAP)
 covid_infection <- covid_infection %>%
   filter(cohort_start_date<=end_index_date) %>%
   compute()
 
-covid_infection %>%tally()  # 912829
+#covid_infection %>%tally()  # 912829
 
 # we exclude people with less than 120 days of follow-up
 exclusion_table <- tibble(N_current=covid_infection %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="initial pop",
                           cohort_definition_id = covid_infection %>%
                                                  select(cohort_definition_id) %>% 
-                            distinct() %>%pull(),
-                          symptom=NA)
+                            distinct() %>%pull())
 
 covid_infection <- covid_infection %>%
   filter(!(follow_up_days<120))%>%
   compute()
 #check follow-up days are fine
-summary(covid_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
+# summary(covid_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
 
 exclusion_table<-rbind(exclusion_table,
                        tibble(N_current=covid_infection %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="Less than 120 days of follow-up",
                           cohort_definition_id = covid_infection %>%
                                                  select(cohort_definition_id) %>% 
-                            distinct() %>%pull(),
-                         symptom= NA))
+                            distinct() %>%pull()
+                         ))
 
 
-covid_infection %>%tally()  #857732 infections
-covid_infection %>% select(subject_id)%>% distinct() %>%tally() #805884 subjects
+# covid_infection %>%tally()  #857732 infections
+# covid_infection %>% select(subject_id)%>% distinct() %>%tally() #805884 subjects
 
 ### First COVID-19 infection 
 first_infection <- covid_infection %>%
   filter(seq==1) %>% 
   distinct() %>%
+  select(-seq) %>%
   # we change cohort definition id so that is has its own id
   mutate(cohort_definition_id=70) %>%
   compute() 
 # check we have one row per person
-first_infection %>%tally()    # 782948
-first_infection %>% select(subject_id)%>% distinct() %>%tally() #782948
+# first_infection %>%tally()    # 782948
+# first_infection %>% select(subject_id)%>% distinct() %>%tally() #782948
 
 # we add the cohort id to our cohorts ids table
 cohorts_ids <- rbind(cohorts_ids,
@@ -264,18 +264,19 @@ exclusion_table<-rbind(exclusion_table,
                           exclusion_reason="initial pop",
                           cohort_definition_id = first_infection%>%
                                                   select(cohort_definition_id) %>% 
-                            distinct() %>%pull(),
-                         symptom= NA))
+                            distinct() %>%pull()
+                         ))
 
 
 reinfections <- covid_infection %>%
   filter(seq!=1)%>% 
+  rename(number_reinfection=seq) %>%
   distinct() %>%
   # we change cohort definition id so that is has its own id
   mutate(cohort_definition_id=71) %>%
   compute()
 
-reinfections %>%tally()    #  74784
+# reinfections %>%tally()    #  74784
 reinfections %>% select(subject_id)%>% distinct() %>%tally() #70752
 
 exclusion_table<-rbind(exclusion_table,
@@ -283,8 +284,8 @@ exclusion_table<-rbind(exclusion_table,
                           exclusion_reason="initial pop",
                           cohort_definition_id = reinfections %>%
                                                  select(cohort_definition_id) %>%
-                            distinct() %>%pull(),
-                          symptom= NA))
+                            distinct() %>%pull()
+                          ))
 # we add the cohort identificator to our cohorts ids table
 cohorts_ids <- rbind(cohorts_ids,
                      tibble(atlas_id = NA,
@@ -292,7 +293,9 @@ cohorts_ids <- rbind(cohorts_ids,
                             cohort_definition_id =71, 
                             type = "covid-19"))
 
-#######################################################################################
+covid_infection <- covid_infection %>%
+  rename(n_infection = seq)
+
 ## aixo no cal q ho miris pq es el mateix q el codi d'abans - per tant el q estigui malament abans 
 # també ho està aquí :D
 ###  Tested positive  ----
@@ -356,7 +359,6 @@ confirmed_infection <- confirmed_infection %>%
   compute()
 # we add them again with the cleaned df for influenza
 confirmed_infection <- union_all(confirmed_infection, influenza_covid)
-rm(influenza_covid, influenza_ids, repeated_influenza, repeated_influenza_ids)
 
 # add date one year after infection
 confirmed_infection <- confirmed_infection %>%
@@ -380,52 +382,47 @@ confirmed_infection <- confirmed_infection %>%
   mutate(follow_up_days= sql("EXTRACT(epoch FROM follow_up)/(60*60*24)")) %>%
   compute()
 
-# comprovem q el meu sql ha funcionat be
-glimpse(confirmed_infection)
-
-# check <- confirmed_infection %>%collect()
-
 confirmed_infection <- confirmed_infection %>% 
   select(cohort_definition_id, subject_id, cohort_start_date, cohort_end_date, seq, follow_up_days) %>%
   compute()
 
 # we check numbers make sense -
-confirmed_infection %>% tally()  # 618080 infections
-## check that follow_up_days make sense
-summary(confirmed_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
+# confirmed_infection %>% tally()  # 618080 infections
+# ## check that follow_up_days make sense
+# summary(confirmed_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
 
 # keep only cohort start dates prior to the last admissible index date (2nd september for SIDIAP)
 confirmed_infection <- confirmed_infection %>%
   filter(cohort_start_date<=end_index_date) %>%
   compute()
-
-confirmed_infection %>%tally()  # 452647
+# 
+# confirmed_infection %>%tally()  # 452647
 
 # we exclude people with less than 120 days of follow-up
 exclusion_table <- rbind(exclusion_table,
                          tibble(N_current=confirmed_infection %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="initial pop",
                           cohort_definition_id = confirmed_infection %>%
-                            select(cohort_definition_id) %>% distinct() %>%pull(),
-                          symptom=NA))
+                            select(cohort_definition_id) %>% distinct() %>%pull()
+                         ))
 
 confirmed_infection <- confirmed_infection %>%
   filter(!(follow_up_days<120))%>%
   compute()
 #check follow-up days are fine
-summary(confirmed_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
+# summary(confirmed_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
 
 
 exclusion_table<-rbind(exclusion_table,
                        tibble(N_current=confirmed_infection %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="Less than 120 days of follow-up",
                          cohort_definition_id = confirmed_infection %>%
-                            select(cohort_definition_id) %>% distinct() %>%pull(),
-                         symptom= NA))
+                            select(cohort_definition_id) %>% distinct() %>%pull()
+                        ))
 
-
-confirmed_infection %>%tally()  #431571infections
-confirmed_infection %>% select(subject_id)%>% distinct() %>%tally() #425423subjects
+# 
+# confirmed_infection %>%tally()  #431571infections
+# confirmed_infection %>% select(subject_id)%>% distinct() %>%tally() #425423subjects
 
 
 
@@ -448,6 +445,7 @@ covid_infection_cens <- covid_cohorts %>%
   select(subject_id, covid_infection_date)%>%
   compute()
 
+# function to generate tested negative cohorts 
 generate_tested_negative_cohort <- function(id_interest){
   # get the cohort of interst
  working_cohort <- control_cohorts %>%
@@ -462,8 +460,8 @@ generate_tested_negative_cohort <- function(id_interest){
   distinct() %>%
   compute()
  
-# we check if we have people with more than one influenza infection after cohort start  
-# it's cohorts in which all columns are identical aside from influenza_date
+# we check if we have people with more than one covid infectoin after cohort start  
+# it's cohorts in which all columns are identical aside from covid_infection_date
 repeated_covid <-  covid_negative %>%
   group_by_at(vars(-covid_infection_date)) %>% 
   filter(n() > 1) %>%
@@ -481,7 +479,6 @@ repeated_covid <- repeated_covid %>%
   compute()
 
 # we exclude these subjects from covid_negative
-# repeated_covid_ids <- repeated_covid  %>%select(subject_id) %>% pull()
 
 covid_negative <- covid_negative %>%
   anti_join(repeated_covid %>% select(subject_id) %>% distinct())
@@ -569,8 +566,8 @@ exclusion_table <- tibble(N_current=working_cohort %>%tally()%>%collect()%>%pull
                           exclusion_reason="initial pop",
                           cohort_definition_id = working_cohort %>%
                                                  select(cohort_definition_id) %>% 
-                          distinct() %>%pull(),
-                          symptom=NA)
+                          distinct() %>%pull()
+                          )
 
 working_cohort <- working_cohort %>% 
   filter(!(follow_up_days<120))%>%
@@ -581,8 +578,8 @@ exclusion_table<-rbind(exclusion_table,
                           exclusion_reason="Less than 120 days of follow-up",
                           cohort_definition_id = working_cohort  %>%
                                                  select(cohort_definition_id) %>% 
-                            distinct() %>%pull(),
-                         symptom= NA))
+                            distinct() %>%pull()
+                         ))
 
 
 result <- list(working_cohort, exclusion_table) 
@@ -590,6 +587,7 @@ result
 
 }
 
+# get the ids of the tested negative cohorts
 tested_negative_all_id <- cohorts_ids %>% 
                           filter(str_detect(name, "Tested_Negative_all")) %>%
                           select(cohort_definition_id) %>% pull()
@@ -645,10 +643,10 @@ excluded_list <- list()
 denominators_df <- tibble()
 ## parameters  For testing the loop/function
  #symptoms_ids <- c(1,2,3)  # for testing just 3 symptoms
-   i <- 1 # for testing - testing with only one symptom id
-   j <- 1 # for testing - washout window
- # cohort <- reinfections # for testing - cohort
-cohort <- tested_negative_earliest[[1]] 
+#    i <- 1 # for testing - testing with only one symptom id
+#    j <- 1 # for testing - washout window
+#  # cohort <- reinfections # for testing - cohort
+# cohort <- tested_negative_earliest[[1]] 
 
 ## function including loop to generate all cohorts  
 creating_symptom_cohorts <- function(cohort){
@@ -779,7 +777,8 @@ excluded_list[[i]] <- excluded
 denominators_df
 }
 result <- list(cohorts_list, denominators_df, excluded_list)  
-  }
+}
+
 ## function to generate any sypmtom cohort
 create_any_symptom <- function(list_cohorts){
 # we first bind the rows from the previous function result
@@ -797,20 +796,42 @@ any_symp_cohort <- bind_rows(list_cohorts[1]) %>%
   # we keep just first symptom recorded by unique cohort, subject id and cohort start id
   mutate(seq=row_number()) %>%
   filter(seq==1) %>%
-  select(-seq)
+  select(-seq)%>%
+  ungroup()
 }
+
+# only people with at least 3 symptoms, with 1 being fatigue, shortness of breath or cognitive dysfunction
+#  Cognitive_dysfunction_brain_fog, dyspnea, fatigue
+create_numb_symptom <- function(list_cohorts){
+symps_cohort <- bind_rows(list_cohorts[1]) %>%
+  mutate(symptom_id = substr(as.character(cohort_definition_id), 3, 4)) %>%
+  mutate(window = substr(as.character(cohort_definition_id), 5, 6)) %>%
+  mutate(symptom_id = as.numeric(symptom_id)) %>%
+  mutate(symptom =1) %>%  
+  left_join(cohorts_ids %>% 
+              select(cohort_definition_id, name) %>% 
+              rename(symptom_id=cohort_definition_id)) %>%
+  select(-cohort_end_date, -cohort_definition_id, -symptom_id) %>%
+  group_by(subject_id, cohort_start_date, window) %>%
+  spread(name, symptom) %>%
+    ungroup() 
+symps_cohort$all_symp<-rowSums(symps_cohort[,4:26],na.rm=T)
+symps_cohort <- symps_cohort %>% filter(all_symp>=3 
+                                        | (Cognitive_dysfunction_brain_fog==1 | Dyspnea==1| Fatigue_malaise==1))
+}
+
+
+
 
 # Covid cohorts & control cohorts 
 covid_infection_symp     <- creating_symptom_cohorts(cohort=covid_infection)
 first_infection_symp     <- creating_symptom_cohorts(cohort=first_infection)
 confirmed_infection_symp <- creating_symptom_cohorts(cohort=confirmed_infection)
 reinfections_symp        <- creating_symptom_cohorts(cohort=reinfections)
-
 tested_negative_earliest_symp <- creating_symptom_cohorts(cohort= tested_negative_earliest[[1]] )
 tested_negative_all_symp      <- creating_symptom_cohorts(cohort= tested_negative_all[[1]])
 PCR_negative_earliest_symp    <- creating_symptom_cohorts(cohort= PCR_negative_earliest[[1]])
 PCR_negative_all_symp         <- creating_symptom_cohorts(cohort= PCR_negative_all[[1]])
-
 
 # generate any symptom cohorts 
 covid_infection_any_symp          <- create_any_symptom(list_cohorts = covid_infection_symp)
@@ -821,6 +842,18 @@ tested_negative_earliest_any_symp <- create_any_symptom(list_cohorts = tested_ne
 tested_negative_all_any_symp      <- create_any_symptom(list_cohorts = tested_negative_all_symp)
 PCR_negative_earliest_any_symp    <- create_any_symptom(list_cohorts = PCR_negative_earliest_symp )
 PCR_negative_all_any_symp         <- create_any_symptom(list_cohorts = PCR_negative_all_symp )
+# generate cohorts inclyding all symptoms per person&infection 
+covid_infection_numb_symp          <- create_numb_symptom(list_cohorts = covid_infection_symp)
+first_infection_numb_symp          <- create_numb_symptom(list_cohorts = first_infection_symp)
+confirmed_infection_numb_symp      <- create_numb_symptom(list_cohorts = confirmed_infection_symp)
+reinfections_numb_symp             <- create_numb_symptom(list_cohorts = reinfections_symp)
+
+tested_negative_earliest_numb_symp <- create_numb_symptom(list_cohorts = tested_negative_earliest_symp )
+tested_negative_all_numb_symp      <- create_numb_symptom(list_cohorts = tested_negative_all_symp)
+PCR_negative_earliest_numb_symp    <- create_numb_symptom(list_cohorts = PCR_negative_earliest_symp )
+PCR_negative_all_numb_symp         <- create_numb_symptom(list_cohorts = PCR_negative_all_symp )
+
+
 
 any_symp_cohorts <- rbind(covid_infection_any_symp,
                           first_infection_any_symp,
@@ -832,7 +865,11 @@ any_symp_cohorts <- rbind(covid_infection_any_symp,
                           PCR_negative_all_any_symp
 )
 # we add all the  cohorts together
-# fala afegir les tested negative + despres s'hauran d'afegir les "mare" amb nomes cohort id, subject id, cohort start i cohort end
+# save(any_symp_cohorts, 
+#      file = "data/longCov_Any_symp_cohorts.Rdata")
+# 
+
+# falta afegir  les "mare" amb nomes cohort id, subject id, cohort start i cohort end
 cohorts_covid_index_date<- rbind(bind_rows(covid_infection_symp[1]),
                                  bind_rows(first_infection_symp[1]),
                                  bind_rows(confirmed_infection_symp[1]),
@@ -844,36 +881,93 @@ cohorts_covid_index_date<- rbind(bind_rows(covid_infection_symp[1]),
                                  any_symp_cohorts
                                  )
 
+# denominator de reinfection has one column missing (because for the first 3 months period there were not reinferecitons)
+den_reinfections_symp <- reinfections_symp[[2]] %>%
+  mutate(n_Jan_Mar_2020=NA)
+
 denominator <- rbind(covid_infection_symp[[2]],
                      first_infection_symp[[2]],
                      confirmed_infection_symp[[2]],
-                     reinfections_symp[[2]],
-                     testd)
+                     den_reinfections_symp ,
+                     tested_negative_earliest_symp[[2]],
+                     tested_negative_all_symp[[2]],   
+                     PCR_negative_earliest_symp[[2]],
+                     PCR_negative_all_symp[[2]]
+)
 
-# hauria de tenir 2 cohorts (washout window) per cada simptoma i per cada covid base (4 cohorts)
+# hauria de tenir 2 cohorts (washout window) per cada simptoma i per cada covid base (4 cohorts) i control cohort (4)
 # mes les cohrots de any symptom -- q de moment no estan a denominator
 # pendent comprovar q no hi hagi alguna persona q ha tingut tots els simptomes en el periode de washout
-4*2*length(symptoms_ids)
+8*2*length(symptoms_ids)
 denominator %>%select(cohort_id) %>% distinct() %>% nrow()
 
-# save stuff locally
-write.csv2(exclusion_table, here("results/exclusion_table.csv"))
-write.csv2(denominator, here("results/denominator.csv"))
+
 
 ## falta tenir el dnominador de any symtpom - son tots excepte si alguna persona ha tingut tots els simptoes en el washout period-cosa q no sembla probable
 
 ### explorar els numeros 
-# proporcio de long covid
-covid_infection_any_symp %>% filter(str_detect(as.character(cohort_definition_id), "28")) %>%nrow()/857732*100
+# proporcio de long covid als 90 dies 
+n_long_cov <-rbind(
+  tibble(cohort_definition_id=  covid_infection %>% 
+           select(cohort_definition_id) %>% distinct() %>% pull(),
+         n= covid_infection_any_symp %>% 
+           filter(str_detect(as.character(cohort_definition_id), "90")) %>% 
+           nrow()),
+  tibble(cohort_definition_id= first_infection %>% 
+           select(cohort_definition_id) %>% distinct() %>% pull(),
+         n=  first_infection_any_symp %>% 
+           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+           nrow()),
+  tibble(cohort_definition_id = reinfections %>%
+            select(cohort_definition_id) %>% distinct() %>% pull(),
+         n= reinfections_any_symp %>% 
+           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+           nrow()),
+    tibble(cohort_definition_id = confirmed_infection %>%
+            select(cohort_definition_id) %>% distinct() %>% pull(),
+         n= confirmed_infection_any_symp %>% 
+           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+           nrow()),
+  tibble(cohort_definition_id = tested_negative_all[[1]]  %>%
+           select(cohort_definition_id) %>% distinct() %>% pull(),
+        n=  tested_negative_all_any_symp %>%
+           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+           nrow()),
+  tibble(cohort_definition_id= tested_negative_earliest[[1]]  %>% 
+           select(cohort_definition_id) %>% distinct() %>% pull(),
+         n=  tested_negative_earliest_any_symp %>% 
+           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+           nrow()),
+  tibble(cohort_definition_id = PCR_negative_earliest[[1]] %>%
+                     select(cohort_definition_id) %>% distinct() %>% pull(),
+        n=  PCR_negative_earliest_any_symp%>% 
+           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+           nrow()),
+  tibble(cohort_definition_id = PCR_negative_all[[1]]  %>%
+           select(cohort_definition_id) %>% distinct() %>% pull(),
+        n=  PCR_negative_all_any_symp %>%
+           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+           nrow()))
 
-covid_infection_any_symp %>% filter(str_detect(as.character(cohort_definition_id), "90")) %>%nrow()/857732*100
+perc_long_cov <- exclusion_table %>%
+  filter(exclusion_reason== "Less than 120 days of follow-up" | 
+           name == 	"First COVID-19 infection" | 
+           name == "Reinfections") %>%
+  select(-exclusion_reason, -symptom)  %>%
+  left_join(n_long_cov) %>%
+  rename(N_any_symptom = n,
+         N_denominator = N_current) %>%
+  mutate(proportion = N_any_symptom/N_denominator *100) %>%
+  relocate(type, cohort_definition_id, name)
 
-first_infection_any_symp %>% filter(str_detect(as.character(cohort_definition_id), "28")) %>%nrow()/782948*100
+rm(n_long_cov)
 
-first_infection_any_symp %>% filter(str_detect(as.character(cohort_definition_id), "90")) %>%nrow()/782948*100
+# save stuff locally
+write.csv2(exclusion_table, here("results/exclusion_table.csv"))
+write.csv2(denominator, here("results/denominator.csv"))
+write.csv2(perc_long_cov, here("results/longCov90days.csv"))
 
-
-
+                      
 
 
 # excluded
@@ -891,6 +985,16 @@ a <-  pivot_wider(
   names_from = hours,
   values_from = syptom_id,
   names_prefix = "symptom_id_"
+)
+
+
+
+## explorar numero de sintomas en tested negative y covid infection
+plot_grid(
+  covid_infection_numb_symp %>% filter(window==90) %>% 
+    ggplot(aes(all_symp)) +geom_bar() + theme_minimal() + ggtitle("Covid-19")  ,
+tested_negative_all_numb_symp %>% filter(window==90) %>%
+  ggplot(aes(all_symp)) +geom_bar() + theme_minimal() + ggtitle("Tested negative")
 )
 
 
