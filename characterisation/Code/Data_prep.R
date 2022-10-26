@@ -5,6 +5,7 @@ library(DBI)
 library(DatabaseConnector)
 library(here)
 library(dplyr)
+library(dbplyr)
 library(tidyr)
 library(CDMConnector)
 library(stringr)
@@ -26,6 +27,16 @@ db <- dbConnect(RPostgres::Postgres(),
                 user = user, 
                 password = password)
 
+## connectionDetails per inserir table amb OHDSI tools
+connectionDetails <-DatabaseConnector::downloadJdbcDrivers("postgresql", here::here())
+connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "postgresql",
+                                                                server =server,
+                                                                user = user,
+                                                                password = password,
+                                                                port = port ,
+                                                                pathToDriver = here::here())
+    
+ 
 targetDialect              <- "postgresql"
 cdm_database_schema        <- "omop21t4_cmbd" 
 vocabulary_database_schema <-"omop21t4_cmbd" 
@@ -97,10 +108,11 @@ symptom_cohorts <- cohorts %>%
  select(symptom_definition_id, subject_id, symptom_date) %>%
  compute()
 
-rm(covid_ids, influenza_id, controls_ids, cohorts, observation_death, db, cdm)
+rm(covid_ids, influenza_id, controls_ids, cohorts, observation_death)
 
 
 ####################################### Getting cohorts ########
+
 ## COVID-19 cohorts ----
 ###  Covid infection - diagnoses and or laboratory tests  ----
 new_infection_id <- cohorts_ids %>%
@@ -181,22 +193,16 @@ compute()
 # add cohort end date, considering censoring options
 # death, observation end, next covid infection, influenza, one year followup
 covid_infection <- covid_infection %>% 
-  mutate(cohort_end_date = pmin(observation_period_end_date, 
+  mutate(cohort_end_date = lubridate::as_date(pmin(observation_period_end_date, 
                                 death_date, 
                                 covid_next_inf_date-lubridate::days(1), # trec un dia
                                 # pq si no una el cohort_end_date de la persona amb reinifeccion
                                 # es igual q el cohort_start_date de la seguent infeccio
                                 influenza_start_date, 
                                 one_year_date,
-                                na.rm = TRUE)) %>%
-  mutate(follow_up = cohort_end_date - cohort_start_date) %>% # this give me an interval 
-  # turn this interval into a number of days 
-  ## no he trobat com fer-ho amb dbplyr aixi q he buscat la manera en sql
-  mutate(follow_up_days= sql("EXTRACT(epoch FROM follow_up)/(60*60*24)")) %>%
+                                na.rm = TRUE))) %>%
+  mutate(follow_up_days = cohort_end_date - cohort_start_date) %>% 
   compute()
-
-# comprovem q el meu sql ha funcionat be
-# glimpse(covid_infection)
 
 covid_infection <- covid_infection %>% 
   select(cohort_definition_id, subject_id, cohort_start_date, 
@@ -224,6 +230,7 @@ exclusion_table <- tibble(N_current=covid_infection %>%tally()%>%collect()%>%pul
 
 covid_infection <- covid_infection %>%
   filter(!(follow_up_days<120))%>%
+  select(-follow_up_days) %>%
   compute()
 #check follow-up days are fine
 # summary(covid_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
@@ -246,7 +253,7 @@ first_infection <- covid_infection %>%
   distinct() %>%
   select(-seq) %>%
   # we change cohort definition id so that is has its own id
-  mutate(cohort_definition_id=70) %>%
+  mutate(cohort_definition_id=as.integer(70)) %>%
   compute() 
 # check we have one row per person
 # first_infection %>%tally()    # 782948
@@ -270,10 +277,10 @@ exclusion_table<-rbind(exclusion_table,
 
 reinfections <- covid_infection %>%
   filter(seq!=1)%>% 
-  rename(number_reinfection=seq) %>%
+  select(-seq) %>%
   distinct() %>%
   # we change cohort definition id so that is has its own id
-  mutate(cohort_definition_id=71) %>%
+  mutate(cohort_definition_id=as.integer(71)) %>%
   compute()
 
 # reinfections %>%tally()    #  74784
@@ -294,7 +301,36 @@ cohorts_ids <- rbind(cohorts_ids,
                             type = "covid-19"))
 
 covid_infection <- covid_infection %>%
-  rename(n_infection = seq)
+ select(-seq)%>%
+  compute()
+
+covid_infection <- covid_infection %>%
+  mutate(cohort_definition_id= as.integer(cohort_definition_id))
+
+## inserting these cohorts into the database
+#### guardar cohorts mare 
+# esborrar taula
+# sql_query <- glue::glue("DROP TABLE {write_schema}.er_long_covid_final_cohorts\n" )
+# DBI::dbExecute(db, as.character(sql_query))
+
+sql_query <- glue::glue("SELECT * INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "FROM (\n",
+                          dbplyr::sql_render(reinfections),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
+
+# quan la taula ja existeix
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(covid_infection),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
+
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(first_infection),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
 
 ## aixo no cal q ho miris pq es el mateix q el codi d'abans - per tant el q estigui malament abans 
 # també ho està aquí :D
@@ -368,23 +404,19 @@ compute()
 # add cohort end date, considering censoring options
 # death, observation end, next covid infection, influenza, one year followup
 confirmed_infection <- confirmed_infection %>% 
-  mutate(cohort_end_date = pmin(observation_period_end_date, 
+  mutate(cohort_end_date =lubridate::as_date(pmin(observation_period_end_date, 
                                 death_date, 
                                 covid_next_inf_date-lubridate::days(1), # trec un dia
                                 # pq si no una el cohort_end_date de la persona amb reinifeccion
                                 # es igual q el cohort_start_date de la seguent infeccio
                                 influenza_start_date, 
                                 one_year_date,
-                                na.rm = TRUE)) %>%
-  mutate(follow_up = (cohort_end_date - cohort_start_date)) %>% # this give me an interval 
-  # turn this interval into a number of days 
-  ## no he trobat com fer-ho amb dbplyr aixi q he buscat la manera en sql
-  mutate(follow_up_days= sql("EXTRACT(epoch FROM follow_up)/(60*60*24)")) %>%
-  compute()
-
-confirmed_infection <- confirmed_infection %>% 
+                                na.rm = TRUE))) %>%
+  mutate(follow_up_days = (cohort_end_date - cohort_start_date))  %>%
   select(cohort_definition_id, subject_id, cohort_start_date, cohort_end_date, seq, follow_up_days) %>%
   compute()
+
+
 
 # we check numbers make sense -
 # confirmed_infection %>% tally()  # 618080 infections
@@ -408,6 +440,7 @@ exclusion_table <- rbind(exclusion_table,
 
 confirmed_infection <- confirmed_infection %>%
   filter(!(follow_up_days<120))%>%
+  select(-follow_up_days, -seq) %>%
   compute()
 #check follow-up days are fine
 # summary(confirmed_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
@@ -423,7 +456,11 @@ exclusion_table<-rbind(exclusion_table,
 # 
 # confirmed_infection %>%tally()  #431571infections
 # confirmed_infection %>% select(subject_id)%>% distinct() %>%tally() #425423subjects
-
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(confirmed_infection),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
 
 
 ## Tested negative cohorts 
@@ -540,17 +577,13 @@ compute()
 # add cohort end date, considering censoring options
 # death, observation end, next covid infection, influenza, one year followup
 working_cohort <- working_cohort %>% 
-  mutate(cohort_end_date = pmin(observation_period_end_date, 
+  mutate(cohort_end_date = lubridate::as_date(pmin(observation_period_end_date, 
                                 death_date, 
                                 covid_infection_date-lubridate::days(1), # trec un dia
                                 influenza_start_date, 
                                 one_year_date,
-                                na.rm = TRUE)) %>%
-  mutate(follow_up = cohort_end_date - cohort_start_date) %>% # this give me an interval 
-  mutate(follow_up_days= sql("EXTRACT(epoch FROM follow_up)/(60*60*24)")) %>%
-  compute()
-
-working_cohort <- working_cohort %>% 
+                                na.rm = TRUE))) %>%
+  mutate(follow_up_days = cohort_end_date - cohort_start_date) %>% 
   select(cohort_definition_id, subject_id, cohort_start_date, 
          cohort_end_date, follow_up_days) %>%
   compute()
@@ -571,6 +604,7 @@ exclusion_table <- tibble(N_current=working_cohort %>%tally()%>%collect()%>%pull
 
 working_cohort <- working_cohort %>% 
   filter(!(follow_up_days<120))%>%
+  select(-follow_up_days) %>%
   compute()
 
 exclusion_table<-rbind(exclusion_table,
@@ -581,6 +615,11 @@ exclusion_table<-rbind(exclusion_table,
                             distinct() %>%pull()
                          ))
 
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(working_cohort),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
 
 result <- list(working_cohort, exclusion_table) 
 result
@@ -619,22 +658,40 @@ exclusion_table <- bind_rows(exclusion_table,
   left_join(cohorts_ids %>% select(cohort_definition_id, name, type) %>%
               mutate(cohort_definition_id=as.integer(cohort_definition_id)))
 
-#### guardar cohorts mare 
-# covid_infection_c <- covid_infection %>% collect()
-# reinfections_c <-    reinfections %>% collect()
-# tested_negative_all_c      <- tested_negative_all[[1]] %>% collect()
-# tested_negative_earliest_c <- tested_negative_earliest[[1]] %>% collect()
-# PCR_negative_all_c      <- PCR_negative_all[[1]] %>% collect()
-# PCR_negative_earliest_c <- PCR_negative_earliest[[1]] %>% collect()
-# 
-# save(covid_infection_c,reinfections_c, tested_negative_all_c, tested_negative_earliest_c,
-#      PCR_negative_all_c, PCR_negative_earliest_c, 
-#      file = "data/longCov_Main_cohorts.Rdata")
-# 
-# rm(covid_infection_c,reinfections_c, tested_negative_all_c, tested_negative_earliest_c,
-#      PCR_negative_all_c, PCR_negative_earliest_c)
+
+
+#### save tested negative cohorts 
+# canviar el codi per fer-ho dincs la funcio 
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(tested_negative_earliest[[1]]),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(tested_negative_all[[1]]),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(PCR_negative_earliest[[1]]),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(PCR_negative_all[[1]]),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
+
+
 ## Symptoms  ----
 ### parameters for loop
+cdm <- cdm_from_con(db, 
+             cdm_schema = cdm_database_schema,
+             write_schema = write_schema,
+             cohort_tables = c("er_cohorts_for_longcov", "er_long_covid_final_cohorts"))
+
+
 symptoms_ids <- cohorts_ids %>% filter(type=="symptom") %>% select(cohort_definition_id) %>% pull()
 window_longCov <- c(28,90)
 
@@ -645,8 +702,7 @@ denominators_df <- tibble()
  #symptoms_ids <- c(1,2,3)  # for testing just 3 symptoms
 #    i <- 1 # for testing - testing with only one symptom id
 #    j <- 1 # for testing - washout window
-#  # cohort <- reinfections # for testing - cohort
-# cohort <- tested_negative_earliest[[1]] 
+# cohort <- reinfections
 
 ## function including loop to generate all cohorts  
 creating_symptom_cohorts <- function(cohort){
@@ -667,12 +723,14 @@ for (i in 1:length(symptoms_ids)){
   # we first clean symptoms considering covid infection date
   symptom_covid <- symptom %>%
   inner_join(cohort)%>%
-  filter(!(symptom_date<cohort_start_date-lubridate::days(180))) %>% 
+    # we keep only symptoms recorded between 180 days prior to the index date and the cohort end date
+  filter(!(symptom_date<cohort_start_date-lubridate::days(180))) %>%  
   filter(symptom_date<=cohort_end_date) %>%
   mutate(days_symptom_onset= symptom_date - cohort_start_date) %>% 
   distinct() %>%
   compute()
-  # we find the people we need to exclude (symptom within the washout window)
+  # we find the people we need to exclude (symptom within the washout window) -
+  # it's people with a negative number for days since symptom onset
   people_to_exclude <- symptom_covid %>%
   filter(days_symptom_onset<=0) %>%
   select(subject_id, cohort_start_date) %>%
@@ -705,7 +763,7 @@ working_symptom <- cohort %>%
                               (symptom_definition_id*10^2)+
                               window) %>% 
   mutate(cohort_end_date = ifelse(is.na(symptom_date), cohort_end_date,
-                                    pmin(cohort_end_date, symptom_date))) %>%
+                                    lubridate::as_date(pmin(cohort_end_date, symptom_date)))) %>%
   mutate(follow_up_days = cohort_end_date-cohort_start_date)%>%
   compute()
 
@@ -735,13 +793,12 @@ working_denominator <- tibble(
                             n_subject = working_symptom %>% select(subject_id)%>%distinct() %>%tally()%>% pull(),
                           # follow-up days
                             follow_up_days =  working_symptom %>% 
-                            mutate(follow_up= sql("EXTRACT(epoch FROM follow_up_days)/(60*60*24)")) %>%
-                            select(follow_up) %>% 
+                            select(follow_up_days) %>% 
                             collect() %>%
-                            summarise(sum_days= sum(follow_up)) %>%
+                            summarise(sum_days= sum(follow_up_days)) %>%
                             pull()
                           )
-# get the denominator by trimestre ## just nrows¿
+# get the denominator by trimestre ## just nrows
 working_den_trimester <- working_symptom  %>%
   group_by(trimester) %>%
   tally() %>%
@@ -758,8 +815,16 @@ denominators_df <- rbind(denominators_df, working_denominator)
 working_symptom <- working_symptom %>%
   filter(!(is.na(symptom_date))) %>%
   select(cohort_definition_id, subject_id, cohort_start_date, cohort_end_date) %>%
-  collect()
-
+  compute()
+# we insert this into the database
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(working_symptom),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
+working_symptom <- working_symptom %>%
+collect
+# we also save this into a list to generaste the any symptom cohort
 output <- rbind(output,working_symptom)
 
 people_to_exclude <- people_to_exclude %>%
@@ -816,8 +881,7 @@ symps_cohort <- bind_rows(list_cohorts[1]) %>%
   spread(name, symptom) %>%
     ungroup() 
 symps_cohort$all_symp<-rowSums(symps_cohort[,4:26],na.rm=T)
-symps_cohort <- symps_cohort %>% filter(all_symp>=3 
-                                        | (Cognitive_dysfunction_brain_fog==1 | Dyspnea==1| Fatigue_malaise==1))
+
 }
 
 
@@ -827,7 +891,7 @@ symps_cohort <- symps_cohort %>% filter(all_symp>=3
 covid_infection_symp     <- creating_symptom_cohorts(cohort=covid_infection)
 first_infection_symp     <- creating_symptom_cohorts(cohort=first_infection)
 confirmed_infection_symp <- creating_symptom_cohorts(cohort=confirmed_infection)
-reinfections_symp        <- creating_symptom_cohorts(cohort=reinfections)
+reinfections_symp        <- creating_symptom_cohorts(cohort= reinfections)
 tested_negative_earliest_symp <- creating_symptom_cohorts(cohort= tested_negative_earliest[[1]] )
 tested_negative_all_symp      <- creating_symptom_cohorts(cohort= tested_negative_all[[1]])
 PCR_negative_earliest_symp    <- creating_symptom_cohorts(cohort= PCR_negative_earliest[[1]])
@@ -842,6 +906,29 @@ tested_negative_earliest_any_symp <- create_any_symptom(list_cohorts = tested_ne
 tested_negative_all_any_symp      <- create_any_symptom(list_cohorts = tested_negative_all_symp)
 PCR_negative_earliest_any_symp    <- create_any_symptom(list_cohorts = PCR_negative_earliest_symp )
 PCR_negative_all_any_symp         <- create_any_symptom(list_cohorts = PCR_negative_all_symp )
+
+# we append the any symtpoms cohrots to the table
+conn <- connect(connectionDetails)   
+
+append_table<- function(data){
+  insertTable(
+  connection = conn ,
+  tableName = paste0(write_schema, ".", "er_long_covid_final_cohorts"),
+  data =data,
+  createTable = FALSE,
+   dropTableIfExists = FALSE
+)
+}  
+                                                            
+append_table(covid_infection_any_symp)
+append_table(first_infection_any_symp)
+append_table(confirmed_infection_any_symp)
+append_table(reinfections_any_symp)
+append_table(tested_negative_earliest_any_symp)
+append_table(tested_negative_all_any_symp)
+append_table(PCR_negative_all_any_symp)
+append_table(PCR_negative_earliest_any_symp)
+
 # generate cohorts inclyding all symptoms per person&infection 
 covid_infection_numb_symp          <- create_numb_symptom(list_cohorts = covid_infection_symp)
 first_infection_numb_symp          <- create_numb_symptom(list_cohorts = first_infection_symp)
@@ -853,33 +940,6 @@ tested_negative_all_numb_symp      <- create_numb_symptom(list_cohorts = tested_
 PCR_negative_earliest_numb_symp    <- create_numb_symptom(list_cohorts = PCR_negative_earliest_symp )
 PCR_negative_all_numb_symp         <- create_numb_symptom(list_cohorts = PCR_negative_all_symp )
 
-
-
-any_symp_cohorts <- rbind(covid_infection_any_symp,
-                          first_infection_any_symp,
-                          confirmed_infection_any_symp,
-                          reinfections_any_symp,
-                          tested_negative_earliest_any_symp,
-                          tested_negative_all_any_symp,
-                          PCR_negative_earliest_any_symp,
-                          PCR_negative_all_any_symp
-)
-# we add all the  cohorts together
-# save(any_symp_cohorts, 
-#      file = "data/longCov_Any_symp_cohorts.Rdata")
-# 
-
-# falta afegir  les "mare" amb nomes cohort id, subject id, cohort start i cohort end
-cohorts_covid_index_date<- rbind(bind_rows(covid_infection_symp[1]),
-                                 bind_rows(first_infection_symp[1]),
-                                 bind_rows(confirmed_infection_symp[1]),
-                                 bind_rows(reinfections_symp[1]),
-                                 bind_rows(tested_negative_earliest_symp[1]),
-                                 bind_rows(tested_negative_all_symp[1]),     
-                                 bind_rows(PCR_negative_earliest_symp[1]),  
-                                 bind_rows(PCR_negative_all_symp[1]),   
-                                 any_symp_cohorts
-                                 )
 
 # denominator de reinfection has one column missing (because for the first 3 months period there were not reinferecitons)
 den_reinfections_symp <- reinfections_symp[[2]] %>%
@@ -967,26 +1027,24 @@ write.csv2(exclusion_table, here("results/exclusion_table.csv"))
 write.csv2(denominator, here("results/denominator.csv"))
 write.csv2(perc_long_cov, here("results/longCov90days.csv"))
 
-                      
 
-
-# excluded
-reinfections_excluded <- bind_rows(reinfections_symp[3]) %>%
-  mutate(days= as.numeric(substr(cohort_definition_id, 5,6))) %>%
-  filter(days==28) %>%
-  select(-days) %>%
-  mutate(symptom_id =  as.numeric(substr(cohort_definition_id, 3, 4))) %>%
-  select(-cohort_definition_id) %>%
-  distinct()
-
-a <-  pivot_wider(
-  reinfections_excluded,
-  id_cols = c(),
-  names_from = hours,
-  values_from = syptom_id,
-  names_prefix = "symptom_id_"
+                                                       
+                                                                
+insertTable(
+  connection = conn ,
+  tableName = paste0(write_schema, ".", "er_long_covid_main_cohorts"),
+  data = a,
+  dropTableIfExists = TRUE,
+  createTable = TRUE
 )
+cdm <- cdm_from_con(db, 
+             cdm_schema = cdm_database_schema,
+             write_schema = write_schema,
+             cohort_tables = c("er_long_covid_def_cohorts"))
 
+
+## pte - comprobar exclusiones de las cohorts LongCovid - alguien q tenga todos los sintomas
+                      
 
 
 ## explorar numero de sintomas en tested negative y covid infection
@@ -996,11 +1054,6 @@ plot_grid(
 tested_negative_all_numb_symp %>% filter(window==90) %>%
   ggplot(aes(all_symp)) +geom_bar() + theme_minimal() + ggtitle("Tested negative")
 )
-
-
-## falta afegir les cohorts mare + les cohorts de tested negative
-
-
 
 
 
