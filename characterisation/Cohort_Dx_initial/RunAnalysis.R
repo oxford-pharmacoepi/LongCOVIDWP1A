@@ -1,12 +1,12 @@
 # Get cohort details -----
- cohortJsonFiles <- list.files(here("1_InstantiateCohorts", "Cohorts"))
+ cohortJsonFiles <- list.files(here("Cohort_Dx_initial","1_InstantiateCohorts", "Cohorts"))
 #cohortJsonFiles <- list.files(here("1_InstantiateCohorts", "Covid_cohorts"))
 
 cohortJsonFiles <- cohortJsonFiles[str_detect(cohortJsonFiles,".json")]
 
 cohortDefinitionSet <- list()
 for(i in 1:length(cohortJsonFiles)){
-working.json<-here("1_InstantiateCohorts", "Cohorts",
+working.json<-here("Cohort_Dx_initial","1_InstantiateCohorts", "Cohorts",
                       cohortJsonFiles[i])
 cohortJson <- readChar(working.json, file.info(working.json)$size)
 cohortExpression <- cohortExpressionFromJson(cohortJson) # generates the sql
@@ -44,28 +44,28 @@ CohortGenerator::exportCohortStatsTables(
     connection = NULL,
     cohortDatabaseSchema = results_database_schema,
     cohortTableNames = cohortTableNames,
-    cohortStatisticsFolder = here("Results"),
+    cohortStatisticsFolder = here("Cohort_Dx_initial", "Results"),
     incremental = FALSE)
 
 # cohort diagnostics
-executeDiagnostics(cohortDefinitionSet,
-                   connectionDetails = connectionDetails,
-                   cohortTable = cohortTableStem,
-                   cohortDatabaseSchema = results_database_schema,
-                   cdmDatabaseSchema = cdm_database_schema,
-                   exportFolder = here("Results"),
-                   databaseId = db.name,
-                   minCellCount = 5,
-                   runInclusionStatistics = FALSE,
-                   runOrphanConcepts = FALSE,
-                   runTimeDistributions = FALSE,
-                   runVisitContext = FALSE,
-                   runBreakdownIndexEvents = FALSE,
-                   runIncidenceRate = FALSE,
-                   runTimeSeries = FALSE,
-                   runCohortOverlap = FALSE,
-                   runCohortCharacterization = TRUE,
-                   runTemporalCohortCharacterization = FALSE)
+# executeDiagnostics(cohortDefinitionSet,
+#                    connectionDetails = connectionDetails,
+#                    cohortTable = cohortTableStem,
+#                    cohortDatabaseSchema = results_database_schema,
+#                    cdmDatabaseSchema = cdm_database_schema,
+#                    exportFolder = here("Cohort_Dx_initial", "Results"),
+#                    databaseId = db.name,
+#                    minCellCount = 5,
+#                    runInclusionStatistics = FALSE,
+#                    runOrphanConcepts = FALSE,
+#                    runTimeDistributions = FALSE,
+#                    runVisitContext = FALSE,
+#                    runBreakdownIndexEvents = FALSE,
+#                    runIncidenceRate = FALSE,
+#                    runTimeSeries = FALSE,
+#                    runCohortOverlap = FALSE,
+#                    runCohortCharacterization = TRUE,
+#                    runTemporalCohortCharacterization = FALSE)
 
 # drop cohort stats table
 CohortGenerator::dropCohortStatsTables(

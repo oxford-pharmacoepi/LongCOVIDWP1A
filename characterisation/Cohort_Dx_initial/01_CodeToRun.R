@@ -15,8 +15,6 @@ library(CohortGenerator)
 library(here)
 library(stringr)
 
-
-
 # database metadata and connection details -----
 
 # database connection details
@@ -68,7 +66,7 @@ db <- dbConnect(RPostgres::Postgres(),
 cohortTableStem<-"er_cohorts_for_longcov"
 
 # Run analysis ----
-source(here("RunAnalysis.R"))
+source(here("Cohort_Dx_initial", "RunAnalysis.R"))
 
 # Review results -----
 # CohortDiagnostics::preMergeDiagnosticsFiles(dataFolder = here("Results"))

@@ -27,7 +27,7 @@ db <- dbConnect(RPostgres::Postgres(),
                 user = user, 
                 password = password)
 
-## connectionDetails per inserir table amb OHDSI tools
+## we also cuse connection details to insert later tables using OHDSI  tools
 connectionDetails <-DatabaseConnector::downloadJdbcDrivers("postgresql", here::here())
 connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "postgresql",
                                                                 server =server,
@@ -39,8 +39,20 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "postgres
  
 targetDialect              <- "postgresql"
 cdm_database_schema        <- "omop21t4_cmbd" 
-vocabulary_database_schema <-"omop21t4_cmbd" 
-write_schema               <-"results21t4_cmbd"
+vocabulary_database_schema <- "omop21t4_cmbd" 
+write_schema               <- "results21t4_cmbd"
+
+# cdm object to access the tables easily
+cdm <- cdm_from_con(db, 
+             cdm_schema = cdm_database_schema,
+             write_schema = write_schema,
+             cohort_tables = c("er_cohorts_for_longcov"))
+
+# create results folder if needed
+cohorts.folder <- here::here("results")
+if (!file.exists(cohorts.folder)){
+  dir.create(cohorts.folder)
+}
 
 # parameters ----
 # to get rid of covid diagnoses captured before the start of the pandemic --
@@ -52,22 +64,14 @@ influenza_start_date<- as.Date("2019-12-01", "%Y-%m-%d")
 symptoms_start_date <- as.Date("2019-08-29","%Y-%m-%d")
 end_index_date      <- as.Date("2021-09-02", "%Y-%m-%d")
 
-
-
 # Cohort ids -----
-# Cohort ids are in csv with all cohorts ids
+# Cohort ids are in a csv with all cohorts ids
 cohorts_ids  <- read.csv2(here("ATLAS Cohort Definitions_LongCovid.csv")) %>%
-  mutate(name= paste(sub(".*LongCov-ER_", "", name)))
+                          mutate(name= paste(sub(".*LongCov-ER_", "", name)))
 covid_ids    <- cohorts_ids %>% filter(type=="covid-19") %>% select(cohort_definition_id) %>% pull()
 influenza_id <- cohorts_ids %>% filter(type=="influenza") %>% select(cohort_definition_id) %>% pull()
 controls_ids <- cohorts_ids %>% filter(type=="control") %>% select(cohort_definition_id) %>% pull()
 symptoms_ids <- cohorts_ids %>% filter(type=="symptom") %>% select(cohort_definition_id) %>% pull()
-
-# Generate cdm object to access the tables
-cdm <- cdm_from_con(db, 
-             cdm_schema = cdm_database_schema,
-             write_schema = write_schema,
-             cohort_tables = c("er_cohorts_for_longcov"))
 
 # combine observation period (to have observation period end date) and death with our study cohorts
 observation_death <- cdm$observation_period %>%
@@ -78,7 +82,8 @@ observation_death <- cdm$observation_period %>%
 cohorts <- cdm$er_cohorts_for_longcov %>%
   left_join(observation_death, by = c("subject_id" = "person_id") )
 
-# get influenza cohort - to use for censoring 
+# get initial cohorts ----
+# influenza cohort - to use for censoring 
 influenza_cohort <- cohorts %>%
   filter(cohort_definition_id %in% influenza_id) %>%
   filter(cohort_start_date>=influenza_start_date) %>%
@@ -86,7 +91,6 @@ influenza_cohort <- cohorts %>%
   rename(influenza_start_date= cohort_start_date) %>%
   compute() 
 
-# Collect cohorts ----
 covid_cohorts <- cohorts %>%
  filter(cohort_definition_id %in% covid_ids) %>%
  filter(cohort_start_date>=covid_start_date) %>%
@@ -128,6 +132,8 @@ covid_infection <- covid_cohorts %>%
   distinct() %>%
   ungroup() %>%
   compute()
+
+rm(new_infection_id)
 
 # add next infection date to use for censoring 
 covid_infection <- covid_infection %>%
@@ -347,6 +353,7 @@ confirmed_infection <- covid_cohorts %>%
   ungroup() %>%
   compute()
 
+rm(confirmed_infection_id)
 # add next infection date to use for censoring 
 confirmed_infection <- confirmed_infection %>%
  arrange(subject_id,cohort_start_date) %>% 
@@ -395,6 +402,7 @@ confirmed_infection <- confirmed_infection %>%
   compute()
 # we add them again with the cleaned df for influenza
 confirmed_infection <- union_all(confirmed_infection, influenza_covid)
+rm(influenza_covid,  repeated_influenza)
 
 # add date one year after infection
 confirmed_infection <- confirmed_infection %>%
@@ -481,6 +489,8 @@ covid_infection_cens <- covid_cohorts %>%
   rename(covid_infection_date = cohort_start_date) %>%
   select(subject_id, covid_infection_date)%>%
   compute()
+
+
 
 # function to generate tested negative cohorts 
 generate_tested_negative_cohort <- function(id_interest){
@@ -646,6 +656,8 @@ tested_negative_earliest <- generate_tested_negative_cohort(id_interest = tested
 tested_negative_all      <- generate_tested_negative_cohort(id_interest = tested_negative_all_id)
 PCR_negative_earliest    <- generate_tested_negative_cohort(id_interest = PCR_negative_earliest_id)
 PCR_negative_all         <- generate_tested_negative_cohort(id_interest = PCR_negative_all_id)
+
+rm(new_infection_id, tested_negative_all_id, tested_negative_earliest_id, PCR_negative_earliest_id,PCR_negative_all_id, covid_infection_cens)
 
 exclusion_table <- bind_rows(exclusion_table,
                               tested_negative_earliest[[2]],
@@ -884,6 +896,11 @@ denominator <- rbind(covid_infection_symp[[2]],
                      PCR_negative_all_symp[[2]]
 )
 
+# save exclusion table and denominator table
+write.csv2(exclusion_table, here("results/exclusion_table.csv"))
+write.csv2(denominator, here("results/denominator.csv"))
+
+
 # generate any symptom cohorts 
 covid_infection_any_symp          <- create_any_symptom(list_cohorts = covid_infection_symp)
 first_infection_any_symp          <- create_any_symptom(list_cohorts = first_infection_symp)
@@ -894,7 +911,7 @@ tested_negative_all_any_symp      <- create_any_symptom(list_cohorts = tested_ne
 PCR_negative_earliest_any_symp    <- create_any_symptom(list_cohorts = PCR_negative_earliest_symp )
 PCR_negative_all_any_symp         <- create_any_symptom(list_cohorts = PCR_negative_all_symp )
 
-# we append the any symtpoms cohrots to the table
+# we append any symptoms cohorts to the table
 conn <- connect(connectionDetails)   
 
 append_table<- function(data){
@@ -916,7 +933,7 @@ append_table(tested_negative_all_any_symp)
 append_table(PCR_negative_all_any_symp)
 append_table(PCR_negative_earliest_any_symp)
 
-# generate cohorts inclyding all symptoms per person&infection 
+# generate cohorts inclding all symptoms per person&infection 
 # cohort including all the symptoms reported per row
 create_numb_symptom <- function(list_cohorts){
 symps_cohort <- bind_rows(list_cohorts[1]) %>%
@@ -946,8 +963,8 @@ tested_negative_all_numb_symp      <- create_numb_symptom(list_cohorts = tested_
 PCR_negative_earliest_numb_symp    <- create_numb_symptom(list_cohorts = PCR_negative_earliest_symp )
 PCR_negative_all_numb_symp         <- create_numb_symptom(list_cohorts = PCR_negative_all_symp )
 
-# we savethis in a different place
-# we first create the new table
+# save this in a different table in the database, since it has a different structure
+# create the new table
   insertTable(
   connection = conn ,
   tableName = paste0(write_schema, ".", "er_long_covid_all_symptoms_cohorts"),
@@ -955,7 +972,7 @@ PCR_negative_all_numb_symp         <- create_numb_symptom(list_cohorts = PCR_neg
   dropTableIfExists = TRUE,
   createTable = TRUE
 )
-# we then append the others  
+# append the others  
 append_table_all<- function(data){
   insertTable(
   connection = conn ,
@@ -974,10 +991,45 @@ append_table_all(tested_negative_all_numb_symp)
 append_table_all(PCR_negative_all_numb_symp)
 append_table_all(PCR_negative_earliest_numb_symp)
 
+# save the cohort for any symptoms keeping the date of start of symptoms as cohort_start_date 
+# to use these cohorts with the IncidencePrevalence package
+# these cohorts need a different id - 
+# the symptom cohort id will be 89 (instead of 99)
+change_any_symptom_date <- function(data){
+  data <- data %>%
+  mutate(cohort_start_date = cohort_end_date) %>%
+  mutate(cohort_definition_id = (as.numeric(
+                         substr(cohort_definition_id, 1, 2))*10^4 +
+                         89*10^2+
+                         as.numeric(substr(cohort_definition_id, 5,6)
+                                    ))) %>%
+  compute()
+  data
+}
+
+covid_infection_any_symp          <- change_any_symptom_date( covid_infection_any_symp)
+first_infection_any_symp          <- change_any_symptom_date( first_infection_any_symp)
+confirmed_infection_any_symp      <- change_any_symptom_date( confirmed_infection_any_symp)
+reinfections_any_symp             <- change_any_symptom_date( reinfections_any_symp)
+tested_negative_earliest_any_symp <- change_any_symptom_date( tested_negative_earliest_any_symp)
+tested_negative_all_any_symp      <- change_any_symptom_date( tested_negative_all_any_symp)
+PCR_negative_earliest_any_symp    <- change_any_symptom_date( PCR_negative_earliest_any_symp)
+PCR_negative_all_any_symp         <- change_any_symptom_date( PCR_negative_all_any_symp)
+  
+append_table(covid_infection_any_symp)
+append_table(first_infection_any_symp)
+append_table(confirmed_infection_any_symp)
+append_table(reinfections_any_symp)
+append_table(tested_negative_earliest_any_symp)
+append_table(tested_negative_all_any_symp)
+append_table(PCR_negative_all_any_symp)
+append_table(PCR_negative_earliest_any_symp)
+
 
 # hauria de tenir 2 cohorts (washout window) per cada simptoma i per cada covid base (4 cohorts) i control cohort (4)
 # mes les cohrots de any symptom -- q de moment no estan a denominator
 # pendent comprovar q no hi hagi alguna persona q ha tingut tots els simptomes en el periode de washout
+## hi ha un problema amb la cohort de alergies, em surten 0 counts -- pendent d'arreglar
 8*2*length(symptoms_ids)
 denominator %>%select(cohort_id) %>% distinct() %>% nrow()
 
@@ -1043,8 +1095,7 @@ denominator %>%select(cohort_id) %>% distinct() %>% nrow()
 # rm(n_long_cov)
 
 # save stuff locally
-write.csv2(exclusion_table, here("results/exclusion_table.csv"))
-write.csv2(denominator, here("results/denominator.csv"))
+
 # write.csv2(perc_long_cov, here("results/longCov90days.csv"))
 
 

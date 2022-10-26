@@ -1,6 +1,7 @@
 #### warning #### 
 #### this is not working for the cohorts that include Measurements (such as COVID one) with results in LOINC
 # concept ids for LOINC are >10000000  (10^8) and numbers are rounded - so the concepts IDs end up being wrong!!
+# the error applies also for allergy
 # use this just for the Symptoms cohorts
 library(here)
 library(DatabaseConnector)
@@ -12,20 +13,21 @@ baseUrl <- "https://atlas-demo.ohdsi.org/WebAPI"
 cohortIds <- c(
 1780619,1780589,1780628,1780624,1780622,1780617,1780615,1780618,1780621,1780620,
   1780626,1780612,1780625,1780614,1780613,1780631,1780623,1780627,1780629,1780630,
-1780632,1780603,1780604,1780608,
-  1780846
+1780632,1780603,1780604,  1780846
 )
 
 # cohorts with measurements
-cohorts_measurements <- c(1780611,1780580,1780634,1780587,1780635,1780582,1780581)
+cohorts_measurements <- c(1780611,1780580,1780634,1780587,1780635,1780582,1780581, 1780608)
 
 
 # create folder to save cohorts if needed
-cohorts.folder <- here::here("1_InstantiateCohorts/Cohorts_v2")
+cohorts.folder <- here::here("Cohort_Dx_initial/1_InstantiateCohorts/Cohorts_v2")
 if (!file.exists(cohorts.folder)){
   dir.create(cohorts.folder)
 }
 
+
+cohortId <- 1780608
 for (i in 1:length(cohortIds)){
 cohortId <- cohortIds[i]
  message(paste0("working on ",cohortId))
