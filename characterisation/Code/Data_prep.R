@@ -308,18 +308,18 @@ covid_infection <- covid_infection %>%
   mutate(cohort_definition_id= as.integer(cohort_definition_id))
 
 ## inserting these cohorts into the database
-#### guardar cohorts mare 
-# esborrar taula
-# sql_query <- glue::glue("DROP TABLE {write_schema}.er_long_covid_final_cohorts\n" )
-# DBI::dbExecute(db, as.character(sql_query))
+#### remove prior tables fi needed
+ sql_query <- glue::glue("DROP TABLE {write_schema}.er_long_covid_final_cohorts\n" )
+ DBI::dbExecute(db, as.character(sql_query))
 
+ # create the new table 
 sql_query <- glue::glue("SELECT * INTO {write_schema}.er_long_covid_final_cohorts\n",
                           "FROM (\n",
                           dbplyr::sql_render(reinfections),
                           "\n) AS from_table")
 DBI::dbExecute(db, as.character(sql_query))
 
-# quan la taula ja existeix
+# append rows to existing table
 sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
                           "SELECT * FROM (\n",
                           dbplyr::sql_render(covid_infection),
@@ -642,8 +642,6 @@ PCR_negative_all_id <- cohorts_ids %>%
                           filter(str_detect(name, "PCR_Negative_all")) %>%
                           select(cohort_definition_id) %>% pull()
 
-
-
 tested_negative_earliest <- generate_tested_negative_cohort(id_interest = tested_negative_earliest_id)
 tested_negative_all      <- generate_tested_negative_cohort(id_interest = tested_negative_all_id)
 PCR_negative_earliest    <- generate_tested_negative_cohort(id_interest = PCR_negative_earliest_id)
@@ -658,40 +656,32 @@ exclusion_table <- bind_rows(exclusion_table,
   left_join(cohorts_ids %>% select(cohort_definition_id, name, type) %>%
               mutate(cohort_definition_id=as.integer(cohort_definition_id)))
 
-
-
 #### save tested negative cohorts 
-# canviar el codi per fer-ho dincs la funcio 
-sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
-                          "SELECT * FROM (\n",
-                          dbplyr::sql_render(tested_negative_earliest[[1]]),
-                          "\n) AS from_table")
-DBI::dbExecute(db, as.character(sql_query))
-sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
-                          "SELECT * FROM (\n",
-                          dbplyr::sql_render(tested_negative_all[[1]]),
-                          "\n) AS from_table")
-DBI::dbExecute(db, as.character(sql_query))
-sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
-                          "SELECT * FROM (\n",
-                          dbplyr::sql_render(PCR_negative_earliest[[1]]),
-                          "\n) AS from_table")
-DBI::dbExecute(db, as.character(sql_query))
-sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
-                          "SELECT * FROM (\n",
-                          dbplyr::sql_render(PCR_negative_all[[1]]),
-                          "\n) AS from_table")
-DBI::dbExecute(db, as.character(sql_query))
+# # canviar el codi per fer-ho dincs la funcio 
+# sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+#                           "SELECT * FROM (\n",
+#                           dbplyr::sql_render(tested_negative_earliest[[1]]),
+#                           "\n) AS from_table")
+# DBI::dbExecute(db, as.character(sql_query))
+# sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+#                           "SELECT * FROM (\n",
+#                           dbplyr::sql_render(tested_negative_all[[1]]),
+#                           "\n) AS from_table")
+# DBI::dbExecute(db, as.character(sql_query))
+# sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+#                           "SELECT * FROM (\n",
+#                           dbplyr::sql_render(PCR_negative_earliest[[1]]),
+#                           "\n) AS from_table")
+# DBI::dbExecute(db, as.character(sql_query))
+# sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+#                           "SELECT * FROM (\n",
+#                           dbplyr::sql_render(PCR_negative_all[[1]]),
+#                           "\n) AS from_table")
+# DBI::dbExecute(db, as.character(sql_query))
 
 
 ## Symptoms  ----
 ### parameters for loop
-cdm <- cdm_from_con(db, 
-             cdm_schema = cdm_database_schema,
-             write_schema = write_schema,
-             cohort_tables = c("er_cohorts_for_longcov", "er_long_covid_final_cohorts"))
-
-
 symptoms_ids <- cohorts_ids %>% filter(type=="symptom") %>% select(cohort_definition_id) %>% pull()
 window_longCov <- c(28,90)
 
@@ -700,7 +690,7 @@ excluded_list <- list()
 denominators_df <- tibble()
 ## parameters  For testing the loop/function
  #symptoms_ids <- c(1,2,3)  # for testing just 3 symptoms
-#    i <- 1 # for testing - testing with only one symptom id
+#    i <- 2 # for testing - testing with only one symptom id
 #    j <- 1 # for testing - washout window
 # cohort <- reinfections
 
@@ -822,6 +812,7 @@ sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\
                           dbplyr::sql_render(working_symptom),
                           "\n) AS from_table")
 DBI::dbExecute(db, as.character(sql_query))
+
 working_symptom <- working_symptom %>%
 collect
 # we also save this into a list to generaste the any symptom cohort
@@ -845,6 +836,7 @@ result <- list(cohorts_list, denominators_df, excluded_list)
 }
 
 ## function to generate any sypmtom cohort
+# aixo s'ha de millorar per fer-ho sense necessitat d'haver fet un collect abans
 create_any_symptom <- function(list_cohorts){
 # we first bind the rows from the previous function result
 any_symp_cohort <- bind_rows(list_cohorts[1]) %>%
@@ -865,37 +857,32 @@ any_symp_cohort <- bind_rows(list_cohorts[1]) %>%
   ungroup()
 }
 
-# only people with at least 3 symptoms, with 1 being fatigue, shortness of breath or cognitive dysfunction
-#  Cognitive_dysfunction_brain_fog, dyspnea, fatigue
-create_numb_symptom <- function(list_cohorts){
-symps_cohort <- bind_rows(list_cohorts[1]) %>%
-  mutate(symptom_id = substr(as.character(cohort_definition_id), 3, 4)) %>%
-  mutate(window = substr(as.character(cohort_definition_id), 5, 6)) %>%
-  mutate(symptom_id = as.numeric(symptom_id)) %>%
-  mutate(symptom =1) %>%  
-  left_join(cohorts_ids %>% 
-              select(cohort_definition_id, name) %>% 
-              rename(symptom_id=cohort_definition_id)) %>%
-  select(-cohort_end_date, -cohort_definition_id, -symptom_id) %>%
-  group_by(subject_id, cohort_start_date, window) %>%
-  spread(name, symptom) %>%
-    ungroup() 
-symps_cohort$all_symp<-rowSums(symps_cohort[,4:26],na.rm=T)
-
-}
-
-
 
 
 # Covid cohorts & control cohorts 
-covid_infection_symp     <- creating_symptom_cohorts(cohort=covid_infection)
-first_infection_symp     <- creating_symptom_cohorts(cohort=first_infection)
-confirmed_infection_symp <- creating_symptom_cohorts(cohort=confirmed_infection)
-reinfections_symp        <- creating_symptom_cohorts(cohort= reinfections)
+covid_infection_symp          <- creating_symptom_cohorts(cohort=covid_infection)
+first_infection_symp          <- creating_symptom_cohorts(cohort=first_infection)
+confirmed_infection_symp      <- creating_symptom_cohorts(cohort=confirmed_infection)
+reinfections_symp             <- creating_symptom_cohorts(cohort= reinfections)
 tested_negative_earliest_symp <- creating_symptom_cohorts(cohort= tested_negative_earliest[[1]] )
 tested_negative_all_symp      <- creating_symptom_cohorts(cohort= tested_negative_all[[1]])
 PCR_negative_earliest_symp    <- creating_symptom_cohorts(cohort= PCR_negative_earliest[[1]])
 PCR_negative_all_symp         <- creating_symptom_cohorts(cohort= PCR_negative_all[[1]])
+
+
+# denominator de reinfection has one column missing (because for the first 3 months period there were not reinferecitons)
+den_reinfections_symp <- reinfections_symp[[2]] %>%
+  mutate(n_Jan_Mar_2020=NA)
+
+denominator <- rbind(covid_infection_symp[[2]],
+                     first_infection_symp[[2]],
+                     confirmed_infection_symp[[2]],
+                     den_reinfections_symp ,
+                     tested_negative_earliest_symp[[2]],
+                     tested_negative_all_symp[[2]],   
+                     PCR_negative_earliest_symp[[2]],
+                     PCR_negative_all_symp[[2]]
+)
 
 # generate any symptom cohorts 
 covid_infection_any_symp          <- create_any_symptom(list_cohorts = covid_infection_symp)
@@ -915,8 +902,8 @@ append_table<- function(data){
   connection = conn ,
   tableName = paste0(write_schema, ".", "er_long_covid_final_cohorts"),
   data =data,
-  createTable = FALSE,
-   dropTableIfExists = FALSE
+  dropTableIfExists = FALSE,
+  createTable = FALSE
 )
 }  
                                                             
@@ -930,30 +917,63 @@ append_table(PCR_negative_all_any_symp)
 append_table(PCR_negative_earliest_any_symp)
 
 # generate cohorts inclyding all symptoms per person&infection 
+# cohort including all the symptoms reported per row
+create_numb_symptom <- function(list_cohorts){
+symps_cohort <- bind_rows(list_cohorts[1]) %>%
+  mutate(main_cohort_id = substr(as.character(cohort_definition_id), 1,2)) %>%
+  mutate(symptom_id = substr(as.character(cohort_definition_id), 3, 4)) %>%
+  mutate(window_days = substr(as.character(cohort_definition_id), 5, 6)) %>%
+  mutate(symptom_id = as.numeric(symptom_id)) %>%
+  mutate(symptom =1) %>%  
+  left_join(cohorts_ids %>% 
+              select(cohort_definition_id, name_var) %>% 
+              rename(symptom_id=cohort_definition_id)) %>%
+  select(-cohort_end_date, -symptom_id, -cohort_definition_id) %>%
+  group_by(subject_id, cohort_start_date, window_days) %>%
+  spread(name_var, symptom) %>%
+    ungroup()  %>%
+ mutate_at(c(5:27), ~replace_na(.,0))
+symps_cohort$all_symp<-rowSums(symps_cohort[,5:27],na.rm=T)
+symps_cohort 
+}
+
 covid_infection_numb_symp          <- create_numb_symptom(list_cohorts = covid_infection_symp)
 first_infection_numb_symp          <- create_numb_symptom(list_cohorts = first_infection_symp)
 confirmed_infection_numb_symp      <- create_numb_symptom(list_cohorts = confirmed_infection_symp)
 reinfections_numb_symp             <- create_numb_symptom(list_cohorts = reinfections_symp)
-
 tested_negative_earliest_numb_symp <- create_numb_symptom(list_cohorts = tested_negative_earliest_symp )
 tested_negative_all_numb_symp      <- create_numb_symptom(list_cohorts = tested_negative_all_symp)
 PCR_negative_earliest_numb_symp    <- create_numb_symptom(list_cohorts = PCR_negative_earliest_symp )
 PCR_negative_all_numb_symp         <- create_numb_symptom(list_cohorts = PCR_negative_all_symp )
 
-
-# denominator de reinfection has one column missing (because for the first 3 months period there were not reinferecitons)
-den_reinfections_symp <- reinfections_symp[[2]] %>%
-  mutate(n_Jan_Mar_2020=NA)
-
-denominator <- rbind(covid_infection_symp[[2]],
-                     first_infection_symp[[2]],
-                     confirmed_infection_symp[[2]],
-                     den_reinfections_symp ,
-                     tested_negative_earliest_symp[[2]],
-                     tested_negative_all_symp[[2]],   
-                     PCR_negative_earliest_symp[[2]],
-                     PCR_negative_all_symp[[2]]
+# we savethis in a different place
+# we first create the new table
+  insertTable(
+  connection = conn ,
+  tableName = paste0(write_schema, ".", "er_long_covid_all_symptoms_cohorts"),
+  data =covid_infection_numb_symp,
+  dropTableIfExists = TRUE,
+  createTable = TRUE
 )
+# we then append the others  
+append_table_all<- function(data){
+  insertTable(
+  connection = conn ,
+  tableName = paste0(write_schema, ".", "er_long_covid_all_symptoms_cohorts"),
+  data =data,
+  dropTableIfExists = FALSE,
+  createTable = FALSE
+)
+}  
+                                                            
+append_table_all(first_infection_numb_symp)
+append_table_all(confirmed_infection_numb_symp)
+append_table_all(reinfections_numb_symp)
+append_table_all(tested_negative_earliest_numb_symp)
+append_table_all(tested_negative_all_numb_symp)
+append_table_all(PCR_negative_all_numb_symp)
+append_table_all(PCR_negative_earliest_numb_symp)
+
 
 # hauria de tenir 2 cohorts (washout window) per cada simptoma i per cada covid base (4 cohorts) i control cohort (4)
 # mes les cohrots de any symptom -- q de moment no estan a denominator
@@ -961,99 +981,74 @@ denominator <- rbind(covid_infection_symp[[2]],
 8*2*length(symptoms_ids)
 denominator %>%select(cohort_id) %>% distinct() %>% nrow()
 
-
-
-## falta tenir el dnominador de any symtpom - son tots excepte si alguna persona ha tingut tots els simptoes en el washout period-cosa q no sembla probable
-
-### explorar els numeros 
-# proporcio de long covid als 90 dies 
-n_long_cov <-rbind(
-  tibble(cohort_definition_id=  covid_infection %>% 
-           select(cohort_definition_id) %>% distinct() %>% pull(),
-         n= covid_infection_any_symp %>% 
-           filter(str_detect(as.character(cohort_definition_id), "90")) %>% 
-           nrow()),
-  tibble(cohort_definition_id= first_infection %>% 
-           select(cohort_definition_id) %>% distinct() %>% pull(),
-         n=  first_infection_any_symp %>% 
-           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
-           nrow()),
-  tibble(cohort_definition_id = reinfections %>%
-            select(cohort_definition_id) %>% distinct() %>% pull(),
-         n= reinfections_any_symp %>% 
-           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
-           nrow()),
-    tibble(cohort_definition_id = confirmed_infection %>%
-            select(cohort_definition_id) %>% distinct() %>% pull(),
-         n= confirmed_infection_any_symp %>% 
-           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
-           nrow()),
-  tibble(cohort_definition_id = tested_negative_all[[1]]  %>%
-           select(cohort_definition_id) %>% distinct() %>% pull(),
-        n=  tested_negative_all_any_symp %>%
-           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
-           nrow()),
-  tibble(cohort_definition_id= tested_negative_earliest[[1]]  %>% 
-           select(cohort_definition_id) %>% distinct() %>% pull(),
-         n=  tested_negative_earliest_any_symp %>% 
-           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
-           nrow()),
-  tibble(cohort_definition_id = PCR_negative_earliest[[1]] %>%
-                     select(cohort_definition_id) %>% distinct() %>% pull(),
-        n=  PCR_negative_earliest_any_symp%>% 
-           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
-           nrow()),
-  tibble(cohort_definition_id = PCR_negative_all[[1]]  %>%
-           select(cohort_definition_id) %>% distinct() %>% pull(),
-        n=  PCR_negative_all_any_symp %>%
-           filter(str_detect(as.character(cohort_definition_id), "90")) %>%
-           nrow()))
-
-perc_long_cov <- exclusion_table %>%
-  filter(exclusion_reason== "Less than 120 days of follow-up" | 
-           name == 	"First COVID-19 infection" | 
-           name == "Reinfections") %>%
-  select(-exclusion_reason, -symptom)  %>%
-  left_join(n_long_cov) %>%
-  rename(N_any_symptom = n,
-         N_denominator = N_current) %>%
-  mutate(proportion = N_any_symptom/N_denominator *100) %>%
-  relocate(type, cohort_definition_id, name)
-
-rm(n_long_cov)
+# 
+# 
+# ## falta tenir el dnominador de any symtpom - son tots excepte si alguna persona ha tingut tots els simptoes en el washout period-cosa q no sembla probable
+# 
+# ### explorar els numeros 
+# # proporcio de long covid als 90 dies 
+# n_long_cov <-rbind(
+#   tibble(cohort_definition_id=  covid_infection %>% 
+#            select(cohort_definition_id) %>% distinct() %>% pull(),
+#          n= covid_infection_any_symp %>% 
+#            filter(str_detect(as.character(cohort_definition_id), "90")) %>% 
+#            nrow()),
+#   tibble(cohort_definition_id= first_infection %>% 
+#            select(cohort_definition_id) %>% distinct() %>% pull(),
+#          n=  first_infection_any_symp %>% 
+#            filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+#            nrow()),
+#   tibble(cohort_definition_id = reinfections %>%
+#             select(cohort_definition_id) %>% distinct() %>% pull(),
+#          n= reinfections_any_symp %>% 
+#            filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+#            nrow()),
+#     tibble(cohort_definition_id = confirmed_infection %>%
+#             select(cohort_definition_id) %>% distinct() %>% pull(),
+#          n= confirmed_infection_any_symp %>% 
+#            filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+#            nrow()),
+#   tibble(cohort_definition_id = tested_negative_all[[1]]  %>%
+#            select(cohort_definition_id) %>% distinct() %>% pull(),
+#         n=  tested_negative_all_any_symp %>%
+#            filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+#            nrow()),
+#   tibble(cohort_definition_id= tested_negative_earliest[[1]]  %>% 
+#            select(cohort_definition_id) %>% distinct() %>% pull(),
+#          n=  tested_negative_earliest_any_symp %>% 
+#            filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+#            nrow()),
+#   tibble(cohort_definition_id = PCR_negative_earliest[[1]] %>%
+#                      select(cohort_definition_id) %>% distinct() %>% pull(),
+#         n=  PCR_negative_earliest_any_symp%>% 
+#            filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+#            nrow()),
+#   tibble(cohort_definition_id = PCR_negative_all[[1]]  %>%
+#            select(cohort_definition_id) %>% distinct() %>% pull(),
+#         n=  PCR_negative_all_any_symp %>%
+#            filter(str_detect(as.character(cohort_definition_id), "90")) %>%
+#            nrow()))
+# 
+# perc_long_cov <- exclusion_table %>%
+#   filter(exclusion_reason== "Less than 120 days of follow-up" | 
+#            name == 	"First COVID-19 infection" | 
+#            name == "Reinfections") %>%
+#   select(-exclusion_reason, -symptom)  %>%
+#   left_join(n_long_cov) %>%
+#   rename(N_any_symptom = n,
+#          N_denominator = N_current) %>%
+#   mutate(proportion = N_any_symptom/N_denominator *100) %>%
+#   relocate(type, cohort_definition_id, name)
+# 
+# rm(n_long_cov)
 
 # save stuff locally
 write.csv2(exclusion_table, here("results/exclusion_table.csv"))
 write.csv2(denominator, here("results/denominator.csv"))
-write.csv2(perc_long_cov, here("results/longCov90days.csv"))
+# write.csv2(perc_long_cov, here("results/longCov90days.csv"))
 
 
-                                                       
-                                                                
-insertTable(
-  connection = conn ,
-  tableName = paste0(write_schema, ".", "er_long_covid_main_cohorts"),
-  data = a,
-  dropTableIfExists = TRUE,
-  createTable = TRUE
-)
-cdm <- cdm_from_con(db, 
-             cdm_schema = cdm_database_schema,
-             write_schema = write_schema,
-             cohort_tables = c("er_long_covid_def_cohorts"))
 
-
-## pte - comprobar exclusiones de las cohorts LongCovid - alguien q tenga todos los sintomas
-                      
-
-
-## explorar numero de sintomas en tested negative y covid infection
-plot_grid(
-  covid_infection_numb_symp %>% filter(window==90) %>% 
-    ggplot(aes(all_symp)) +geom_bar() + theme_minimal() + ggtitle("Covid-19")  ,
-tested_negative_all_numb_symp %>% filter(window==90) %>%
-  ggplot(aes(all_symp)) +geom_bar() + theme_minimal() + ggtitle("Tested negative")
-)
 
 
 

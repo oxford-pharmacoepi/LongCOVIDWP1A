@@ -1,0 +1,132 @@
+---
+title: "Exploring_symptoms_across_cohorts"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning=FALSE, 
+                      message=FALSE, 
+                      comment = FALSE,
+                      cache.lazy=FALSE)
+options(scipen=999)
+```
+
+
+```{r include=FALSE}
+# packages
+library(SqlRender)
+library(DBI)
+library(DatabaseConnector)
+library(here)
+library(dplyr)
+library(tidyr)
+library(CDMConnector)
+library(stringr)
+library(lubridate)
+library(gtsummary)
+
+
+# Connection details ----
+server    <- Sys.getenv("SERVER_JUN22")
+server_dbi<- Sys.getenv("SERVER_DBI_JUN22")
+user      <- Sys.getenv("DB_USER_JUN22")
+password  <- Sys.getenv("DB_PASSWORD_JUN22")
+port      <- Sys.getenv("DB_PORT_JUN22") 
+host      <- Sys.getenv("DB_HOST_JUN22") 
+
+
+db <- dbConnect(RPostgres::Postgres(), 
+                dbname = server_dbi,
+                port = port,
+                host = host, 
+                user = user, 
+                password = password)
+
+targetDialect              <- "postgresql"
+cdm_database_schema        <- "omop21t4_cmbd" 
+vocabulary_database_schema <-"omop21t4_cmbd" 
+write_schema               <-"results21t4_cmbd"
+
+# Generate cdm object to access the tables
+cdm <- cdm_from_con(db, 
+             cdm_schema = cdm_database_schema,
+             write_schema = write_schema,
+             cohort_tables = c("er_long_covid_final_cohorts",
+                               "er_long_covid_all_symptoms_cohorts"))
+
+```
+
+```{r include=FALSE}
+generate_table <- function(cohort_id, window, name){
+data <- cdm$er_long_covid_all_symptoms_cohorts %>%
+  filter(main_cohort_id == cohort_id & window_days == window) %>%
+  collect()
+summary <-  data%>% 
+  mutate(all_symp = as.factor(all_symp)) %>%
+  select(-subject_id, -window_days, - main_cohort_id, - cohort_start_date ) %>%
+  mutate(gen = paste0(name)) %>%
+   tbl_summary(
+       by = "gen",
+  digits = all_categorical()~ c(0,1),
+  missing = "ifany",
+  missing_text= "Missing",
+  percent = "col"
+           ) %>% 
+  bold_labels()
+  summary
+}
+```
+
+
+
+```{r include=FALSE}
+t.covid.infection <- generate_table(cohort_id= "22",
+                                    window="90",
+                                    name = "New COVID-19 infection")
+
+t.covid.reinfections <- generate_table(cohort_id= "71",
+                                    window="90",
+                                    name = "Reinfections")
+
+t.covid.confirmed <- generate_table(cohort_id= "30",
+                                    window="90",
+                                    name = "Confirmed infections")
+
+
+t.tested.negative.earliest <- generate_table(cohort_id = "29",
+                                    window="90",
+                                    name = "Tested negative, earliest")
+
+t.pcr.negative.earliest <- generate_table(cohort_id = "24",
+                                    window="90",
+                                    name = "PCR negative, earliest")
+
+
+
+```
+
+```{r}
+
+table  <- tbl_merge(tbls = list(t.covid.infection,      
+                                t.covid.reinfections,
+                                t.tested.negative.earliest,
+                                t.pcr.negative.earliest
+                                 ), 
+                     tab_spanner = c("", "", "", ""))
+
+table
+
+```
+```{r}
+## explorar numero de sintomas en tested negative y covid infection
+# plot_grid(
+#   covid_infection_numb_symp %>% filter(window==90) %>% 
+#     ggplot(aes(all_symp)) +geom_bar() + theme_minimal() + ggtitle("Covid-19")  ,
+# tested_negative_all_numb_symp %>% filter(window==90) %>%
+#   ggplot(aes(all_symp)) +geom_bar() + theme_minimal() + ggtitle("Tested negative")
+# )
+
+
+```
+
