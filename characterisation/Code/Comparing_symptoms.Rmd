@@ -4,12 +4,14 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+
 knitr::opts_chunk$set(echo = TRUE,
                       warning=FALSE, 
                       message=FALSE, 
                       comment = FALSE,
                       cache.lazy=FALSE)
 options(scipen=999)
+
 ```
 
 
@@ -26,6 +28,7 @@ library(stringr)
 library(lubridate)
 library(gtsummary)
 library(tableone)
+library(kableExtra)
 
 # Connection details ----
 server    <- Sys.getenv("SERVER_JUN22")
@@ -77,23 +80,20 @@ pcr_negative_earliest_id <-as.character( cohorts_ids %>%
                     select(cohort_definition_id) %>% pull())
 
 # get data for table 1
- table1_data_new_infections  <- load(here("data", "table1_data_new_infections.Rda")))
-
+load(here("data", "table1_data_new_infections.Rda"))
 
 
 ```
 
 
-```{r}
-
-
+```{r include=FALSE}
 table1.data<-rbind(  
 # those without missing values
        table1_data_new_infections   %>%
-        mutate(group = "With COVID-19_infection"),
+        mutate(group = "COVID-19_infection"),
         table1_data_new_infections  %>%
         filter(long_covid == 1)%>%
-          mutate(group = "90 days Long Covid symtpoms"))
+          mutate(group = "Long Covid symptoms (90 days)"))
 
 
 # variables
@@ -134,7 +134,6 @@ factor.vars<- c(
 
 
 
-
 summary.characteristics<-print(CreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
@@ -150,23 +149,23 @@ summary.characteristics<-print(CreateTableOne(
   printToggle=FALSE)
 
 
-# format numbers (eg commas etc)  
-# functionality does not seem to be in tableone package
-# so do this manually
-for(i in 1:2) {
-# tidy up 
-  cur_column <- summary.characteristics[, i]
-  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
-                as.numeric() 
-  cur_column <-nice.num(cur_column)
-  # add back in
-  summary.characteristics[, i] <- str_replace(string=summary.characteristics.loss[, i], 
-                              pattern='[0-9.]+\\b', 
-                              replacement=cur_column)    
-}
-
-
  
+```
+
+
+
+## Table: Baseline characteristics of individuals with COVID-19 and with long COVID-19 
+```{r}
+
+kable(summary.characteristics, 
+      col.names = c("New COVID-19 infection",  
+                    "Long COVID-19, 90 days",
+                    "SMD"
+                    ))%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
+ # pack_rows("Baseline comorbidities", 40, 44)
+
+
 ```
 
 
@@ -201,13 +200,13 @@ t.covid.infection <- generate_table(cohort_id= new_infection_id,
                                     window="90",
                                     name = "New COVID-19 infection")
 
-t.covid.reinfections <- generate_table(cohort_id= "71",
-                                    window="90",
-                                    name = "Reinfections")
-
 t.covid.confirmed <- generate_table(cohort_id= tested_positive_id,
                                     window="90",
                                     name = "Confirmed infections")
+
+t.covid.reinfections <- generate_table(cohort_id= "71",
+                                    window="90",
+                                    name = "Reinfections")
 
 
 t.tested.negative.earliest <- generate_table(cohort_id = tested_negative_earliest_id,
@@ -223,27 +222,18 @@ t.pcr.negative.earliest <- generate_table(cohort_id = pcr_negative_earliest_id,
 
 ```
 
-```{r}
+## Table: Symptoms distribution across cohorts
 
-table  <- tbl_merge(tbls = list(t.covid.infection,      
+```{r}
+table  <- tbl_merge(tbls = list(t.covid.infection,   
+                                t.covid.confirmed,
                                 t.covid.reinfections,
                                 t.tested.negative.earliest,
                                 t.pcr.negative.earliest
                                  ), 
-                     tab_spanner = c("", "", "", ""))
+                     tab_spanner = c("","", "", "", ""))
 
 table
-
-```
-```{r}
-## explorar numero de sintomas en tested negative y covid infection
-# plot_grid(
-#   covid_infection_numb_symp %>% filter(window==90) %>% 
-#     ggplot(aes(all_symp)) +geom_bar() + theme_minimal() + ggtitle("Covid-19")  ,
-# tested_negative_all_numb_symp %>% filter(window==90) %>%
-#   ggplot(aes(all_symp)) +geom_bar() + theme_minimal() + ggtitle("Tested negative")
-# )
-
 
 ```
 

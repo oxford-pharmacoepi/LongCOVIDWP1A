@@ -41,6 +41,10 @@ cdm <- cdm_from_con(db,
              write_schema = write_schema,
              cohort_tables = c("er_long_covid_final_cohorts"))
 
+cohorts_ids  <- read.csv2(here("ATLAS Cohort Definitions_LongCovid.csv")) %>%
+                          mutate(name= paste(sub(".*LongCov-ER_", "", name)))
+
+
 ## cohrot of interest - first New Covid infections
 # main_cohort_interest <- cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == 22)
 # 90 days long Covid cohort
@@ -362,94 +366,23 @@ working_cohort
 }
 
 
-# main_cohort_interest <- cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == 22)
-# 90 days long Covid cohort
-# first two digits are for the "mother cohort"
-# digits 3,4 are for the symptoms cohort (99 is for any symptom") 
-# last two digits for window period
-# long_covid_cohort <- cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == 229990)
+# Get ids for cohorts of interest 
+# New infection
+main_cohort_id <- cohorts_ids %>%
+                    filter(str_detect(name, "New_Infection")) %>% 
+                    select(cohort_definition_id) %>% pull()
+# Symptoms - long Covid is 99
+symptom_id <- 99
+# time window of interest
+window_id <- 90
+
+long_covid_id <- main_cohort_id*10^4+symptom_id*10^2+window_id
+
 
 table1_data_new_infections <- generate_data_table1(
-  main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == 22) ,
-  long_covid_cohort = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == 229990))
+  main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == main_cohort_id) ,
+  long_covid_cohort = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == long_covid_id))
 
-table1.data<-rbind(  
-# those without missing values
-       table1_data_new_infections   %>%
-        mutate(group = "With COVID-19_infection"),
-        table1_data_new_infections  %>%
-        filter(long_covid == 1)%>%
-          mutate(group = "90 days Long Covid symtpoms"))
+save(table1_data_new_infections,
+     file = here("data", "table1_data_new_infections.Rda"))
 
-
-# variables
-vars<-c(
-        "age",
-        "age_gr2",
-        "gender",
-        "nationality_cat",
-        "vaccination_status",
-        "medea",
-        "asthma",
-        "autoimmune_disease",
-        "copd",
-        "dementia",
-        "diabetes",
-        "heart_disease",
-        "cancer",
-        "hypertension",
-        "renal_impairment"
-)
-
-factor.vars<- c(
-        "age_gr2",
-        "gender",
-        "nationality_cat",
-        "vaccination_status",
-        "medea",
-        "asthma",
-        "autoimmune_disease",
-        "copd",
-        "dementia",
-        "diabetes",
-        "heart_disease",
-        "cancer",
-        "hypertension",
-        "renal_impairment"
-)
-
-
-
-
-summary.characteristics<-print(CreateTableOne(
-  vars =  vars,
-  factorVars = factor.vars,
-  includeNA=T,
-  data = table1.data,
-  strata=c("group"),
-  test = F), 
-  showAllLevels=F,
-  smd=T,
-  nonnormal = vars, #all 
-  noSpaces = TRUE,
-  contDigits = 1,
-  printToggle=FALSE)
-
-
-# format numbers (eg commas etc)  
-# functionality does not seem to be in tableone package
-# so do this manually
-for(i in 1:2) {
-# tidy up 
-  cur_column <- summary.characteristics[, i]
-  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
-                as.numeric() 
-  cur_column <-nice.num(cur_column)
-  # add back in
-  summary.characteristics[, i] <- str_replace(string=summary.characteristics.loss[, i], 
-                              pattern='[0-9.]+\\b', 
-                              replacement=cur_column)    
-}
-
-
- 
