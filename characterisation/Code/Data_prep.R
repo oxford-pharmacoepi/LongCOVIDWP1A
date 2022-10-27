@@ -951,8 +951,8 @@ symps_cohort <- bind_rows(list_cohorts[1]) %>%
   group_by(subject_id, cohort_start_date, window_days) %>%
   spread(name_var, symptom) %>%
     ungroup()  %>%
- mutate_at(c(5:27), ~replace_na(.,0))
-symps_cohort$all_symp<-rowSums(symps_cohort[,5:27],na.rm=T)
+ mutate_at(c(5:28), ~replace_na(.,0))
+symps_cohort$all_symp<-rowSums(symps_cohort[,5:28],na.rm=T)
 symps_cohort 
 }
 
