@@ -270,6 +270,7 @@ cohorts_ids <- rbind(cohorts_ids,
                      tibble(atlas_id = NA,
                             name = "First COVID-19 infection",
                             cohort_definition_id =70, 
+                            name_var = "first_infection",
                             type = "covid-19"))
 
 exclusion_table<-rbind(exclusion_table,
@@ -304,6 +305,7 @@ cohorts_ids <- rbind(cohorts_ids,
                      tibble(atlas_id = NA,
                             name = "Reinfections",
                             cohort_definition_id =71, 
+                            name_var = "reinfections",
                             type = "covid-19"))
 
 covid_infection <- covid_infection %>%

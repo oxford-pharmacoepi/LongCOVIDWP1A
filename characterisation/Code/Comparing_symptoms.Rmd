@@ -25,7 +25,7 @@ library(CDMConnector)
 library(stringr)
 library(lubridate)
 library(gtsummary)
-
+library(tableone)
 
 # Connection details ----
 server    <- Sys.getenv("SERVER_JUN22")
@@ -55,12 +55,128 @@ cdm <- cdm_from_con(db,
              cohort_tables = c("er_long_covid_final_cohorts",
                                "er_long_covid_all_symptoms_cohorts"))
 
+#  get ids for cohorts
+
+cohorts_ids  <- read.csv2(here("ATLAS Cohort Definitions_LongCovid.csv")) %>%
+                          mutate(name= paste(sub(".*LongCov-ER_", "", name)))
+
+new_infection_id <- as.character(cohorts_ids %>%
+                    filter(str_detect(name, "New_Infection")) %>% 
+                    select(cohort_definition_id) %>% pull())
+
+tested_positive_id <- as.character(cohorts_ids %>%
+                    filter(str_detect(name, "Tested_Positive")) %>% 
+                    select(cohort_definition_id) %>% pull())
+
+tested_negative_earliest_id <- as.character(cohorts_ids %>%
+                    filter(str_detect(name, "Tested_Negative_earliest")) %>% 
+                    select(cohort_definition_id) %>% pull())
+
+pcr_negative_earliest_id <-as.character( cohorts_ids %>%
+                    filter(str_detect(name, "PCR_Negative_earliest")) %>% 
+                    select(cohort_definition_id) %>% pull())
+
+# get data for table 1
+ table1_data_new_infections  <- load(here("data", "table1_data_new_infections.Rda")))
+
+
+
 ```
 
+
+```{r}
+
+
+table1.data<-rbind(  
+# those without missing values
+       table1_data_new_infections   %>%
+        mutate(group = "With COVID-19_infection"),
+        table1_data_new_infections  %>%
+        filter(long_covid == 1)%>%
+          mutate(group = "90 days Long Covid symtpoms"))
+
+
+# variables
+vars<-c(
+        "age",
+        "age_gr2",
+        "gender",
+        "nationality_cat",
+        "vaccination_status",
+        "medea",
+        "asthma",
+        "autoimmune_disease",
+        "copd",
+        "dementia",
+        "diabetes",
+        "heart_disease",
+        "cancer",
+        "hypertension",
+        "renal_impairment"
+)
+
+factor.vars<- c(
+        "age_gr2",
+        "gender",
+        "nationality_cat",
+        "vaccination_status",
+        "medea",
+        "asthma",
+        "autoimmune_disease",
+        "copd",
+        "dementia",
+        "diabetes",
+        "heart_disease",
+        "cancer",
+        "hypertension",
+        "renal_impairment"
+)
+
+
+
+
+summary.characteristics<-print(CreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=T,
+  data = table1.data,
+  strata=c("group"),
+  test = F), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  contDigits = 1,
+  printToggle=FALSE)
+
+
+# format numbers (eg commas etc)  
+# functionality does not seem to be in tableone package
+# so do this manually
+for(i in 1:2) {
+# tidy up 
+  cur_column <- summary.characteristics[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+  summary.characteristics[, i] <- str_replace(string=summary.characteristics.loss[, i], 
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
+
+
+ 
+```
+
+
+
 ```{r include=FALSE}
+# function to obtain data for table
 generate_table <- function(cohort_id, window, name){
 data <- cdm$er_long_covid_all_symptoms_cohorts %>%
   filter(main_cohort_id == cohort_id & window_days == window) %>%
+  distinct() %>%
   collect()
 summary <-  data%>% 
   mutate(all_symp = as.factor(all_symp)) %>%
@@ -81,7 +197,7 @@ summary <-  data%>%
 
 
 ```{r include=FALSE}
-t.covid.infection <- generate_table(cohort_id= "22",
+t.covid.infection <- generate_table(cohort_id= new_infection_id,
                                     window="90",
                                     name = "New COVID-19 infection")
 
@@ -89,18 +205,19 @@ t.covid.reinfections <- generate_table(cohort_id= "71",
                                     window="90",
                                     name = "Reinfections")
 
-t.covid.confirmed <- generate_table(cohort_id= "30",
+t.covid.confirmed <- generate_table(cohort_id= tested_positive_id,
                                     window="90",
                                     name = "Confirmed infections")
 
 
-t.tested.negative.earliest <- generate_table(cohort_id = "29",
+t.tested.negative.earliest <- generate_table(cohort_id = tested_negative_earliest_id,
                                     window="90",
                                     name = "Tested negative, earliest")
 
-t.pcr.negative.earliest <- generate_table(cohort_id = "24",
+t.pcr.negative.earliest <- generate_table(cohort_id = pcr_negative_earliest_id,
                                     window="90",
                                     name = "PCR negative, earliest")
+
 
 
 
