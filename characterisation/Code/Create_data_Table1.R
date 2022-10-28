@@ -354,35 +354,59 @@ working_cohort <- working_cohort%>%
  ## we add long covid 90 days 
  working_cohort <- working_cohort %>%
    left_join( long_covid_cohort   %>% 
+                 distinct() %>%
                 select(-cohort_definition_id) %>%
                 mutate(long_covid = 1) %>%
                 rename(long_covid_date = cohort_end_date,
                       person_id = subject_id))  %>%
     mutate(long_covid=ifelse(is.na(long_covid),0,long_covid)) %>%
    distinct() %>%
+     mutate(year = lubridate::year(cohort_start_date),
+         month = lubridate::month(cohort_start_date)) %>%
+  mutate(trimester=ifelse(year==2020 & month<4, "1- Jan_Mar_2020", 
+                   ifelse(year==2020 & (month==4 | month==5| month==6), "2- Apr_Jun_2020", 
+                   ifelse(year==2020 & (month==7 | month==8| month==9), "3- Jul_Sep_2020",
+                   ifelse(year==2020 & month>9, "4- Oct_Dec_2020",
+                   ifelse(year==2021 & month<4, "5- Jan_Mar_2021",
+                   ifelse(year==2021 & (month==4 | month==5| month==6), "6- Apr_Jun_2021",
+                   ifelse(year==2021 & (month==7 | month==8| month==9), "7- Jul_Sep_2021",
+                   ifelse(year==2021 & month>9, "8- Oct_Dec_21", 
+                   NA))))))))) %>%
+  select(-year, -month) %>%
  collect()
  
 working_cohort
 }
 
-
-# Get ids for cohorts of interest 
-# New infection
-main_cohort_id <- cohorts_ids %>%
-                    filter(str_detect(name, "New_Infection")) %>% 
-                    select(cohort_definition_id) %>% pull()
+## Parameters ----
 # Symptoms - long Covid is 99
 symptom_id <- 99
 # time window of interest
 window_id <- 90
 
+# New COVID-19 infection ----- 
+main_cohort_id <- cohorts_ids %>%
+                    filter(str_detect(name, "New_Infection")) %>% 
+                    select(cohort_definition_id) %>% pull()
 long_covid_id <- main_cohort_id*10^4+symptom_id*10^2+window_id
-
 
 table1_data_new_infections <- generate_data_table1(
   main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == main_cohort_id) ,
   long_covid_cohort = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == long_covid_id))
 
+# Tested negative, earliest ----
+main_cohort_id <- cohorts_ids %>%
+                    filter(str_detect(name, "Tested_Negative_earliest")) %>% 
+                    select(cohort_definition_id) %>% pull()
+long_covid_id <- main_cohort_id*10^4+symptom_id*10^2+window_id
+
+
+table1_data_tested_negative <- generate_data_table1(
+  main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == main_cohort_id) ,
+  long_covid_cohort = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == long_covid_id))
+
+## save results 
 save(table1_data_new_infections,
-     file = here("data", "table1_data_new_infections.Rda"))
+     table1_data_tested_negative,
+     file = here("data", "table1_data.Rdata"))
 

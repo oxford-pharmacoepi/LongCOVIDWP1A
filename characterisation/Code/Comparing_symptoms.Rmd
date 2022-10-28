@@ -1,5 +1,5 @@
 ---
-title: "Exploring_symptoms_across_cohorts"
+title: "Descriptive characteristics of Long COVID Cohorts"
 output: html_document
 ---
 
@@ -80,10 +80,11 @@ pcr_negative_earliest_id <-as.character( cohorts_ids %>%
                     select(cohort_definition_id) %>% pull())
 
 # get data for table 1
-load(here("data", "table1_data_new_infections.Rda"))
+load(here("data", "table1_data.Rdata"))
 
 
 ```
+
 
 
 ```{r include=FALSE}
@@ -101,6 +102,7 @@ vars<-c(
         "age",
         "age_gr2",
         "gender",
+        "trimester",
         "nationality_cat",
         "vaccination_status",
         "medea",
@@ -118,6 +120,7 @@ vars<-c(
 factor.vars<- c(
         "age_gr2",
         "gender",
+                "trimester",
         "nationality_cat",
         "vaccination_status",
         "medea",
@@ -167,6 +170,185 @@ kable(summary.characteristics,
 
 
 ```
+
+
+
+
+```{r include=FALSE}
+table2.data<-rbind(  
+# those without missing values
+       table1_data_tested_negative   %>%
+        mutate(group = "1- Tested negative"),
+       table1_data_tested_negative   %>%
+        filter(long_covid == 1)%>%
+          mutate(group = "2- Long Covid symptoms (90 days)"))
+
+
+# variables
+vars<-c(
+        "age",
+        "age_gr2",
+        "gender",
+        "trimester",
+        "nationality_cat",
+        "vaccination_status",
+        "medea",
+        "asthma",
+        "autoimmune_disease",
+        "copd",
+        "dementia",
+        "diabetes",
+        "heart_disease",
+        "cancer",
+        "hypertension",
+        "renal_impairment"
+)
+
+factor.vars<- c(
+        "age_gr2",
+        "gender",
+                "trimester",
+        "nationality_cat",
+        "vaccination_status",
+        "medea",
+        "asthma",
+        "autoimmune_disease",
+        "copd",
+        "dementia",
+        "diabetes",
+        "heart_disease",
+        "cancer",
+        "hypertension",
+        "renal_impairment"
+)
+
+
+
+summary.characteristics.negative <-print(CreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=T,
+  data = table2.data,
+  strata=c("group"),
+  test = F), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  contDigits = 1,
+  printToggle=FALSE)
+
+
+ 
+```
+
+
+## Table: Baseline characteristics of individuals tested negative and with long COVID-18 symptoms
+```{r}
+
+kable(summary.characteristics.negative, 
+      col.names = c("Tested negative, earliest",  
+                    "Long COVID-19 symptoms, 90 days",
+                    "SMD"
+                    ))%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
+ # pack_rows("Baseline comorbidities", 40, 44)
+
+
+```
+
+
+
+```{r include=FALSE}
+table3.data<-rbind(  
+# those without missing values
+        table1_data_new_infections  %>%
+        mutate(group = "New infections"),
+        table1_data_tested_negative   %>%
+        mutate(group = "Tested negative"))
+
+
+# variables
+vars<-c(
+        "age",
+        "age_gr2",
+        "gender",
+        "trimester",
+        "nationality_cat",
+        "vaccination_status",
+        "medea",
+        "asthma",
+        "autoimmune_disease",
+        "copd",
+        "dementia",
+        "diabetes",
+        "heart_disease",
+        "cancer",
+        "hypertension",
+        "renal_impairment",
+                "long_covid"
+
+)
+
+factor.vars<- c(
+        "age_gr2",
+        "gender",
+                "trimester",
+        "nationality_cat",
+        "vaccination_status",
+        "medea",
+        "asthma",
+        "autoimmune_disease",
+        "copd",
+        "dementia",
+        "diabetes",
+        "heart_disease",
+        "cancer",
+        "hypertension",
+        "renal_impairment",
+        "long_covid"
+)
+
+
+
+summary.characteristics.infection.negative <-print(CreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=T,
+  data = table3.data,
+  strata=c("group"),
+  test = F), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  contDigits = 1,
+  printToggle=FALSE)
+
+
+ 
+```
+
+
+## Table: Baseline characteristics of individuals tested negative and with long COVID-18 symptoms
+```{r}
+
+kable(summary.characteristics.infection.negative, 
+      col.names = c("New COVID-19 infection",  
+                    "Tested negative",
+                    "SMD"
+                    ))%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
+ # pack_rows("Baseline comorbidities", 40, 44)
+
+
+```
+
+
+
+
+
+
 
 
 
