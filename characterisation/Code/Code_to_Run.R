@@ -21,11 +21,7 @@ p_load(SqlRender,
        lubridate,
        MatchIt,
        tsibble,
-       survey,
        CirceR,
-       lubridate,
-       MatchIt,
-       tsibble,
        survey)
 
 # library(here)
@@ -85,15 +81,17 @@ influenza_start_date<- as.Date("2019-12-01", "%Y-%m-%d")
 # for symptoms, we only need symptoms occurring during covid + 180 days washout
 symptoms_start_date <- as.Date("2019-08-29","%Y-%m-%d")
 end_index_date      <- as.Date("2021-09-02", "%Y-%m-%d")
-# 
+# for filtering some results 
 full_testing_start_date <- as.Date("2020-09-01", "%Y-%m-%d")
 
 # Create initial Json cohorts ---- 
-create_initial_json_cohorts <- FALSE
+create_initial_json_cohorts     <- TRUE
 # Crate Long Covid  cohorts and save in the db
-create_long_covid_cohorts <- TRUE
+create_long_covid_cohorts       <- TRUE
 # Generate data for descritpive tables and save locally
-generate_data_descriptive_table <- FALSE
+generate_data_descriptive_table <- TRUE
+# Generate Html with results files
+generate_results                <- TRUE
 
 
 # Window for long COvid - 90 or 28
@@ -101,5 +99,6 @@ window_id <- 90
 
 # Run analysis
 source(here("Code/Run_Analysis.R"))
+
 
 # Results script

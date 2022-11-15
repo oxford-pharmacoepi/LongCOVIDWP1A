@@ -18,42 +18,27 @@ options(scipen=999)
 
 ```{r include=FALSE}
 # packages
-library(SqlRender)
-library(DBI)
-library(DatabaseConnector)
-library(here)
-library(dplyr)
-library(tidyr)
-library(CDMConnector)
-library(stringr)
-library(lubridate)
-library(gtsummary)
-library(tableone)
-library(kableExtra)
-library(ggplot2)
-library(forcats)
+if (!require("pacman")) install.packages("pacman")
+library(pacman)
+
+p_load(SqlRender,
+       DBI,
+       here,
+       tidyr,
+       dplyr,
+       dbplyr,
+       CDMConnector,
+       stringr,
+       lubridate,
+       tableone,
+       kableExtra,
+       ggplot2,
+       forcats,
+       gtsummary)
+
 
 # Connection details ----
-server    <- Sys.getenv("SERVER_JUN22")
-server_dbi<- Sys.getenv("SERVER_DBI_JUN22")
-user      <- Sys.getenv("DB_USER_JUN22")
-password  <- Sys.getenv("DB_PASSWORD_JUN22")
-port      <- Sys.getenv("DB_PORT_JUN22") 
-host      <- Sys.getenv("DB_HOST_JUN22") 
-
-
-db <- dbConnect(RPostgres::Postgres(), 
-                dbname = server_dbi,
-                port = port,
-                host = host, 
-                user = user, 
-                password = password)
-
-targetDialect              <- "postgresql"
-cdm_database_schema        <- "omop21t4_cmbd" 
-vocabulary_database_schema <-"omop21t4_cmbd" 
-write_schema               <-"results21t4_cmbd"
-
+source("Code_to_Run.R", local = knitr::knit_global())
 # Generate cdm object to access the tables
 cdm <- cdm_from_con(db, 
              cdm_schema = cdm_database_schema,
@@ -62,7 +47,6 @@ cdm <- cdm_from_con(db,
                                "er_long_covid_all_symptoms_cohorts"))
 
 #  get ids for cohorts
-
 cohorts_ids  <- read.csv2(here("ATLAS Cohort Definitions_LongCovid.csv")) %>%
                           mutate(name= paste(sub(".*LongCov-ER_", "", name)))
 
@@ -130,7 +114,7 @@ vars<-c(
 factor.vars<- c(
         "age_gr2",
         "gender",
-                "trimester",
+        "trimester",
         "nationality_cat",
         "vaccination_status",
         "medea",
@@ -146,7 +130,6 @@ factor.vars<- c(
 )
 
 
-
 summary.characteristics <-print(CreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
@@ -158,7 +141,8 @@ summary.characteristics <-print(CreateTableOne(
   smd=T,
   nonnormal = vars, #all 
   noSpaces = TRUE,
-  contDigits = 1,
+  contDigits = 0,
+  catDigits = 0,
   printToggle=FALSE)
 
  
@@ -173,8 +157,7 @@ kable(summary.characteristics,
                     "Long COVID-19, 90 days",
                     "SMD"
                     ))%>%
-  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
- # pack_rows("Baseline comorbidities", 40, 44)
+  kable_styling(bootstrap_options = c("striped", "bordered")) 
 
 
 ```
@@ -203,7 +186,8 @@ summary.characteristics.negative <-print(CreateTableOne(
   smd=T,
   nonnormal = vars, #all 
   noSpaces = TRUE,
-  contDigits = 1,
+  contDigits = 0,
+  catDigits = 0,
   printToggle=FALSE)
 
 
@@ -219,8 +203,7 @@ kable(summary.characteristics.negative,
                     "Long COVID-19 symptoms, 90 days",
                     "SMD"
                     ))%>%
-  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
- # pack_rows("Baseline comorbidities", 40, 44)
+  kable_styling(bootstrap_options = c("striped", "bordered")) 
 
 
 ```
@@ -251,11 +234,10 @@ summary.characteristics.infection.negative <-print(CreateTableOne(
   smd=T,
   nonnormal = vars, #all 
   noSpaces = TRUE,
-  contDigits = 1,
+  contDigits = 0,
+  catDigits = 0,
   printToggle=FALSE)
 
-
- 
 ```
 
 
@@ -268,14 +250,10 @@ kable(summary.characteristics.infection.negative,
                     "Tested negative, all events",
                     "SMD"
                     ))%>%
-  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
- # pack_rows("Baseline comorbidities", 40, 44)
+  kable_styling(bootstrap_options = c("striped", "bordered")) 
 
 
 ```
-
-
-
 
 
 ```{r include=FALSE}

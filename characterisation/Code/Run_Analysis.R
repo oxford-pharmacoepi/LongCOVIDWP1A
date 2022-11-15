@@ -1062,14 +1062,14 @@ change_any_symptom_date <- function(data){
   data
 }
 
-covid_infection_any_symp          <- change_any_symptom_date( covid_infection_any_symp)
-first_infection_any_symp          <- change_any_symptom_date( first_infection_any_symp)
-confirmed_infection_any_symp      <- change_any_symptom_date( confirmed_infection_any_symp)
-reinfections_any_symp             <- change_any_symptom_date( reinfections_any_symp)
-tested_negative_earliest_any_symp <- change_any_symptom_date( tested_negative_earliest_any_symp)
-tested_negative_all_any_symp      <- change_any_symptom_date( tested_negative_all_any_symp)
-PCR_negative_earliest_any_symp    <- change_any_symptom_date( PCR_negative_earliest_any_symp)
-PCR_negative_all_any_symp         <- change_any_symptom_date( PCR_negative_all_any_symp)
+covid_infection_any_symp          <- change_any_symptom_date(covid_infection_any_symp)
+first_infection_any_symp          <- change_any_symptom_date(first_infection_any_symp)
+confirmed_infection_any_symp      <- change_any_symptom_date(confirmed_infection_any_symp)
+reinfections_any_symp             <- change_any_symptom_date(reinfections_any_symp)
+tested_negative_earliest_any_symp <- change_any_symptom_date(tested_negative_earliest_any_symp)
+tested_negative_all_any_symp      <- change_any_symptom_date(tested_negative_all_any_symp)
+PCR_negative_earliest_any_symp    <- change_any_symptom_date(PCR_negative_earliest_any_symp)
+PCR_negative_all_any_symp         <- change_any_symptom_date(PCR_negative_all_any_symp)
   
 append_table(covid_infection_any_symp)
 append_table(first_infection_any_symp)
@@ -1111,17 +1111,14 @@ moderna_id <- cohorts_ids %>%
                     filter(str_detect(name, "Moderna")) %>% 
                     select(cohort_definition_id) %>% pull()
 
-cdm$er_
-
-
-
 
 ## cohrot of interest - first New Covid infections
-# main_cohort_interest <- cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == 22)
 # 90 days long Covid cohort
 # first two digits are for the "mother cohort"
 # digits 3,4 are for the symptoms cohort (99 is for any symptom") 
 # last two digits for window period
+## testing function
+# main_cohort_interest <- cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == 22)
 # long_covid_cohort <- cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == 229990)
 
 
@@ -1134,7 +1131,7 @@ working_cohort <- main_cohort_interest %>%
               mutate(gender= ifelse(gender_concept_id==8507, "Male",
                              ifelse(gender_concept_id==8532, "Female", NA ))) %>%
               select(-gender_concept_id)) %>%
-  # SIDIAP specific 
+  # SIDIAP specific  - MEDEA and nationality
  # left_join(cdm$observation %>%
  #             filter(observation_source_value == "medea") %>% 
  #             select(person_id, observation_source_value, value_as_string) %>%
@@ -1146,9 +1143,27 @@ working_cohort <- main_cohort_interest %>%
  #             filter(observation_source_value == "agr_nationality") %>%
  #            rename(nationality = value_as_string) %>%
  #             select(person_id, nationality))%>%
+ #     # clean nationality
+ #   mutate(nationality = ifelse(str_detect(nationality, "Austr"), "Australia & New Zealand", nationality)) %>%
+ #   mutate(nationality_cat = ifelse( nationality== "Espanya", "Spain", 
+ #                            ifelse(str_detect( nationality, "frica"),  "Africa",  
+ #                            ifelse(str_detect( nationality, "rica central"), "Central & South America",
+ #                            ifelse(str_detect( nationality, "del Nord"), "Europe & North America",    
+ #                            ifelse(str_detect( nationality, "Europa"), "Europe & North America",       
+ #                            ifelse(str_detect( nationality, "Europa oriental"),  "Eastern Europe",       
+ #                            ifelse(str_detect( nationality, "del Sud"), "Central & South America",      
+ #                            ifelse(str_detect( nationality, "Carib"), "Central & South America", 
+ #                            ifelse(str_detect( nationality, "sia"), "Asia & Oceania",
+ #                            ifelse(str_detect( nationality, "Melan"), "Asia & Oceania", 
+ #                            ifelse(str_detect( nationality, "Polin"), "Asia & Oceania",
+ #                            ifelse(str_detect( nationality, "Micro"), "Asia & Oceania",
+ #                            ifelse(str_detect( nationality, "Ant"),"Asia & Oceania", 
+ #                            ifelse(str_detect( nationality, "Australia & New Zealand"), "Asia & Oceania",
+ #                                   NA))))))))))))))) %>%
+ #   select(-nationality) %>%
   compute()
          
-  # we get age - SIDIAP specific?
+  # get age 
     working_cohort<- working_cohort %>%
     mutate(age= year(cohort_start_date)-year_of_birth) %>%
     select(-year_of_birth) %>%
@@ -1183,29 +1198,8 @@ working_cohort <- main_cohort_interest %>%
    mutate(week_year = as.character(week_year)) %>%
   compute() 
 
-# clean nationality   # SIDIAP specific
- # working_cohort <- working_cohort %>%
- #   mutate(nationality = ifelse(str_detect(nationality, "Austr"), "Australia & New Zealand", nationality)) %>%
- #   mutate(nationality_cat = ifelse( nationality== "Espanya", "Spain", 
- #                            ifelse(str_detect( nationality, "frica"),  "Africa",  
- #                            ifelse(str_detect( nationality, "rica central"), "Central & South America",
- #                            ifelse(str_detect( nationality, "del Nord"), "Europe & North America",    
- #                            ifelse(str_detect( nationality, "Europa"), "Europe & North America",       
- #                            ifelse(str_detect( nationality, "Europa oriental"),  "Eastern Europe",       
- #                            ifelse(str_detect( nationality, "del Sud"), "Central & South America",      
- #                            ifelse(str_detect( nationality, "Carib"), "Central & South America", 
- #                            ifelse(str_detect( nationality, "sia"), "Asia & Oceania",
- #                            ifelse(str_detect( nationality, "Melan"), "Asia & Oceania", 
- #                            ifelse(str_detect( nationality, "Polin"), "Asia & Oceania",
- #                            ifelse(str_detect( nationality, "Micro"), "Asia & Oceania",
- #                            ifelse(str_detect( nationality, "Ant"),"Asia & Oceania", 
- #                            ifelse(str_detect( nationality, "Australia & New Zealand"), "Asia & Oceania",
- #                                   NA))))))))))))))) %>%
- #   select(-nationality) %>%
- #   compute()    
- #### Comorbidities
- # get comorbidities at baseline
- # looking at only records on or prior to specified date
+
+ #### Comorbidities at baseline
 autoimmune_disease.codes<- cdm$concept_ancestor %>% 
    filter(ancestor_concept_id ==434621) %>% 
    collect()
@@ -1217,7 +1211,6 @@ autoimmune_disease.codes<- cdm$concept_ancestor %>%
    select(person_id) %>% 
    distinct() %>% 
    compute() 
- 
  
  asthma.codes<- cdm$concept_ancestor %>% 
    filter(ancestor_concept_id ==317009) %>% 
@@ -1231,7 +1224,6 @@ autoimmune_disease.codes<- cdm$concept_ancestor %>%
    distinct() %>% 
    compute() 
  
- 
  malignant_neoplastic_disease.codes<- cdm$concept_ancestor %>% 
    filter(ancestor_concept_id ==443392) %>% 
    collect()
@@ -1244,7 +1236,6 @@ autoimmune_disease.codes<- cdm$concept_ancestor %>%
    distinct() %>% 
      compute() 
   
- 
  diabetes.codes<- cdm$concept_ancestor %>% 
    filter(ancestor_concept_id ==201820) %>% 
    collect()
@@ -1256,7 +1247,6 @@ autoimmune_disease.codes<- cdm$concept_ancestor %>%
    select(person_id) %>% 
    distinct() %>% 
       compute() 
- 
  
  heart_disease.codes<- cdm$concept_ancestor %>% 
    filter(ancestor_concept_id ==321588) %>% 
@@ -1270,11 +1260,9 @@ autoimmune_disease.codes<- cdm$concept_ancestor %>%
    distinct() %>% 
    compute() 
  
- 
  hypertensive_disorder.codes<- cdm$concept_ancestor %>% 
    filter(ancestor_concept_id ==316866) %>% 
       collect() 
- 
  
  hypertensive_disorder <- cdm$condition_occurrence %>% 
    filter(condition_concept_id %in% !!hypertensive_disorder.codes$descendant_concept_id) %>%
@@ -1308,7 +1296,6 @@ autoimmune_disease.codes<- cdm$concept_ancestor %>%
    distinct() %>% 
    compute()
  
- 
  dementia.codes<- cdm$concept_ancestor %>% 
    filter(ancestor_concept_id ==4182210) %>% 
    collect()
@@ -1320,21 +1307,8 @@ autoimmune_disease.codes<- cdm$concept_ancestor %>%
    select(person_id) %>% 
    distinct() %>% 
    compute()
- 
- 
- rm(autoimmune_disease.codes,
-    asthma.codes,
-    malignant_neoplastic_disease.codes,
-    diabetes.codes,
-    heart_disease.codes,
-    hypertensive_disorder.codes,
-    renal_impairment.codes,
-    copd.codes,
-    dementia.codes)
- 
- 
- ## Add to exposure pop
-working_cohort <- working_cohort %>%
+ # add to cohort
+ working_cohort <- working_cohort %>%
    left_join(asthma %>% mutate(asthma = 1)) %>%
    left_join(autoimmune_disease %>% mutate(autoimmune_disease = 1)) %>%
    left_join(copd %>% mutate(copd = 1 )) %>%
@@ -1354,8 +1328,16 @@ working_cohort <- working_cohort %>%
    mutate(cancer=ifelse(is.na(cancer),0,cancer)) %>% 
    mutate(renal_impairment=ifelse(is.na(renal_impairment),0,renal_impairment)) 
  
- 
- rm(autoimmune_disease,
+ rm(autoimmune_disease.codes,
+    asthma.codes,
+    malignant_neoplastic_disease.codes,
+    diabetes.codes,
+    heart_disease.codes,
+    hypertensive_disorder.codes,
+    renal_impairment.codes,
+    copd.codes,
+    dementia.codes,
+    autoimmune_disease,
     asthma,
     copd,
     dementia,
@@ -1365,7 +1347,7 @@ working_cohort <- working_cohort %>%
     malignant_neoplastic_disease,
     renal_impairment)
  
- #!!! we get vaccines - perhaps this is also SIDIAP specific? ----
+ #!!! get vaccines ----
 vaccines <- rbind(cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == astrazeneca_id) %>% mutate(vaccine_type = "ChAdOx1"),
                   cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == moderna_id) %>% mutate(vaccine_type = "mRNA-1273"),
                   cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == pfizer_id)  %>% mutate(vaccine_type = "BNT162b2"),
@@ -1376,7 +1358,8 @@ vaccines <- rbind(cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == 
     filter(drug_exposure_start_date < cohort_start_date) %>%
     distinct() %>%
     compute()
-   
+
+ # SIDIAP specific vaccines   
 # vaccinations <- cdm$drug_exposure%>% 
 #       filter(drug_concept_id %in% 
 #            c("37003436","724905",  "37003518", "739906")) %>% 
@@ -1393,7 +1376,7 @@ vaccines <- rbind(cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == 
 #                                  ifelse(drug_concept_id=="739906", "Ad26.COV2.S",NA ))))) %>%
 #   compute()
  
-# we get  the dates and vaccines types for the different doses
+# get  dates and vaccines types for the different doses
 vaccines <- vaccinations %>%
   rename(person_id = subject_id,
          cohort_start_date = drug_exposure_start_date) %>%
@@ -1411,8 +1394,6 @@ vaccines <- vaccinations %>%
                                   NA)) %>%
   ungroup() %>%
   compute()
-
-vaccines %>% select(seq) %>% distinct()
 
 vaccines <- vaccines %>%
   filter(seq!=2) %>%
@@ -1473,14 +1454,14 @@ left_join(cdm$er_long_covid_all_symptoms_cohorts %>%
      working_cohort <- working_cohort %>%
      mutate(year = lubridate::year(cohort_start_date),
          month = lubridate::month(cohort_start_date)) %>%
-  mutate(trimester=ifelse(year==2020 & month<4, "Jan-Mar 2020", 
+  mutate(trimester=ifelse(year==2020 & month<4,                         "Jan-Mar 2020", 
                    ifelse(year==2020 & (month==4 | month==5| month==6), "Apr-Jun 2020", 
                    ifelse(year==2020 & (month==7 | month==8| month==9), "Jul-Sep 2020",
-                   ifelse(year==2020 & month>9, "Oct-Dec 2020",
-                   ifelse(year==2021 & month<4, "Jan-Mar 2021",
+                   ifelse(year==2020 & month>9,                         "Oct-Dec 2020",
+                   ifelse(year==2021 & month<4,                         "Jan-Mar 2021",
                    ifelse(year==2021 & (month==4 | month==5| month==6), "Apr-Jun 2021",
                    ifelse(year==2021 & (month==7 | month==8| month==9), "Jul-Sep 2021",
-                   ifelse(year==2021 & month>9, "Oct-Dec 2021", 
+                   ifelse(year==2021 & month>9,                         "Oct-Dec 2021", 
                    NA))))))))) %>%
   select(-year, -month) %>%
    collect()%>%
@@ -1618,12 +1599,12 @@ matching_cohorts <- function(cohort1, cohort2,
                              name1, name2) {
   results_list <- list()
   data <- rbind(cohort1 %>%  mutate(cohort = 1, name = name1) ,
-               cohort2 %>% mutate(cohort =0,   name = name2))  # comparator cohort
+                cohort2 %>% mutate(cohort =0,   name = name2))  # comparator cohort
   # Matching
-m.week_year <- matchit(cohort~ week_year + age_gr5, 
+m.week_year <- matchit(cohort~  age_gr5+ gender+ week_year, 
                         data = data,
                         method = "nearest", 
-                        exact = ~ age_gr5 + week_year)
+                        exact = ~ age_gr5 + gender + week_year)
 
 # extract results of matching
 sum_matching <- summary(m.week_year)
@@ -1683,4 +1664,14 @@ save(m.new_covid_tested_negative_earliest,
      file = here("data", "table1_data_matched.Rdata"))
 }
   
+# Generate html files  ----
+if(generate_results  =="FALSE"){
+print(paste0("Skipping  generating descriptive tables"))
+} else { 
+print(paste0("Generating descriptive tables"))
+rmarkdown::render(here("Code/Comparing_symptoms.Rmd"))
+rmarkdown::render(here("Code/Comparing_symptoms_matched.Rmd"))
+  
+} 
+
 

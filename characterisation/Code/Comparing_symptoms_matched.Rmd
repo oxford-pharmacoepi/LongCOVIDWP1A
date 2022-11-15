@@ -1,9 +1,5 @@
 ---
-title: "Descriptive characteristics, matched"
-output: html_document
----
----
-title: "Descriptive characteristics of Long COVID Cohorts"
+title: "Descriptive characteristics of Long COVID cohrots, matched"
 output: html_document
 ---
 
@@ -22,13 +18,9 @@ options(scipen=999)
 
 ```{r include=FALSE}
 # packages
-library(SqlRender)
-library(DBI)
-library(DatabaseConnector)
 library(here)
 library(dplyr)
 library(tidyr)
-library(CDMConnector)
 library(stringr)
 library(lubridate)
 library(gtsummary)
@@ -37,11 +29,13 @@ library(kableExtra)
 library(ggplot2)
 library(forcats)
 library(tsibble)
-library(MatchIt)
 library(survey)
 
 # get data for table 1
-filtering_date <- as.Date("2020-09-01", "%Y-%m-%d")
+# get full testing_start from Code to Run
+# source("Code_to_Run.R", local = knitr::knit_global())
+full_testing_start_date <- as.Date("2020-09-01", "%Y-%m-%d")
+
 load(here("data", "table1_data.Rdata"))
 load(here("data", "table1_data_matched.Rdata"))
 
@@ -95,21 +89,21 @@ table1.data<-rbind(
 # those without missing values
        table1_data_new_infections   %>%
         mutate(group = "1 COVID-19 infection"),
-      table1_data_confirmed_infection  %>%
+       table1_data_confirmed_infection  %>%
         mutate(group = "2 Confirmed infection"),
-      table1_data_first_infection %>%
+       table1_data_first_infection %>%
         mutate(group = "3 First infection"),
        table1_data_reinfections  %>%
         mutate(group = "4 Reinfections"),
         table1_data_tested_negative_earliest  %>%
         mutate(group = "5 Tested negative, earliest"),
-      table1_data_tested_negative_all %>%
+       table1_data_tested_negative_all %>%
         mutate(group = "6 Tested negative, all "),
-        table1_data_pcr_negative_earliest  %>%
+       table1_data_pcr_negative_earliest  %>%
         mutate(group = "7 PCR negative, earliest "),
-         table1_data_pcr_negative_all  %>%
+       table1_data_pcr_negative_all  %>%
         mutate(group = "8 PCR negative, all ")) %>%
-  filter(cohort_start_date >=filtering_date)
+  filter(cohort_start_date >=full_testing_start_date)
 
 
 summary.characteristics <-print(CreateTableOne(
@@ -124,6 +118,7 @@ summary.characteristics <-print(CreateTableOne(
   nonnormal = vars, #all 
   noSpaces = TRUE,
   contDigits = 0,
+  catDigits = 0,
   printToggle=FALSE)
 
 
@@ -131,7 +126,8 @@ summary.characteristics <-print(CreateTableOne(
 
 ```{r}
 kable(summary.characteristics,
-        col.names = c( "COVID-19 infection",
+        col.names = c(
+        "COVID-19 infection",
         "Confirmed infection",
         "First infection",
         "Reinfections",
@@ -161,6 +157,7 @@ summary.characteristics_covid_negative <-print(svyCreateTableOne(
   smd=T,
   nonnormal = vars, #all 
   noSpaces = TRUE,
+  catDigits = 0,
   contDigits = 0,
   printToggle=FALSE)
 
@@ -172,8 +169,7 @@ summary.characteristics_covid_negative <-print(svyCreateTableOne(
 ```{r}
 
 kable(summary.characteristics_covid_negative)%>%
-  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
- # pack_rows("Baseline comorbidities", 40, 44)
+  kable_styling(bootstrap_options = c("striped", "bordered")) 
 
 
 ```
@@ -194,6 +190,7 @@ summary.characteristics.confirmed<-print(svyCreateTableOne(
   nonnormal = vars, #all 
   noSpaces = TRUE,
   contDigits = 0,
+  catDigits = 0,
   printToggle=FALSE)
 
 ```
@@ -225,6 +222,7 @@ summary.characteristics.reinfections<-print(svyCreateTableOne(
   nonnormal = vars, #all 
   noSpaces = TRUE,
   contDigits = 0,
+  catDigits = 0,
   printToggle=FALSE)
 
 
@@ -397,6 +395,7 @@ summary.characteristics_symptoms <-print(svyCreateTableOne(
   nonnormal = vars, #all 
   noSpaces = TRUE,
   contDigits = 0,
+   catDigits = 0,
   printToggle=FALSE)
 
 
@@ -444,6 +443,7 @@ summary.characteristics_symptoms <-print(svyCreateTableOne(
   nonnormal = vars, #all 
   noSpaces = TRUE,
   contDigits = 0,
+  catDigits = 0,
   printToggle=FALSE)
 ```
 
@@ -520,6 +520,7 @@ summary.characteristics_symptoms <-print(svyCreateTableOne(
   nonnormal = vars, #all 
   noSpaces = TRUE,
   contDigits = 0,
+  catDigits = 0,
   printToggle=FALSE)
 
 ```
