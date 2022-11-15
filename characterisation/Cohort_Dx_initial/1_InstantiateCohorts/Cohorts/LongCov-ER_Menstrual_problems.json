@@ -4,14 +4,14 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":       21,
+ "CodesetId":                       21,
 "ConditionTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -19,13 +19,13 @@
 },
 "ConceptSets": [
  {
- "id":       21,
+ "id":                       21,
 "name": "[Long COVID] Menstrual and period problems - PHOEBE'd",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":  4224178,
+ "CONCEPT_ID":                  4224178,
 "CONCEPT_NAME": "Menstrual period late",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -42,7 +42,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4089553,
+ "CONCEPT_ID":                  4089553,
 "CONCEPT_NAME": "Long menstrual cycle",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -59,7 +59,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4171394,
+ "CONCEPT_ID":                  4171394,
 "CONCEPT_NAME": "Abnormal menstrual cycle",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -76,7 +76,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   196168,
+ "CONCEPT_ID":                   196168,
 "CONCEPT_NAME": "Irregular periods",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -93,7 +93,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4127415,
+ "CONCEPT_ID":                  4127415,
 "CONCEPT_NAME": "Intermenstrual bleeding - regular",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -110,7 +110,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4032474,
+ "CONCEPT_ID":                  4032474,
 "CONCEPT_NAME": "Primary oligomenorrhea",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -127,7 +127,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.731198e+07,
+ "CONCEPT_ID":                 37311979,
 "CONCEPT_NAME": "Excessive menstruation with irregular cycle",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -144,7 +144,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  3170126,
+ "CONCEPT_ID":                  3170126,
 "CONCEPT_NAME": "Exercise induced oligomenorrhea",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -173,13 +173,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

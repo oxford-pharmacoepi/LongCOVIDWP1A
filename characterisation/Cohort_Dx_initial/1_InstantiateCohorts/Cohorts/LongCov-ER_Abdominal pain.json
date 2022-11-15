@@ -4,14 +4,14 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":        3,
+ "CodesetId":                        3,
 "ConditionTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -19,13 +19,13 @@
 },
 "ConceptSets": [
  {
- "id":        3,
+ "id":                        3,
 "name": "[Long COVID] Abdominal pain - PHOEBE'd",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":   200219,
+ "CONCEPT_ID":                   200219,
 "CONCEPT_NAME": "Abdominal pain",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -42,7 +42,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4146835,
+ "CONCEPT_ID":                  4146835,
 "CONCEPT_NAME": "Infantile colic",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -59,7 +59,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4149783,
+ "CONCEPT_ID":                  4149783,
 "CONCEPT_NAME": "Abdominal pain in pregnancy",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -88,13 +88,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

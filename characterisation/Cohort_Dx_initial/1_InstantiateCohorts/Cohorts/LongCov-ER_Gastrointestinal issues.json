@@ -4,26 +4,26 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":       16,
+ "CodesetId":                       16,
 "ConditionTypeExclude": false 
 } 
 },
 {
  "ConditionOccurrence": {
- "CodesetId":       14,
+ "CodesetId":                       14,
 "ConditionTypeExclude": false 
 } 
 },
 {
  "ConditionOccurrence": {
- "CodesetId":       15,
+ "CodesetId":                       15,
 "ConditionTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -31,13 +31,13 @@
 },
 "ConceptSets": [
  {
- "id":       14,
+ "id":                       14,
 "name": "[Long COVID] Acid reflux",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":   318800,
+ "CONCEPT_ID":                   318800,
 "CONCEPT_NAME": "Gastroesophageal reflux disease",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -56,13 +56,13 @@
 } 
 },
 {
- "id":       15,
+ "id":                       15,
 "name": "[Long COVID] Constipation",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":    75860,
+ "CONCEPT_ID":                    75860,
 "CONCEPT_NAME": "Constipation",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -81,13 +81,13 @@
 } 
 },
 {
- "id":       16,
+ "id":                       16,
 "name": "[Long COVID] Diarrhea",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":  4324838,
+ "CONCEPT_ID":                  4324838,
 "CONCEPT_NAME": "Noninfectious enteritis",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -104,7 +104,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4207688,
+ "CONCEPT_ID":                  4207688,
 "CONCEPT_NAME": "Infectious enteritis",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -121,7 +121,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   197596,
+ "CONCEPT_ID":                   197596,
 "CONCEPT_NAME": "Toxic gastroenteritis",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -138,7 +138,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":    80141,
+ "CONCEPT_ID":                    80141,
 "CONCEPT_NAME": "Functional diarrhea",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -155,7 +155,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   196523,
+ "CONCEPT_ID":                   196523,
 "CONCEPT_NAME": "Diarrhea",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -172,7 +172,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   201773,
+ "CONCEPT_ID":                   201773,
 "CONCEPT_NAME": "Enteritis of small intestine",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -201,13 +201,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

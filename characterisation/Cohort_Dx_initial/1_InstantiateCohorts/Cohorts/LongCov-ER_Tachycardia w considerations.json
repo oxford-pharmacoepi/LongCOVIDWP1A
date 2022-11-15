@@ -4,14 +4,14 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":       27,
+ "CodesetId":                       27,
 "ConditionTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -19,13 +19,13 @@
 },
 "ConceptSets": [
  {
- "id":       27,
+ "id":                       27,
 "name": "[Long COVID] Tachycardia w considerations",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":  4144463,
+ "CONCEPT_ID":                  4144463,
 "CONCEPT_NAME": "Tachycardia-induced cardiomyopathy",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -42,7 +42,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4140598,
+ "CONCEPT_ID":                  4140598,
 "CONCEPT_NAME": "ECG: sinus tachycardia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -59,7 +59,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   315643,
+ "CONCEPT_ID":                   315643,
 "CONCEPT_NAME": "Tachyarrhythmia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -76,7 +76,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4145510,
+ "CONCEPT_ID":                  4145510,
 "CONCEPT_NAME": "EKG: supraventricular tachycardia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -93,7 +93,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4103295,
+ "CONCEPT_ID":                  4103295,
 "CONCEPT_NAME": "Ventricular tachycardia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -110,7 +110,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4159659,
+ "CONCEPT_ID":                  4159659,
 "CONCEPT_NAME": "Postural orthostatic tachycardia syndrome",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -127,7 +127,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4171269,
+ "CONCEPT_ID":                  4171269,
 "CONCEPT_NAME": "Atrial tachycardia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -144,7 +144,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4064871,
+ "CONCEPT_ID":                  4064871,
 "CONCEPT_NAME": "EKG: ventricular tachycardia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -161,7 +161,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   444070,
+ "CONCEPT_ID":                   444070,
 "CONCEPT_NAME": "Tachycardia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -178,7 +178,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   315078,
+ "CONCEPT_ID":                   315078,
 "CONCEPT_NAME": "Palpitations",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -195,7 +195,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4228448,
+ "CONCEPT_ID":                  4228448,
 "CONCEPT_NAME": "Bradyarrhythmia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -212,7 +212,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   317100,
+ "CONCEPT_ID":                   317100,
 "CONCEPT_NAME": "Fetal tachycardia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -229,7 +229,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4222125,
+ "CONCEPT_ID":                  4222125,
 "CONCEPT_NAME": "Fetal tachycardia affecting management of mother",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -246,7 +246,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.302205e+07,
+ "CONCEPT_ID":                 43022053,
 "CONCEPT_NAME": "Fetal supraventricular tachycardia with short ventriculoatrial interval",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -263,7 +263,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.302173e+07,
+ "CONCEPT_ID":                 43021733,
 "CONCEPT_NAME": "Fetal supraventricular tachycardia with long ventriculoatrial interval",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -280,7 +280,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4261842,
+ "CONCEPT_ID":                  4261842,
 "CONCEPT_NAME": "Sick sinus syndrome",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -309,13 +309,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

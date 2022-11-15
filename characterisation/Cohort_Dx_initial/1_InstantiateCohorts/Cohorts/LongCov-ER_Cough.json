@@ -4,20 +4,20 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":        9,
+ "CodesetId":                        9,
 "ConditionTypeExclude": false 
 } 
 },
 {
  "Observation": {
- "CodesetId":        9,
+ "CodesetId":                        9,
 "ObservationTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -25,13 +25,13 @@
 },
 "ConceptSets": [
  {
- "id":        9,
+ "id":                        9,
 "name": "[Long COVID] Cough - PHOEBE'd",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":   254761,
+ "CONCEPT_ID":                   254761,
 "CONCEPT_NAME": "Cough",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -48,7 +48,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4089228,
+ "CONCEPT_ID":                  4089228,
 "CONCEPT_NAME": "Sputum finding",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -65,7 +65,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4128691,
+ "CONCEPT_ID":                  4128691,
 "CONCEPT_NAME": "Able to cough",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -82,7 +82,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4048218,
+ "CONCEPT_ID":                  4048218,
 "CONCEPT_NAME": "Cough reflex absent",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -99,7 +99,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4128692,
+ "CONCEPT_ID":                  4128692,
 "CONCEPT_NAME": "Difficulty coughing",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -116,7 +116,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4087178,
+ "CONCEPT_ID":                  4087178,
 "CONCEPT_NAME": "Unable to cough",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -145,13 +145,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

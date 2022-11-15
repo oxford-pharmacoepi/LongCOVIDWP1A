@@ -4,14 +4,14 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":       20,
+ "CodesetId":                       20,
 "ConditionTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -19,13 +19,13 @@
 },
 "ConceptSets": [
  {
- "id":       20,
+ "id":                       20,
 "name": "[Long COVID] Memory issues - V2",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":  4083457,
+ "CONCEPT_ID":                  4083457,
 "CONCEPT_NAME": "Cannot remember names of intimates",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -42,7 +42,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.269037e+07,
+ "CONCEPT_ID":                 42690369,
 "CONCEPT_NAME": "Unable to remember people",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -59,7 +59,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4111205,
+ "CONCEPT_ID":                  4111205,
 "CONCEPT_NAME": "Unable to remember motor skills",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -76,7 +76,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.269037e+07,
+ "CONCEPT_ID":                 42690368,
 "CONCEPT_NAME": "Unable to remember past events",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -93,7 +93,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.269011e+07,
+ "CONCEPT_ID":                 42690112,
 "CONCEPT_NAME": "Does not remember past events",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -110,7 +110,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4110901,
+ "CONCEPT_ID":                  4110901,
 "CONCEPT_NAME": "Unable to remember day of the week",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -127,7 +127,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.269062e+07,
+ "CONCEPT_ID":                 42690615,
 "CONCEPT_NAME": "Difficulty remembering past events",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -144,7 +144,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4131380,
+ "CONCEPT_ID":                  4131380,
 "CONCEPT_NAME": "Poor visual sequential memory",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -161,7 +161,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4084416,
+ "CONCEPT_ID":                  4084416,
 "CONCEPT_NAME": "Unable to remember name of reigning monarch",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -178,7 +178,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4304008,
+ "CONCEPT_ID":                  4304008,
 "CONCEPT_NAME": "Memory impairment",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -195,7 +195,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4166591,
+ "CONCEPT_ID":                  4166591,
 "CONCEPT_NAME": "Difficulty in remembering dates",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -212,7 +212,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4092087,
+ "CONCEPT_ID":                  4092087,
 "CONCEPT_NAME": "Unable to remember name of current prime minister",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -229,7 +229,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.268983e+07,
+ "CONCEPT_ID":                 42689830,
 "CONCEPT_NAME": "Difficulty remembering places",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -246,7 +246,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.269037e+07,
+ "CONCEPT_ID":                 42690370,
 "CONCEPT_NAME": "Unable to remember routines",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -263,7 +263,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4083460,
+ "CONCEPT_ID":                  4083460,
 "CONCEPT_NAME": "Cannot remember name of school",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -280,7 +280,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.268998e+07,
+ "CONCEPT_ID":                 42689981,
 "CONCEPT_NAME": "Difficulty remembering people",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -297,7 +297,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4111194,
+ "CONCEPT_ID":                  4111194,
 "CONCEPT_NAME": "Unable to remember own date of birth",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -314,7 +314,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4084415,
+ "CONCEPT_ID":                  4084415,
 "CONCEPT_NAME": "Unable to remember today's date",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -331,7 +331,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4111198,
+ "CONCEPT_ID":                  4111198,
 "CONCEPT_NAME": "Unable to remember current year",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -348,7 +348,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4085500,
+ "CONCEPT_ID":                  4085500,
 "CONCEPT_NAME": "Cannot remember birth dates of children",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -365,7 +365,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4083459,
+ "CONCEPT_ID":                  4083459,
 "CONCEPT_NAME": "Cannot remember wedding anniversary",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -382,7 +382,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.269011e+07,
+ "CONCEPT_ID":                 42690113,
 "CONCEPT_NAME": "Does not remember places",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -399,7 +399,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.269065e+07,
+ "CONCEPT_ID":                 42690647,
 "CONCEPT_NAME": "Unable to remember places",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -416,7 +416,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.269074e+07,
+ "CONCEPT_ID":                 42690742,
 "CONCEPT_NAME": "Does not remember people",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -433,7 +433,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.04823e+07,
+ "CONCEPT_ID":                 40482301,
 "CONCEPT_NAME": "Residual cognitive deficit as late effect of cerebrovascular accident",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -450,7 +450,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.268998e+07,
+ "CONCEPT_ID":                 42689982,
 "CONCEPT_NAME": "Difficulty remembering routines",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -467,7 +467,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4083458,
+ "CONCEPT_ID":                  4083458,
 "CONCEPT_NAME": "Unable to remember own age",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -484,7 +484,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4110903,
+ "CONCEPT_ID":                  4110903,
 "CONCEPT_NAME": "Unable to remember month of year",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -501,7 +501,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4115009,
+ "CONCEPT_ID":                  4115009,
 "CONCEPT_NAME": "Unable to remember objects",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -518,7 +518,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.268985e+07,
+ "CONCEPT_ID":                 42689849,
 "CONCEPT_NAME": "Does not remember routines",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -535,7 +535,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4115010,
+ "CONCEPT_ID":                  4115010,
 "CONCEPT_NAME": "Unable to remember faces",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -552,7 +552,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4135668,
+ "CONCEPT_ID":                  4135668,
 "CONCEPT_NAME": "Poor auditory sequential memory",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -569,7 +569,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4110912,
+ "CONCEPT_ID":                  4110912,
 "CONCEPT_NAME": "Unable to remember sounds",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -598,13 +598,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

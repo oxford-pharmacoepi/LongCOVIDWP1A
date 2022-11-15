@@ -31,3 +31,7 @@ atlas_id;name;cohort_definition_id;type;name_var
 1780582;LongCov-ER_Tested_Negative_earliest_event;30;control;Tested_Negative_earliest_event
 1780581;LongCov-ER_Tested_Positive;31;covid-19;Tested_Positive
 1780589;LongCov-ER_Tinnitus and hearing problems w considerations;32;symptom;Tinnitus_hearing_problems
+;Vaccinated_AstraZeneca;33;vaccine;Astrazeneca
+;Vaccinated_Janssen;34;vaccine;Janssen
+;Vaccinated_Moderna;35;vaccine;Moderna
+;Vaccinated_Pfizer;36;vaccine;Pfizer

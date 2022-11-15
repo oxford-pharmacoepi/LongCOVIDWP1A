@@ -4,14 +4,14 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":       23,
+ "CodesetId":                       23,
 "ConditionTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -19,13 +19,13 @@
 },
 "ConceptSets": [
  {
- "id":       23,
+ "id":                       23,
 "name": "[Long COVID] Neuralgia w considerations - PHOEBE'd",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":   373852,
+ "CONCEPT_ID":                   373852,
 "CONCEPT_NAME": "Neuralgia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -42,7 +42,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4027396,
+ "CONCEPT_ID":                  4027396,
 "CONCEPT_NAME": "Peripheral neuritis",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -59,7 +59,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4216083,
+ "CONCEPT_ID":                  4216083,
 "CONCEPT_NAME": "Cervico-occipital neuralgia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -88,13 +88,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

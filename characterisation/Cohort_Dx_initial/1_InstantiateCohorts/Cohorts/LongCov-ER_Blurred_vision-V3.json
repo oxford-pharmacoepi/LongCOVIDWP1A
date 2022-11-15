@@ -4,14 +4,14 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":        6,
+ "CodesetId":                        6,
 "ConditionTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -19,13 +19,13 @@
 },
 "ConceptSets": [
  {
- "id":        6,
+ "id":                        6,
 "name": "[Long COVID] Blurred Vision - V3",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":  4023310,
+ "CONCEPT_ID":                  4023310,
 "CONCEPT_NAME": "Blindness AND/OR vision impairment level",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -42,7 +42,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   373474,
+ "CONCEPT_ID":                   373474,
 "CONCEPT_NAME": "Diplopia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -59,7 +59,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4308437,
+ "CONCEPT_ID":                  4308437,
 "CONCEPT_NAME": "Visual halos",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -76,7 +76,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4211785,
+ "CONCEPT_ID":                  4211785,
 "CONCEPT_NAME": "Corneal warpage",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -93,7 +93,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.479075e+07,
+ "CONCEPT_ID":                 44790749,
 "CONCEPT_NAME": "Blurred vision",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -110,7 +110,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4228121,
+ "CONCEPT_ID":                  4228121,
 "CONCEPT_NAME": "Against-the-rule astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -127,7 +127,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   378424,
+ "CONCEPT_ID":                   378424,
 "CONCEPT_NAME": "Astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -144,7 +144,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  2721908,
+ "CONCEPT_ID":                  2721908,
 "CONCEPT_NAME": "Astigmatism correcting function of intraocular lens",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -161,7 +161,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.71093e+07,
+ "CONCEPT_ID":                 37109297,
 "CONCEPT_NAME": "Astigmatism of left eye",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -178,7 +178,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.710929e+07,
+ "CONCEPT_ID":                 37109294,
 "CONCEPT_NAME": "Astigmatism of right eye",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -195,7 +195,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.66848e+07,
+ "CONCEPT_ID":                 36684799,
 "CONCEPT_NAME": "Bilateral eye astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -212,7 +212,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.668478e+07,
+ "CONCEPT_ID":                 36684779,
 "CONCEPT_NAME": "Bilateral irregular astigmatism of eyes",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -229,7 +229,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.668476e+07,
+ "CONCEPT_ID":                 36684758,
 "CONCEPT_NAME": "Bilateral regular astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -246,7 +246,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  2110951,
+ "CONCEPT_ID":                  2110951,
 "CONCEPT_NAME": "Corneal relaxing incision for correction of surgically induced astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -263,7 +263,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  2110952,
+ "CONCEPT_ID":                  2110952,
 "CONCEPT_NAME": "Corneal wedge resection for correction of surgically induced astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -280,7 +280,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4191597,
+ "CONCEPT_ID":                  4191597,
 "CONCEPT_NAME": "Disorder of refraction",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -297,7 +297,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.576361e+07,
+ "CONCEPT_ID":                 45763614,
 "CONCEPT_NAME": "High astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -314,7 +314,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.671297e+07,
+ "CONCEPT_ID":                 36712968,
 "CONCEPT_NAME": "High astigmatism of bilateral eyes",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -331,7 +331,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.710894e+07,
+ "CONCEPT_ID":                 37108937,
 "CONCEPT_NAME": "High astigmatism of left eye",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -348,7 +348,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.711765e+07,
+ "CONCEPT_ID":                 37117650,
 "CONCEPT_NAME": "High astigmatism of right eye",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -365,7 +365,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.270986e+07,
+ "CONCEPT_ID":                 42709862,
 "CONCEPT_NAME": "Hyperopic astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -382,7 +382,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   377558,
+ "CONCEPT_ID":                   377558,
 "CONCEPT_NAME": "Irregular astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -399,7 +399,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4334274,
+ "CONCEPT_ID":                  4334274,
 "CONCEPT_NAME": "Irregular astigmatism - corneal",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -416,7 +416,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4336138,
+ "CONCEPT_ID":                  4336138,
 "CONCEPT_NAME": "Irregular astigmatism - lenticular",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -433,7 +433,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.668472e+07,
+ "CONCEPT_ID":                 36684717,
 "CONCEPT_NAME": "Irregular astigmatism of left eye",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -450,7 +450,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.668465e+07,
+ "CONCEPT_ID":                 36684652,
 "CONCEPT_NAME": "Irregular astigmatism of right eye",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -467,7 +467,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.270985e+07,
+ "CONCEPT_ID":                 42709853,
 "CONCEPT_NAME": "Mixed astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -484,7 +484,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4175300,
+ "CONCEPT_ID":                  4175300,
 "CONCEPT_NAME": "Monocular diplopia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -501,7 +501,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.270985e+07,
+ "CONCEPT_ID":                 42709852,
 "CONCEPT_NAME": "Myopic astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -518,7 +518,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.270985e+07,
+ "CONCEPT_ID":                 42709854,
 "CONCEPT_NAME": "Oblique astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -535,7 +535,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.575765e+07,
+ "CONCEPT_ID":                 45757645,
 "CONCEPT_NAME": "Postoperative irregular astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -552,7 +552,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   380706,
+ "CONCEPT_ID":                   380706,
 "CONCEPT_NAME": "Regular astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -569,7 +569,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4335602,
+ "CONCEPT_ID":                  4335602,
 "CONCEPT_NAME": "Regular astigmatism - corneal",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -586,7 +586,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4339037,
+ "CONCEPT_ID":                  4339037,
 "CONCEPT_NAME": "Regular astigmatism - lenticular",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -603,7 +603,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.668469e+07,
+ "CONCEPT_ID":                 36684691,
 "CONCEPT_NAME": "Regular astigmatism of left eye",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -620,7 +620,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.668463e+07,
+ "CONCEPT_ID":                 36684628,
 "CONCEPT_NAME": "Regular astigmatism of right eye",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -637,7 +637,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  2313642,
+ "CONCEPT_ID":                  2313642,
 "CONCEPT_NAME": "Sensorimotor examination with multiple measurements of ocular deviation (eg, restrictive or paretic muscle with diplopia) with interpretation and report (separate procedure)",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -654,7 +654,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   381001,
+ "CONCEPT_ID":                   381001,
 "CONCEPT_NAME": "Subjective visual disturbance",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -671,7 +671,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4304712,
+ "CONCEPT_ID":                  4304712,
 "CONCEPT_NAME": "Surgically induced astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -688,7 +688,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   374034,
+ "CONCEPT_ID":                   374034,
 "CONCEPT_NAME": "Visual disturbance",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -705,7 +705,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4227836,
+ "CONCEPT_ID":                  4227836,
 "CONCEPT_NAME": "With-the-rule astigmatism",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -722,7 +722,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   373478,
+ "CONCEPT_ID":                   373478,
 "CONCEPT_NAME": "Presbyopia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -739,7 +739,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   379805,
+ "CONCEPT_ID":                   379805,
 "CONCEPT_NAME": "Myopia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -756,7 +756,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   376415,
+ "CONCEPT_ID":                   376415,
 "CONCEPT_NAME": "Hypermetropia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -785,13 +785,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

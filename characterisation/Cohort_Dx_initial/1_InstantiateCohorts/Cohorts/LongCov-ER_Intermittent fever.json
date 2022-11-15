@@ -4,20 +4,20 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":       18,
+ "CodesetId":                       18,
 "ConditionTypeExclude": false 
 } 
 },
 {
  "Measurement": {
- "CodesetId":       18,
+ "CodesetId":                       18,
 "MeasurementTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -25,13 +25,13 @@
 },
 "ConceptSets": [
  {
- "id":       18,
+ "id":                       18,
 "name": "[Long COVID] Intermittent fever",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":   314381,
+ "CONCEPT_ID":                   314381,
 "CONCEPT_NAME": "Acute febrile mucocutaneous lymph node syndrome",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -48,7 +48,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   444413,
+ "CONCEPT_ID":                   444413,
 "CONCEPT_NAME": "Febrile convulsion",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -65,7 +65,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4141144,
+ "CONCEPT_ID":                  4141144,
 "CONCEPT_NAME": "Relapsing febrile nodular nonsuppurative panniculitis",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -82,7 +82,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4178904,
+ "CONCEPT_ID":                  4178904,
 "CONCEPT_NAME": "Body temperature above reference range",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -99,7 +99,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4225434,
+ "CONCEPT_ID":                  4225434,
 "CONCEPT_NAME": "Acute febrile neutrophilic dermatosis",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -116,7 +116,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4250734,
+ "CONCEPT_ID":                  4250734,
 "CONCEPT_NAME": "Febrile neutropenia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -133,7 +133,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4321692,
+ "CONCEPT_ID":                  4321692,
 "CONCEPT_NAME": "Heat pyrexia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -150,7 +150,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.739718e+07,
+ "CONCEPT_ID":                 37397178,
 "CONCEPT_NAME": "PFAPA syndrome",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -167,7 +167,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4170869,
+ "CONCEPT_ID":                  4170869,
 "CONCEPT_NAME": "Dehydration fever in newborn",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -184,7 +184,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4226022,
+ "CONCEPT_ID":                  4226022,
 "CONCEPT_NAME": "Drug-induced hyperpyrexia",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -201,7 +201,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4318555,
+ "CONCEPT_ID":                  4318555,
 "CONCEPT_NAME": "Fever of the newborn",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -218,7 +218,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4020879,
+ "CONCEPT_ID":                  4020879,
 "CONCEPT_NAME": "Malignant hyperpyrexia due to anesthetic",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -235,7 +235,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4143214,
+ "CONCEPT_ID":                  4143214,
 "CONCEPT_NAME": "Maternal pyrexia in labor",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -252,7 +252,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4040106,
+ "CONCEPT_ID":                  4040106,
 "CONCEPT_NAME": "O/E - temperature low",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -269,7 +269,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4094003,
+ "CONCEPT_ID":                  4094003,
 "CONCEPT_NAME": "Postpartum fever",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -286,7 +286,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.353065e+07,
+ "CONCEPT_ID":                 43530646,
 "CONCEPT_NAME": "Post vaccination fever",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -303,7 +303,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   438963,
+ "CONCEPT_ID":                   438963,
 "CONCEPT_NAME": "Tick-borne relapsing fever",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -320,7 +320,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4243806,
+ "CONCEPT_ID":                  4243806,
 "CONCEPT_NAME": "Transitory fever of newborn",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -349,13 +349,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

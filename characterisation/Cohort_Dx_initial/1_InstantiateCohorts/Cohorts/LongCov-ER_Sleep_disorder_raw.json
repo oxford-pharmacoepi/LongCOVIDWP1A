@@ -4,20 +4,20 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":       26,
+ "CodesetId":                       26,
 "ConditionTypeExclude": false 
 } 
 },
 {
  "Observation": {
- "CodesetId":       26,
+ "CodesetId":                       26,
 "ObservationTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -25,13 +25,13 @@
 },
 "ConceptSets": [
  {
- "id":       26,
+ "id":                       26,
 "name": "[Long COVID] Sleep disorder raw",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":  4287868,
+ "CONCEPT_ID":                  4287868,
 "CONCEPT_NAME": "Abnormal rapid eye movement sleep",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -48,7 +48,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4204989,
+ "CONCEPT_ID":                  4204989,
 "CONCEPT_NAME": "Disturbance in sleep behavior",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -65,7 +65,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.253524e+07,
+ "CONCEPT_ID":                 42535241,
 "CONCEPT_NAME": "Dependence on biphasic positive airway pressure ventilation due to central sleep apnea syndrome",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -82,7 +82,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4132137,
+ "CONCEPT_ID":                  4132137,
 "CONCEPT_NAME": "Sleep pattern disturbance",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -99,7 +99,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4099949,
+ "CONCEPT_ID":                  4099949,
 "CONCEPT_NAME": "Short-sleeper",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -116,7 +116,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.04819e+07,
+ "CONCEPT_ID":                 40481897,
 "CONCEPT_NAME": "Inadequate sleep hygiene",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -133,7 +133,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   435524,
+ "CONCEPT_ID":                   435524,
 "CONCEPT_NAME": "Sleep disorder",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -150,7 +150,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4175644,
+ "CONCEPT_ID":                  4175644,
 "CONCEPT_NAME": "Sleep state misperception",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -167,7 +167,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4045772,
+ "CONCEPT_ID":                  4045772,
 "CONCEPT_NAME": "Restless sleep",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -184,7 +184,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4104980,
+ "CONCEPT_ID":                  4104980,
 "CONCEPT_NAME": "Light sleep",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -201,7 +201,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.481044e+07,
+ "CONCEPT_ID":                 44810442,
 "CONCEPT_NAME": "On melatonin for sleep disorder",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -218,7 +218,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4312903,
+ "CONCEPT_ID":                  4312903,
 "CONCEPT_NAME": "Insufficient rest/sleep for age",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -235,7 +235,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4115402,
+ "CONCEPT_ID":                  4115402,
 "CONCEPT_NAME": "Difficulty sleeping",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -252,7 +252,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4220636,
+ "CONCEPT_ID":                  4220636,
 "CONCEPT_NAME": "Delayed onset of sleep",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -281,13 +281,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

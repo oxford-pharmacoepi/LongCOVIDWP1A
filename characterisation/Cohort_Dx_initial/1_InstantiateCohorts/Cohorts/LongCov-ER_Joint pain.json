@@ -4,14 +4,14 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":       19,
+ "CodesetId":                       19,
 "ConditionTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -19,13 +19,13 @@
 },
 "ConceptSets": [
  {
- "id":       19,
+ "id":                       19,
 "name": "[Long COVID] Joint pain - PHOEBE'd",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":  4150129,
+ "CONCEPT_ID":                  4150129,
 "CONCEPT_NAME": "Musculoskeletal pain",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -42,7 +42,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4166666,
+ "CONCEPT_ID":                  4166666,
 "CONCEPT_NAME": "Shoulder pain",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -59,7 +59,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":    77074,
+ "CONCEPT_ID":                    77074,
 "CONCEPT_NAME": "Joint pain",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -76,7 +76,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4024561,
+ "CONCEPT_ID":                  4024561,
 "CONCEPT_NAME": "Pain in lower limb",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -93,7 +93,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4204199,
+ "CONCEPT_ID":                  4204199,
 "CONCEPT_NAME": "Hand pain",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -110,7 +110,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4253797,
+ "CONCEPT_ID":                  4253797,
 "CONCEPT_NAME": "Pain in elbow",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -127,7 +127,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4208857,
+ "CONCEPT_ID":                  4208857,
 "CONCEPT_NAME": "Pain in wrist",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -156,13 +156,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

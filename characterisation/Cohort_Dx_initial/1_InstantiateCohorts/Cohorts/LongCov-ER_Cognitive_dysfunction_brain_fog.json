@@ -4,14 +4,14 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":        7,
+ "CodesetId":                        7,
 "ConditionTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -19,13 +19,13 @@
 },
 "ConceptSets": [
  {
- "id":        7,
+ "id":                        7,
 "name": "[Long COVID] Cognitive dysfunction brain fog - v2",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":   443432,
+ "CONCEPT_ID":                   443432,
 "CONCEPT_NAME": "Impaired cognition",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -42,7 +42,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   439795,
+ "CONCEPT_ID":                   439795,
 "CONCEPT_NAME": "Minimal cognitive impairment",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -59,7 +59,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4025217,
+ "CONCEPT_ID":                  4025217,
 "CONCEPT_NAME": "Learning finding",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -76,7 +76,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4096147,
+ "CONCEPT_ID":                  4096147,
 "CONCEPT_NAME": "Poor concentration",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -93,7 +93,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4243064,
+ "CONCEPT_ID":                  4243064,
 "CONCEPT_NAME": "Unable to concentrate",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -110,7 +110,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4084562,
+ "CONCEPT_ID":                  4084562,
 "CONCEPT_NAME": "Reduced concentration",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -127,7 +127,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4085043,
+ "CONCEPT_ID":                  4085043,
 "CONCEPT_NAME": "Reduced concentration span",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -144,7 +144,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4101994,
+ "CONCEPT_ID":                  4101994,
 "CONCEPT_NAME": "Distractibility",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -161,7 +161,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4078686,
+ "CONCEPT_ID":                  4078686,
 "CONCEPT_NAME": "Seems in a dream",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -178,7 +178,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.269e+07,
+ "CONCEPT_ID":                 42689995,
 "CONCEPT_NAME": "Difficulty sustaining attention",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -195,7 +195,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4022572,
+ "CONCEPT_ID":                  4022572,
 "CONCEPT_NAME": "Disturbance of cognitive learning",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -212,7 +212,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4005009,
+ "CONCEPT_ID":                  4005009,
 "CONCEPT_NAME": "Lack of thinking ability",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -241,13 +241,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

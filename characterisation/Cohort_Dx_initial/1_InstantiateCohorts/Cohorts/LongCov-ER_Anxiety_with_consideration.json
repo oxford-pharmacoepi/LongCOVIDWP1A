@@ -4,20 +4,20 @@
  "CriteriaList": [
  {
  "ConditionOccurrence": {
- "CodesetId":        5,
+ "CodesetId":                        5,
 "ConditionTypeExclude": false 
 } 
 },
 {
  "Observation": {
- "CodesetId":        5,
+ "CodesetId":                        5,
 "ObservationTypeExclude": false 
 } 
 } 
 ],
 "ObservationWindow": {
- "PriorDays":        0,
-"PostDays":        0 
+ "PriorDays":                        0,
+"PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
  "Type": "All" 
@@ -25,13 +25,13 @@
 },
 "ConceptSets": [
  {
- "id":        5,
+ "id":                        5,
 "name": "[Long COVID] Anxiety w consideration - PHOEBE'd",
 "expression": {
  "items": [
  {
  "concept": {
- "CONCEPT_ID":   442077,
+ "CONCEPT_ID":                   442077,
 "CONCEPT_NAME": "Anxiety disorder",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -48,7 +48,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4146660,
+ "CONCEPT_ID":                  4146660,
 "CONCEPT_NAME": "Alcohol-induced anxiety disorder",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -65,7 +65,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4219044,
+ "CONCEPT_ID":                  4219044,
 "CONCEPT_NAME": "Amphetamine-induced anxiety disorder",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -82,7 +82,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.711047e+07,
+ "CONCEPT_ID":                 37110465,
 "CONCEPT_NAME": "Anxiety disorder caused by dissociative drug",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -99,7 +99,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.710921e+07,
+ "CONCEPT_ID":                 37109206,
 "CONCEPT_NAME": "Anxiety disorder caused by drug",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -116,7 +116,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.711047e+07,
+ "CONCEPT_ID":                 37110466,
 "CONCEPT_NAME": "Anxiety disorder caused by ketamine",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -133,7 +133,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.730978e+07,
+ "CONCEPT_ID":                 37309777,
 "CONCEPT_NAME": "Anxiety disorder caused by methamphetamine",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -150,7 +150,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.711045e+07,
+ "CONCEPT_ID":                 37110453,
 "CONCEPT_NAME": "Anxiety disorder caused by methylenedioxymethamphetamine",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -167,7 +167,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 3.711915e+07,
+ "CONCEPT_ID":                 37119146,
 "CONCEPT_NAME": "Anxiety disorder caused by opioid",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -184,7 +184,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.253778e+07,
+ "CONCEPT_ID":                 42537777,
 "CONCEPT_NAME": "Anxiety disorder caused by synthetic cannabinoid",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -201,7 +201,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.253874e+07,
+ "CONCEPT_ID":                 42538738,
 "CONCEPT_NAME": "Anxiety disorder caused by synthetic cathinone",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -218,7 +218,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.57571e+07,
+ "CONCEPT_ID":                 45757095,
 "CONCEPT_NAME": "Anxiety disorder in mother complicating childbirth",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -235,7 +235,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.478318e+07,
+ "CONCEPT_ID":                 44783184,
 "CONCEPT_NAME": "Chronic post-traumatic stress disorder following military combat",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -252,7 +252,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4198826,
+ "CONCEPT_ID":                  4198826,
 "CONCEPT_NAME": "Cocaine-induced anxiety disorder",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -269,7 +269,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4035299,
+ "CONCEPT_ID":                  4035299,
 "CONCEPT_NAME": "Hallucinogen-induced anxiety disorder",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -286,7 +286,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4049341,
+ "CONCEPT_ID":                  4049341,
 "CONCEPT_NAME": "Inhalant-induced anxiety disorder",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -303,7 +303,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID": 4.253874e+07,
+ "CONCEPT_ID":                 42538739,
 "CONCEPT_NAME": "Obsessive compulsive disorder caused by synthetic cathinone",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -320,7 +320,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4178114,
+ "CONCEPT_ID":                  4178114,
 "CONCEPT_NAME": "Psychoactive substance-induced organic anxiety disorder",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -337,7 +337,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":  4056690,
+ "CONCEPT_ID":                  4056690,
 "CONCEPT_NAME": "Sedative, hypnotic AND/OR anxiolytic-induced anxiety disorder",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -354,7 +354,7 @@
 },
 {
  "concept": {
- "CONCEPT_ID":   441542,
+ "CONCEPT_ID":                   441542,
 "CONCEPT_NAME": "Anxiety",
 "STANDARD_CONCEPT": "S",
 "STANDARD_CONCEPT_CAPTION": "Standard",
@@ -383,13 +383,13 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":        0 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],
 "CollapseSettings": {
  "CollapseType": "ERA",
-"EraPad":        0 
+"EraPad":                        0 
 },
 "CensorWindow": {} 
 }

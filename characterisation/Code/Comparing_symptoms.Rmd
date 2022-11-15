@@ -5,10 +5,11 @@ output: html_document
 
 ```{r setup, include=FALSE}
 
-knitr::opts_chunk$set(echo = TRUE,
+knitr::opts_chunk$set(echo = FALSE,
                       warning=FALSE, 
                       message=FALSE, 
                       comment = FALSE,
+                      cache = FALSE,
                       cache.lazy=FALSE)
 options(scipen=999)
 
@@ -29,6 +30,8 @@ library(lubridate)
 library(gtsummary)
 library(tableone)
 library(kableExtra)
+library(ggplot2)
+library(forcats)
 
 # Connection details ----
 server    <- Sys.getenv("SERVER_JUN22")
@@ -79,9 +82,16 @@ pcr_negative_earliest_id <-as.character( cohorts_ids %>%
                     filter(str_detect(name, "PCR_Negative_earliest")) %>% 
                     select(cohort_definition_id) %>% pull())
 
+tested_negative_all_id <- as.character(cohorts_ids %>%
+                    filter(str_detect(name, "Tested_Negative_all")) %>% 
+                    select(cohort_definition_id) %>% pull())
+
+pcr_negative_all_id <-as.character( cohorts_ids %>%
+                    filter(str_detect(name, "PCR_Negative_all")) %>% 
+                    select(cohort_definition_id) %>% pull())
+
 # get data for table 1
 load(here("data", "table1_data.Rdata"))
-
 
 ```
 
@@ -137,7 +147,7 @@ factor.vars<- c(
 
 
 
-summary.characteristics<-print(CreateTableOne(
+summary.characteristics <-print(CreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
   includeNA=T,
@@ -151,17 +161,15 @@ summary.characteristics<-print(CreateTableOne(
   contDigits = 1,
   printToggle=FALSE)
 
-
  
 ```
 
 
-
 ## Table: Baseline characteristics of individuals with COVID-19 and with long COVID-19 
-```{r}
+```{r echo=FALSE}
 
 kable(summary.characteristics, 
-      col.names = c("New COVID-19 infection",  
+      col.names = c("COVID-19 infection",  
                     "Long COVID-19, 90 days",
                     "SMD"
                     ))%>%
@@ -184,46 +192,6 @@ table2.data<-rbind(
           mutate(group = "2- Long Covid symptoms (90 days)"))
 
 
-# variables
-vars<-c(
-        "age",
-        "age_gr2",
-        "gender",
-        "trimester",
-        "nationality_cat",
-        "vaccination_status",
-        "medea",
-        "asthma",
-        "autoimmune_disease",
-        "copd",
-        "dementia",
-        "diabetes",
-        "heart_disease",
-        "cancer",
-        "hypertension",
-        "renal_impairment"
-)
-
-factor.vars<- c(
-        "age_gr2",
-        "gender",
-                "trimester",
-        "nationality_cat",
-        "vaccination_status",
-        "medea",
-        "asthma",
-        "autoimmune_disease",
-        "copd",
-        "dementia",
-        "diabetes",
-        "heart_disease",
-        "cancer",
-        "hypertension",
-        "renal_impairment"
-)
-
-
-
 summary.characteristics.negative <-print(CreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
@@ -243,7 +211,7 @@ summary.characteristics.negative <-print(CreateTableOne(
 ```
 
 
-## Table: Baseline characteristics of individuals tested negative and with long COVID-18 symptoms
+## Table: Baseline characteristics of individuals tested negative and with long COVID-19 symptoms
 ```{r}
 
 kable(summary.characteristics.negative, 
@@ -265,49 +233,10 @@ table3.data<-rbind(
         table1_data_new_infections  %>%
         mutate(group = "New infections"),
         table1_data_tested_negative   %>%
-        mutate(group = "Tested negative"))
-
-
-# variables
-vars<-c(
-        "age",
-        "age_gr2",
-        "gender",
-        "trimester",
-        "nationality_cat",
-        "vaccination_status",
-        "medea",
-        "asthma",
-        "autoimmune_disease",
-        "copd",
-        "dementia",
-        "diabetes",
-        "heart_disease",
-        "cancer",
-        "hypertension",
-        "renal_impairment",
-                "long_covid"
-
-)
-
-factor.vars<- c(
-        "age_gr2",
-        "gender",
-                "trimester",
-        "nationality_cat",
-        "vaccination_status",
-        "medea",
-        "asthma",
-        "autoimmune_disease",
-        "copd",
-        "dementia",
-        "diabetes",
-        "heart_disease",
-        "cancer",
-        "hypertension",
-        "renal_impairment",
-        "long_covid"
-)
+        mutate(group = "Tested negative"),
+        table1_data_tested_negative_all   %>%
+        mutate(group = "Tested negative, all")
+        )
 
 
 
@@ -330,12 +259,13 @@ summary.characteristics.infection.negative <-print(CreateTableOne(
 ```
 
 
-## Table: Baseline characteristics of individuals tested negative and with long COVID-18 symptoms
-```{r}
+## Table: Baseline characteristics of individuals with new COVID-19 infection and Tested negative (earliest)
+```{r echo=FALSE}
 
 kable(summary.characteristics.infection.negative, 
-      col.names = c("New COVID-19 infection",  
-                    "Tested negative",
+      col.names = c("COVID-19 infection",  
+                    "Tested negative, earliest",
+                    "Tested negative, all events",
                     "SMD"
                     ))%>%
   kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
@@ -343,10 +273,6 @@ kable(summary.characteristics.infection.negative,
 
 
 ```
-
-
-
-
 
 
 
@@ -371,6 +297,7 @@ summary <-  data%>%
   percent = "col"
            ) %>% 
   bold_labels()
+
   summary
 }
 ```
@@ -380,42 +307,100 @@ summary <-  data%>%
 ```{r include=FALSE}
 t.covid.infection <- generate_table(cohort_id= new_infection_id,
                                     window="90",
-                                    name = "New COVID-19 infection")
+                                    name = "COVID-19 infection")
 
 t.covid.confirmed <- generate_table(cohort_id= tested_positive_id,
                                     window="90",
-                                    name = "Confirmed infections")
+                                    name = "Laboratory-confirmed infections")
 
 t.covid.reinfections <- generate_table(cohort_id= "71",
                                     window="90",
                                     name = "Reinfections")
 
-
 t.tested.negative.earliest <- generate_table(cohort_id = tested_negative_earliest_id,
                                     window="90",
                                     name = "Tested negative, earliest")
 
+
+t.tested.negative.all <- generate_table(cohort_id = tested_negative_all_id,
+                                    window="90",
+                                    name = "Tested negative, all")
+
+
 t.pcr.negative.earliest <- generate_table(cohort_id = pcr_negative_earliest_id,
                                     window="90",
                                     name = "PCR negative, earliest")
-
-
-
+t.pcr.negative.all <- generate_table(cohort_id = pcr_negative_all_id,
+                                    window="90",
+                                    name = "PCR negative, all")
 
 ```
 
-## Table: Symptoms distribution across cohorts
 
-```{r}
+## Table: Symptom distribution across cohorts
+```{r echo=FALSE}
 table  <- tbl_merge(tbls = list(t.covid.infection,   
                                 t.covid.confirmed,
                                 t.covid.reinfections,
                                 t.tested.negative.earliest,
-                                t.pcr.negative.earliest
+                                 t.tested.negative.all,
+                                t.pcr.negative.earliest,
+                                 t.pcr.negative.all
                                  ), 
-                     tab_spanner = c("","", "", "", ""))
+                     tab_spanner = c("","", "", "", "", "", ""))
 
 table
 
 ```
+
+## Figure: Heatmap of symptoms distribution across cohorts
+```{r include=FALSE}
+get_prop <- function(data){
+  filt <- c("1","2","3","4","5","6","7","8","9","10","11", "__all_symp__")
+  output <- as_tibble(data,  col_labels = FALSE) %>%
+  filter(!(label %in% filt)) %>%
+ mutate(prop = str_extract(stat_1, "(?<=\\()(.*?)%")) %>%
+  mutate(prop= substring(prop,1, nchar(prop)-1)) %>%
+  mutate(prop = as.numeric(prop)) %>%
+  select(-stat_1) %>%
+  mutate(label= substring(label,1, nchar(label)-2)) %>%
+  mutate(label= substring(label,3)) %>%
+  as.data.frame()
+} 
+
+results <- rbind(
+  get_prop(t.covid.infection) %>%  mutate(group = "COVID-19\n infection"),
+  get_prop(t.covid.confirmed) %>%  mutate(group = "Laboratory-confirmed\nCOVID-19 infections"),
+  get_prop(t.covid.reinfections) %>% mutate(group = "Reinfections"),
+  get_prop(t.tested.negative.earliest) %>% mutate(group = "Tested negative,\n earliest"),
+  get_prop( t.tested.negative.all) %>% mutate(group = "Tested negative ,\n all"),
+  get_prop( t.pcr.negative.earliest) %>% mutate(group = "Tested negative (PCR only),\n earliest"),
+  get_prop( t.pcr.negative.all) %>% mutate(group = "Tested negative (PCR only),\n all")
+ ) %>%
+  mutate(label = str_replace_all(label, "_", " ")) %>%
+  mutate(label = str_to_title(label)) 
+
+```
+
+```{r echo=FALSE}
+results %>% 
+    mutate(label = fct_rev(factor(label))) %>%
+  ggplot() +
+  aes(x = 1, y = label, fill = prop) +
+  facet_grid(~group)+
+  geom_tile(colour = "black") +
+  scale_fill_gradient(high = "#C81D25", low = "#E4F1EB")+
+  geom_text(aes(label = round(prop, 1))) +
+  theme_minimal() +
+  theme(axis.text.x=element_blank(),
+        legend.position = "bottom")+
+  xlab("")+
+  ylab("Symptom")+
+  labs(fill= "Proportion, in %")
+
+
+```
+
+
+
 

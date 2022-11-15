@@ -1,0 +1,544 @@
+---
+title: "Descriptive characteristics, matched"
+output: html_document
+---
+---
+title: "Descriptive characteristics of Long COVID Cohorts"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE,
+                      warning=FALSE, 
+                      message=FALSE, 
+                      comment = FALSE,
+                      cache = FALSE,
+                      cache.lazy=FALSE)
+options(scipen=999)
+
+```
+
+
+```{r include=FALSE}
+# packages
+library(SqlRender)
+library(DBI)
+library(DatabaseConnector)
+library(here)
+library(dplyr)
+library(tidyr)
+library(CDMConnector)
+library(stringr)
+library(lubridate)
+library(gtsummary)
+library(tableone)
+library(kableExtra)
+library(ggplot2)
+library(forcats)
+library(tsibble)
+library(MatchIt)
+library(survey)
+
+# get data for table 1
+filtering_date <- as.Date("2020-09-01", "%Y-%m-%d")
+load(here("data", "table1_data.Rdata"))
+load(here("data", "table1_data_matched.Rdata"))
+
+```
+
+
+```{r include=FALSE}
+# variables for Table 1 
+vars<-c(
+        "age",
+        "age_gr2",
+        "gender",
+        "trimester",
+        "vaccination_status",
+        "asthma",
+        "autoimmune_disease",
+        "copd",
+        "dementia",
+        "diabetes",
+        "heart_disease",
+        "cancer",
+        "hypertension",
+        "renal_impairment",
+        "long_covid"
+)
+
+factor.vars<- c(
+        "age_gr2",
+        "gender",
+        "trimester",
+        "vaccination_status",
+        "asthma",
+        "autoimmune_disease",
+        "copd",
+        "dementia",
+        "diabetes",
+        "heart_disease",
+        "cancer",
+        "hypertension",
+        "renal_impairment",
+        "long_covid"
+)
+
+
+```
+
+
+# Baseline characteristics 
+```{r}
+table1.data<-rbind(  
+# those without missing values
+       table1_data_new_infections   %>%
+        mutate(group = "1 COVID-19 infection"),
+      table1_data_confirmed_infection  %>%
+        mutate(group = "2 Confirmed infection"),
+      table1_data_first_infection %>%
+        mutate(group = "3 First infection"),
+       table1_data_reinfections  %>%
+        mutate(group = "4 Reinfections"),
+        table1_data_tested_negative_earliest  %>%
+        mutate(group = "5 Tested negative, earliest"),
+      table1_data_tested_negative_all %>%
+        mutate(group = "6 Tested negative, all "),
+        table1_data_pcr_negative_earliest  %>%
+        mutate(group = "7 PCR negative, earliest "),
+         table1_data_pcr_negative_all  %>%
+        mutate(group = "8 PCR negative, all ")) %>%
+  filter(cohort_start_date >=filtering_date)
+
+
+summary.characteristics <-print(CreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=T,
+  data = table1.data,
+  strata=c("group"),
+  test = F), 
+  showAllLevels=F,
+  smd=F,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  contDigits = 0,
+  printToggle=FALSE)
+
+
+```
+
+```{r}
+kable(summary.characteristics,
+        col.names = c( "COVID-19 infection",
+        "Confirmed infection",
+        "First infection",
+        "Reinfections",
+        "Tested negative, earliest",
+        "Tested negative, all ",
+        "PCR negative, earliest ",
+        "PCR negative, all "
+                    ))%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) 
+
+
+```
+
+
+## New COVID-19 infection vs Tested negative (earliest event), after matching by week/year of testing and 5y age group
+```{r include=FALSE}
+data <- m.new_covid_tested_negative_earliest[[3]]
+
+summary.characteristics_covid_negative <-print(svyCreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=T,
+  data = data,
+  strata=c("name"),
+  test = F), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  contDigits = 0,
+  printToggle=FALSE)
+
+
+ 
+```
+
+
+```{r}
+
+kable(summary.characteristics_covid_negative)%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
+ # pack_rows("Baseline comorbidities", 40, 44)
+
+
+```
+
+## Confirmed infections vs tested negative (earliest), after matching by week/year of testing and 5y age group
+```{r}
+data <- m.confirmed_infection_negative_earliest[[3]]
+
+summary.characteristics.confirmed<-print(svyCreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=T,
+  data = data,
+  strata=c("name"),
+  test = F), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  contDigits = 0,
+  printToggle=FALSE)
+
+```
+
+
+```{r}
+kable(summary.characteristics.confirmed
+     )%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) 
+
+```
+
+
+
+## First infections vs reinfections, after matching by week/year of testing and 5y age group
+
+```{r include=FALSE}
+data <- m.first_infection_reinfections[[3]]
+
+summary.characteristics.reinfections<-print(svyCreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=T,
+  data = data,
+  strata=c("name"),
+  test = F), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  contDigits = 0,
+  printToggle=FALSE)
+
+
+ 
+```
+
+```{r echo=FALSE}
+
+kable(summary.characteristics.reinfections 
+     )%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
+ # pack_rows("Baseline comorbidities", 40, 44)
+
+
+```
+
+
+
+```{r Old_function_matching, eval=FALSE, include=FALSE}
+# matched_table_symptom_cohorts <- function(cohort_id1, cohort_id2, window, name1, name2){
+#  results_list <- list()
+#  
+#   cohort1 <- cdm$er_long_covid_all_symptoms_cohorts %>%
+#   filter(main_cohort_id == cohort_id1 & window_days == window) %>%
+#   mutate(name = name1) %>%
+#   mutate(cohort = "0") %>% 
+#   distinct() %>%
+#   collect()
+# 
+#   cohort2 <- cdm$er_long_covid_all_symptoms_cohorts %>%
+#   filter(main_cohort_id == cohort_id2 & window_days == window) %>%
+#    mutate(name = name2) %>%
+#       mutate(cohort = "1") %>%
+#   distinct() %>%
+#   collect()
+# 
+#   data <- rbind(cohort1 , cohort2) %>% mutate(week_year = yearweek(as.Date(cohort_start_date)))
+# # we match by week and year using exact method 
+# m.week_year <- matchit(cohort ~ week_year, data = data, method = "exact")
+# sum_matching <- summary(m.week_year)
+# # we extract matched data
+# m.data <- match.data(m.week_year) %>%
+#   rename(ps_weights= weights) %>%
+#     mutate(all_symp = as.factor(all_symp)) %>%
+#   select(-subject_id, -window_days, - cohort_start_date , -week_year, -main_cohort_id, -cohort) 
+# 
+# s.data <- svydesign(ids = ~subclass, # clusters 
+#           data = m.data, 
+#           weights= ~ps_weights) # weights
+# 
+# summary <-  s.data%>% 
+#    tbl_svysummary(
+#        by = "cohort",
+#   digits = all_categorical()~ c(0,1),
+#   missing = "ifany",
+#   missing_text= "Missing",
+#   percent = "col"
+#            ) %>% 
+#   bold_labels()
+# 
+# results_list <- list(sum_matching, m.data, s.data,   summary)
+# results_list
+# }
+# t.first.infections.reinfections <- matched_table_symptom_cohorts(cohort_id1= "70", name1= "First COVID-19 infection",
+#                                                            cohort_id2 = "71", name2 = "Reinfections", 
+#                                                            window="90")
+# 
+# 
+# t.infections.tested.negative <- matched_table_symptom_cohorts(cohort_id1= "22", name1= "New COVID-19 infection",
+#                                                            cohort_id2 = "30", name2 = "Tested negative, earliest", 
+#                                                            window="90")
+
+```
+
+
+# 90 days Long Covid symptoms distribution
+```{r}
+vars <- c("abdominal_pain", "allergy", "altered_smell_taste",  "anxiety" , 
+         "blurred_vision","chest_pain" ,"cognitive_dysfunction_brain_fog", "cough" ,"depression" ,
+         "dizziness" ,"dyspnea" , "fatigue_malaise" , "gastrointestinal_issues","headache" ,"intermittent_fever" ,
+         "joint_pain" ,  "memory_issues_v2" ,"menstrual_problems" , "muscle_spams_pain", "neuralgia" , "pins_sensation",  
+         "sleep_disorder", "tachycardia" ,"tinnitus_hearing_problems")
+
+
+factor.vars <- c("abdominal_pain", "allergy", "altered_smell_taste",  "anxiety" , 
+         "blurred_vision","chest_pain" ,"cognitive_dysfunction_brain_fog", "cough" ,"depression" ,
+         "dizziness" ,"dyspnea" , "fatigue_malaise" , "gastrointestinal_issues","headache" ,"intermittent_fever" ,
+         "joint_pain" ,  "memory_issues_v2" ,"menstrual_problems" , "muscle_spams_pain", "neuralgia" , "pins_sensation",  
+         "sleep_disorder", "tachycardia" ,"tinnitus_hearing_problems")
+
+```
+
+
+```{r include=FALSE}
+# function to get data for the plot
+get_prop <- function(data){
+  filt <- c("1","2","3","4","5","6","7","8","9","10","11", "__all_symp__")
+  names <- names(as_tibble(data,  col_labels = T)) 
+  names <- str_extract(names, "\\*(.*)\\*")
+  names <- str_sub(names, 3)
+  names <- str_sub(names, end=-3) 
+  
+  output <- as_tibble(data,  col_labels = F) %>%
+   filter(!(label %in% filt)) %>%
+    mutate(prop1 = str_extract(stat_1, "(?<=\\()(.*?)%")) %>%
+    mutate(prop1= substring(prop1,1, nchar(prop1)-1)) %>%
+  mutate(prop1 = as.numeric(prop1)) %>%
+  select(-stat_1) %>%
+     mutate(prop2 = str_extract(stat_2, "(?<=\\()(.*?)%")) %>%
+  mutate(prop2= substring(prop2,1, nchar(prop2)-1)) %>%
+  mutate(prop2 = as.numeric(prop2)) %>%
+      select(-stat_2) %>%
+  mutate(label= substring(label,1, nchar(label)-2)) %>%
+  mutate(label= substring(label,3)) %>%
+  mutate(label = str_replace_all(label, "_", " ")) %>%
+  mutate(label = str_to_title(label)) %>%
+  as.data.frame() 
+  
+  names(output) <- names
+  output
+} 
+
+# plot function
+function_matched_heatmap <- function(data){
+ plot <-  data %>% 
+  pivot_longer(!Characteristic, names_to = "Cohort", values_to = "Proportion") %>%
+  mutate(Characteristic = fct_rev(factor(Characteristic))) %>%
+  ggplot() +
+  aes(x = 1, y = Characteristic, fill = Proportion) +
+  facet_grid(~Cohort)+
+  geom_tile(colour = "black") +
+  scale_fill_gradient(high = "#C81D25", low = "#E4F1EB")+
+  geom_text(aes(label= round(Proportion, 1))) +
+  theme_minimal() +
+  theme(axis.text.x=element_blank(),
+        legend.position = "bottom")+
+  xlab("")+
+  ylab("Symptom")+
+  labs(fill= "Proportion, in %")
+ plot
+}
+
+
+```
+
+## Matched New COVID-19 infection vs Tested negative (earliest record) cohorts
+```{r echo=FALSE}
+
+data <- m.new_covid_tested_negative_earliest[[2]] %>% filter(long_covid == 1) 
+data <- data %>% 
+  select(name, abdominal_pain, allergy, altered_smell_taste,  anxiety , 
+         blurred_vision ,chest_pain ,cognitive_dysfunction_brain_fog, cough ,depression ,
+         dizziness ,dyspnea , fatigue_malaise , gastrointestinal_issues,headache ,intermittent_fever ,
+         joint_pain  ,  memory_issues_v2 ,menstrual_problems , muscle_spams_pain, neuralgia , pins_sensation,  
+         sleep_disorder , tachycardia ,tinnitus_hearing_problems,  all_symp, ps_weights, matched_pair  )
+
+s.data <- svydesign(ids = ~matched_pair,  
+          data = data, 
+          weights= ~ps_weights) # weights all 1
+
+summary.characteristics_symptoms <-print(svyCreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=T,
+  data = s.data,
+  strata=c("name"),
+  test = F), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  contDigits = 0,
+  printToggle=FALSE)
+
+
+```
+
+```{r}
+kable(summary.characteristics_symptoms
+     )%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
+ # pack_rows("Baseline comorbidities", 40, 44)
+```
+
+
+## Heatmap
+
+```{r eval=FALSE, include=FALSE}
+results <-  get_prop(summary_new_covid_tested_negative) 
+function_matched_heatmap(results)
+
+```
+
+## Matched Confirmed infection vs tested negative (earliest)
+```{r}
+data <- m.confirmed_infection_negative_earliest[[2]] %>% filter(long_covid == 1)
+data <- data %>% 
+  select(name, abdominal_pain, allergy, altered_smell_taste,  anxiety , 
+         blurred_vision ,chest_pain ,cognitive_dysfunction_brain_fog, cough ,depression ,
+         dizziness ,dyspnea , fatigue_malaise , gastrointestinal_issues,headache ,intermittent_fever ,
+         joint_pain  ,  memory_issues_v2 ,menstrual_problems , muscle_spams_pain, neuralgia , pins_sensation,  
+         sleep_disorder , tachycardia ,tinnitus_hearing_problems,  all_symp, ps_weights, matched_pair  )
+
+s.data <- svydesign(ids = ~matched_pair,  
+          data = data, 
+          weights= ~ps_weights) # weights all 1
+
+summary.characteristics_symptoms <-print(svyCreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=T,
+  data = s.data,
+  strata=c("name"),
+  test = F), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  contDigits = 0,
+  printToggle=FALSE)
+```
+
+
+```{r}
+kable(summary.characteristics_symptoms
+     )%>%
+  kable_styling(bootstrap_options = c("striped", "bordered"))
+```
+
+
+
+```{r eval=FALSE, include=FALSE}
+data <- m.confirmed_infection_negative_earliest[[2]] %>% filter(long_covid == 1)
+# keep only variables of interest
+data <- data %>% 
+  select(name, abdominal_pain, allergy, altered_smell_taste,  anxiety , 
+         blurred_vision ,chest_pain ,cognitive_dysfunction_brain_fog, cough ,depression ,
+         dizziness ,dyspnea , fatigue_malaise , gastrointestinal_issues,headache ,intermittent_fever ,
+         joint_pain  ,  memory_issues_v2 ,menstrual_problems , muscle_spams_pain, neuralgia , pins_sensation,  
+         sleep_disorder , tachycardia ,tinnitus_hearing_problems,  all_symp, ps_weights, matched_pair  )
+
+s.data <- svydesign(ids = ~matched_pair, # clusters 
+          data = data, 
+          weights= ~ps_weights) # weights
+
+summary_confirmed_infection_tested_negative_earliest <-  s.data%>%
+   tbl_svysummary(
+       by = "name",
+  digits = all_categorical()~ c(0,1),
+  missing = "ifany",
+  missing_text= "Missing",
+  percent = "col"
+           ) %>%
+  bold_labels()
+
+summary_confirmed_infection_tested_negative_earliest 
+```
+
+
+
+
+## Heatmap
+```{r eval=FALSE, include=FALSE}
+results <-  get_prop(summary_confirmed_infection_tested_negative_earliest ) 
+function_matched_heatmap(results)
+```
+
+
+
+## Matched First COVID-19 infection vs Reinfection cohorts
+```{r}
+data <- m.first_infection_reinfections[[2]] %>% filter(long_covid == 1)
+data <- data %>% 
+  select(name, abdominal_pain, allergy, altered_smell_taste,  anxiety , 
+         blurred_vision ,chest_pain ,cognitive_dysfunction_brain_fog, cough ,depression ,
+         dizziness ,dyspnea , fatigue_malaise , gastrointestinal_issues,headache ,intermittent_fever ,
+         joint_pain  ,  memory_issues_v2 ,menstrual_problems , muscle_spams_pain, neuralgia , pins_sensation,  
+         sleep_disorder , tachycardia ,tinnitus_hearing_problems,  all_symp, ps_weights, matched_pair  )
+
+s.data <- svydesign(ids = ~matched_pair,  
+          data = data, 
+          weights= ~ps_weights) # weights all 1
+
+summary.characteristics_symptoms <-print(svyCreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=T,
+  data = s.data,
+  strata=c("name"),
+  test = F), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  contDigits = 0,
+  printToggle=FALSE)
+
+```
+
+```{r}
+kable(summary.characteristics_symptoms
+     )%>%
+  kable_styling(bootstrap_options = c("striped", "bordered"))
+```
+
+
+## Heatmap
+```{r eval=FALSE, include=FALSE}
+results <-  get_prop(summary_first_infection_reinfections ) 
+function_matched_heatmap(results)
+```
+
+
+
+
+
+
