@@ -299,147 +299,10 @@ exclusion_table<-rbind(exclusion_table,
                             distinct() %>%pull()
                          ))
 
-covid_infection <- covid_infection %>%
-   mutate(cohort_definition_id= as.integer(cohort_definition_id))%>%
-   select(-seq)%>%
-   compute()
-
-## inserting these cohorts into the database
-#### remove prior tables if needed
- sql_query <- glue::glue("DROP TABLE {write_schema}.er_long_covid_final_cohorts\n" )
- DBI::dbExecute(db, as.character(sql_query))
-
- # create new table 
-sql_query <- glue::glue("SELECT * INTO {write_schema}.er_long_covid_final_cohorts\n",
-                          "FROM (\n",
-                          dbplyr::sql_render(covid_infection),
-                          "\n) AS from_table")
-DBI::dbExecute(db, as.character(sql_query))
-
-###  Tested positive  ----
-confirmed_infection_id <- cohorts_ids %>% filter(str_detect(name, "Tested_Positive")) %>%select(cohort_definition_id) %>% pull()
-
-confirmed_infection <- covid_cohorts %>%
-  filter(cohort_definition_id==confirmed_infection_id) %>%# change this for confirmed infections
-  arrange(subject_id, desc(as.Date(cohort_start_date))) %>% 
-  group_by(subject_id) %>% 
-  arrange(cohort_start_date) %>%
-  mutate(seq=row_number()) %>% 
-  distinct() %>%
-  ungroup() %>%
-  compute()
-
-rm(confirmed_infection_id)
-# add next infection date to use for censoring 
-confirmed_infection <- confirmed_infection %>%
- arrange(subject_id,cohort_start_date) %>% 
- group_by(subject_id) %>%
- mutate(covid_next_inf_date = lead(cohort_start_date)) %>%
- ungroup() %>%
- compute()
-
-# add influenza to censor
-### first we get rid of influenzxa dx prior to cohort_start_date
-influenza_covid <- influenza_cohort %>%
-  inner_join(confirmed_infection) %>%
-  filter(influenza_start_date>cohort_start_date) %>%
-  distinct() %>%
-  compute()
-
-# we check if we have people with more than one influenza infection after cohort start  
-# it's cohorts in which all columns are identical aside from influenza_date
-# we don't have for confirmed infectiosn but we keep the code 
-repeated_influenza <-  influenza_covid %>%
-  group_by_at(vars(-influenza_start_date)) %>% 
-  filter(n() > 1) %>%
-  ungroup() %>%
-  compute()
-
-# we keep the first influenza record
-repeated_influenza <- repeated_influenza %>%
-  group_by(subject_id) %>%
-  arrange(influenza_start_date) %>%
-  mutate(seq2= row_number()) %>%
-  ungroup() %>%
-  filter(seq2==1) %>%
-  select(-seq2) %>%
-  compute()
-
-# we exclude these subjects from influenza covid
-influenza_covid <- influenza_covid %>%
-  anti_join(repeated_influenza %>%select(subject_id) %>% distinct())
-# we add them again with the clean repeated influenza
-influenza_covid <- union_all(influenza_covid, repeated_influenza)
-
-# similarly, we exclude all people with an influenza dx during our study period from the main df
-confirmed_infection <- confirmed_infection %>%
-  anti_join(influenza_covid %>% select(subject_id) %>% distinct()) %>%
-  mutate(influenza_start_date=as.Date(NA))%>%
-  compute()
-# we add them again with the cleaned df for influenza
-confirmed_infection <- union_all(confirmed_infection, influenza_covid)
-rm(influenza_covid,  repeated_influenza)
-
-# add date one year after infection
-confirmed_infection <- confirmed_infection %>%
-mutate(one_year_date = cohort_start_date+lubridate::days(365))%>%
-compute()
-
-# add cohort end date, considering censoring options
-# death, observation end, next covid infection, influenza, one year followup
-confirmed_infection <- confirmed_infection %>% 
-  mutate(cohort_end_date =lubridate::as_date(pmin(observation_period_end_date, 
-                                death_date, 
-                                covid_next_inf_date-lubridate::days(1), # trec un dia
-                                # pq si no una el cohort_end_date de la persona amb reinifeccion
-                                # es igual q el cohort_start_date de la seguent infeccio
-                                influenza_start_date-lubridate::days(1), 
-                                one_year_date,
-                                na.rm = TRUE))) %>%
-  mutate(follow_up_days = (cohort_end_date - cohort_start_date))  %>%
-  select(cohort_definition_id, subject_id, cohort_start_date, cohort_end_date, seq, follow_up_days) %>%
-  compute()
 
 
-
-# we check numbers make sense -
-# confirmed_infection %>% tally()  # 618080 infections
-# ## check that follow_up_days make sense
-# summary(confirmed_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
-
-# keep only cohort start dates prior to the last admissible index date (2nd september for SIDIAP)
-confirmed_infection <- confirmed_infection %>%
-  filter(cohort_start_date<=end_index_date) %>%
-  compute()
-# 
-# confirmed_infection %>%tally()  # 452647
-
-# we exclude people with less than 120 days of follow-up
-exclusion_table <- rbind(exclusion_table,
-                         tibble(N_current=confirmed_infection %>%tally()%>%collect()%>%pull(), 
-                          exclusion_reason="initial pop",
-                          cohort_definition_id = confirmed_infection %>%
-                            select(cohort_definition_id) %>% distinct() %>%pull()
-                         ))
-
-confirmed_infection <- confirmed_infection %>%
-  filter(!(follow_up_days<120))%>%
-  select(-follow_up_days) %>%
-  compute()
-#check follow-up days are fine
-# summary(confirmed_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
-
-
-exclusion_table<-rbind(exclusion_table,
-                       tibble(N_current=confirmed_infection %>%tally()%>%collect()%>%pull(), 
-                          exclusion_reason="Less than 120 days of follow-up",
-                         cohort_definition_id = confirmed_infection %>%
-                            select(cohort_definition_id) %>% distinct() %>%pull()
-                        ))
-
-
-### First COVID-19 infection  - confirmed only
-first_infection <- confirmed_infection  %>%
+### First COVID-19 infection  
+first_infection <- covid_infection   %>%
   filter(seq==1) %>% 
   distinct() %>%
   select(-seq) %>%
@@ -467,7 +330,7 @@ exclusion_table<-rbind(exclusion_table,
                          ))
 
 
-reinfections <- confirmed_infection  %>%
+reinfections <- covid_infection  %>%
   filter(seq!=1)%>% 
   select(-seq) %>%
   distinct() %>%
@@ -493,10 +356,22 @@ cohorts_ids <- rbind(cohorts_ids,
                             name_var = "reinfections",
                             type = "covid-19"))
 
-confirmed_infection <- confirmed_infection  %>%
- mutate(cohort_definition_id= as.integer(cohort_definition_id)) %>%
- select(-seq)%>%
-compute()
+covid_infection <- covid_infection %>%
+   select(-seq) %>%
+   mutate(cohort_definition_id= as.integer(cohort_definition_id))%>%
+   compute()
+
+## inserting these cohorts into the database
+#### remove prior tables if needed
+ sql_query <- glue::glue("DROP TABLE {write_schema}.er_long_covid_final_cohorts\n" )
+ DBI::dbExecute(db, as.character(sql_query))
+
+ # create new table 
+sql_query <- glue::glue("SELECT * INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "FROM (\n",
+                          dbplyr::sql_render(covid_infection),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
 
 # append cohorts to existing table
 sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
