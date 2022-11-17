@@ -35,3 +35,4 @@ atlas_id;name;cohort_definition_id;type;name_var
 ;Vaccinated_Janssen;34;vaccine;Janssen
 ;Vaccinated_Moderna;35;vaccine;Moderna
 ;Vaccinated_Pfizer;36;vaccine;Pfizer
+;x_LongCov-ER_PCRpos;37;covid-19;PCR_Positive
