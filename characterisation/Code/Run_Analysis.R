@@ -299,99 +299,23 @@ exclusion_table<-rbind(exclusion_table,
                             distinct() %>%pull()
                          ))
 
-
-# covid_infection %>%tally()  #857732 infections
-# covid_infection %>% select(subject_id)%>% distinct() %>%tally() #805884 subjects
-
-### First COVID-19 infection 
-first_infection <- covid_infection %>%
-  filter(seq==1) %>% 
-  distinct() %>%
-  select(-seq) %>%
-  # we change cohort definition id so that is has its own id
-  mutate(cohort_definition_id=as.integer(70)) %>%
-  compute() 
-# check we have one row per person
-# first_infection %>%tally()    # 782948
-# first_infection %>% select(subject_id)%>% distinct() %>%tally() #782948
-
-# we add the cohort id to our cohorts ids table
-cohorts_ids <- rbind(cohorts_ids,
-                     tibble(atlas_id = NA,
-                            name = "First COVID-19 infection",
-                            cohort_definition_id =70, 
-                            name_var = "first_infection",
-                            type = "covid-19"))
-
-exclusion_table<-rbind(exclusion_table,
-                       tibble(N_current=first_infection %>%tally()%>%collect()%>%pull(), 
-                          exclusion_reason="initial pop",
-                          cohort_definition_id = first_infection%>%
-                                                  select(cohort_definition_id) %>% 
-                            distinct() %>%pull()
-                         ))
-
-
-reinfections <- covid_infection %>%
-  filter(seq!=1)%>% 
-  select(-seq) %>%
-  distinct() %>%
-  # we change cohort definition id so that is has its own id
-  mutate(cohort_definition_id=as.integer(71)) %>%
-  compute()
-
-# reinfections %>%tally()    #  74784
-reinfections %>% select(subject_id)%>% distinct() %>%tally() #70752
-
-exclusion_table<-rbind(exclusion_table,
-                       tibble(N_current=reinfections %>%tally()%>%collect()%>%pull(), 
-                          exclusion_reason="initial pop",
-                          cohort_definition_id = reinfections %>%
-                                                 select(cohort_definition_id) %>%
-                            distinct() %>%pull()
-                          ))
-# we add the cohort identificator to our cohorts ids table
-cohorts_ids <- rbind(cohorts_ids,
-                     tibble(atlas_id = NA,
-                            name = "Reinfections",
-                            cohort_definition_id =71, 
-                            name_var = "reinfections",
-                            type = "covid-19"))
-
 covid_infection <- covid_infection %>%
- select(-seq)%>%
-  compute()
-
-covid_infection <- covid_infection %>%
-  mutate(cohort_definition_id= as.integer(cohort_definition_id))
+   mutate(cohort_definition_id= as.integer(cohort_definition_id))%>%
+   select(-seq)%>%
+   compute()
 
 ## inserting these cohorts into the database
 #### remove prior tables if needed
  sql_query <- glue::glue("DROP TABLE {write_schema}.er_long_covid_final_cohorts\n" )
  DBI::dbExecute(db, as.character(sql_query))
 
- # create the new table 
+ # create new table 
 sql_query <- glue::glue("SELECT * INTO {write_schema}.er_long_covid_final_cohorts\n",
                           "FROM (\n",
-                          dbplyr::sql_render(reinfections),
-                          "\n) AS from_table")
-DBI::dbExecute(db, as.character(sql_query))
-
-# append rows to existing table
-sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
-                          "SELECT * FROM (\n",
                           dbplyr::sql_render(covid_infection),
                           "\n) AS from_table")
 DBI::dbExecute(db, as.character(sql_query))
 
-sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
-                          "SELECT * FROM (\n",
-                          dbplyr::sql_render(first_infection),
-                          "\n) AS from_table")
-DBI::dbExecute(db, as.character(sql_query))
-
-## aixo no cal q ho miris pq es el mateix q el codi d'abans - per tant el q estigui malament abans 
-# també ho està aquí :D
 ###  Tested positive  ----
 confirmed_infection_id <- cohorts_ids %>% filter(str_detect(name, "Tested_Positive")) %>%select(cohort_definition_id) %>% pull()
 
@@ -469,7 +393,7 @@ confirmed_infection <- confirmed_infection %>%
                                 covid_next_inf_date-lubridate::days(1), # trec un dia
                                 # pq si no una el cohort_end_date de la persona amb reinifeccion
                                 # es igual q el cohort_start_date de la seguent infeccio
-                                influenza_start_date, 
+                                influenza_start_date-lubridate::days(1), 
                                 one_year_date,
                                 na.rm = TRUE))) %>%
   mutate(follow_up_days = (cohort_end_date - cohort_start_date))  %>%
@@ -500,7 +424,7 @@ exclusion_table <- rbind(exclusion_table,
 
 confirmed_infection <- confirmed_infection %>%
   filter(!(follow_up_days<120))%>%
-  select(-follow_up_days, -seq) %>%
+  select(-follow_up_days) %>%
   compute()
 #check follow-up days are fine
 # summary(confirmed_infection %>% select(follow_up_days) %>% distinct() %>%collect()) 
@@ -513,17 +437,89 @@ exclusion_table<-rbind(exclusion_table,
                             select(cohort_definition_id) %>% distinct() %>%pull()
                         ))
 
-# 
-# confirmed_infection %>%tally()  #431571infections
-# confirmed_infection %>% select(subject_id)%>% distinct() %>%tally() #425423subjects
+
+### First COVID-19 infection  - confirmed only
+first_infection <- confirmed_infection  %>%
+  filter(seq==1) %>% 
+  distinct() %>%
+  select(-seq) %>%
+  # we change cohort definition id so that is has its own id
+  mutate(cohort_definition_id=as.integer(70)) %>%
+  compute() 
+# check we have one row per person
+# first_infection %>%tally()    # 782948
+# first_infection %>% select(subject_id)%>% distinct() %>%tally() #782948
+
+# we add the cohort id to our cohorts ids table
+cohorts_ids <- rbind(cohorts_ids,
+                     tibble(atlas_id = NA,
+                            name = "First COVID-19 infection",
+                            cohort_definition_id =70, 
+                            name_var = "first_infection",
+                            type = "covid-19"))
+
+exclusion_table<-rbind(exclusion_table,
+                       tibble(N_current=first_infection %>%tally()%>%collect()%>%pull(), 
+                          exclusion_reason="initial pop",
+                          cohort_definition_id = first_infection%>%
+                                                  select(cohort_definition_id) %>% 
+                            distinct() %>%pull()
+                         ))
+
+
+reinfections <- confirmed_infection  %>%
+  filter(seq!=1)%>% 
+  select(-seq) %>%
+  distinct() %>%
+  # we change cohort definition id so that is has its own id
+  mutate(cohort_definition_id=as.integer(71)) %>%
+  compute()
+
+# reinfections %>%tally()    #  74784
+reinfections %>% select(subject_id)%>% distinct() %>%tally() #70752
+
+exclusion_table<-rbind(exclusion_table,
+                       tibble(N_current=reinfections %>%tally()%>%collect()%>%pull(), 
+                          exclusion_reason="initial pop",
+                          cohort_definition_id = reinfections %>%
+                                                 select(cohort_definition_id) %>%
+                            distinct() %>%pull()
+                          ))
+#add the cohort id to our cohorts ids table
+cohorts_ids <- rbind(cohorts_ids,
+                     tibble(atlas_id = NA,
+                            name = "Reinfections",
+                            cohort_definition_id =71, 
+                            name_var = "reinfections",
+                            type = "covid-19"))
+
+confirmed_infection <- confirmed_infection  %>%
+ mutate(cohort_definition_id= as.integer(cohort_definition_id)) %>%
+ select(-seq)%>%
+compute()
+
+# append cohorts to existing table
 sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
                           "SELECT * FROM (\n",
                           dbplyr::sql_render(confirmed_infection),
                           "\n) AS from_table")
 DBI::dbExecute(db, as.character(sql_query))
 
+# append rows to existing table
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(reinfections),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
 
-## Tested negative cohorts 
+sql_query <- glue::glue("INSERT INTO {write_schema}.er_long_covid_final_cohorts\n",
+                          "SELECT * FROM (\n",
+                          dbplyr::sql_render(first_infection),
+                          "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
+
+
+## Tested negative cohorts ----
 ### PCR and antigen negative _all events 
 
 # covid infections to use for censoring
@@ -642,7 +638,7 @@ working_cohort <- working_cohort %>%
   mutate(cohort_end_date = lubridate::as_date(pmin(observation_period_end_date, 
                                 death_date, 
                                 covid_infection_date-lubridate::days(1), # trec un dia
-                                influenza_start_date, 
+                                influenza_start_date-lubridate::days(1), 
                                 one_year_date,
                                 na.rm = TRUE))) %>%
   mutate(follow_up_days = cohort_end_date - cohort_start_date) %>% 
@@ -1123,6 +1119,7 @@ moderna_id <- cohorts_ids %>%
 
 
 # Function to get the data for the table 
+# !! pendent add PCR for postivie test----
 generate_data_table1 <- function(main_cohort_interest, long_covid_cohort){
 working_cohort <- main_cohort_interest %>% 
  rename(person_id=subject_id) %>%
@@ -1600,11 +1597,13 @@ matching_cohorts <- function(cohort1, cohort2,
   results_list <- list()
   data <- rbind(cohort1 %>%  mutate(cohort = 1, name = name1) ,
                 cohort2 %>% mutate(cohort =0,   name = name2))  # comparator cohort
+
   # Matching
-m.week_year <- matchit(cohort~  age_gr5+ gender+ week_year, 
+m.week_year <- matchit(cohort~    week_year + age_gr5, 
                         data = data,
                         method = "nearest", 
-                        exact = ~ age_gr5 + gender + week_year)
+                        exact = ~   week_year +age_gr5
+                       )
 
 # extract results of matching
 sum_matching <- summary(m.week_year)
@@ -1649,6 +1648,7 @@ m.confirmed_infection_negative_earliest <- matching_cohorts(
 
 )
 ### First infections with reinfections ---- 
+## change this to matching 1:3 ----
 m.first_infection_reinfections <- matching_cohorts(
   cohort1 = table1_data_first_infection,
   name1 = "First infection",

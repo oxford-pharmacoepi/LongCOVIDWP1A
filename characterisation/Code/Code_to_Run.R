@@ -3,10 +3,6 @@
 if (!require("pacman")) install.packages("pacman")
 library(pacman)
 
-
-
-
-
 p_load(SqlRender,
        DBI,
        DatabaseConnector,
@@ -23,24 +19,6 @@ p_load(SqlRender,
        tsibble,
        CirceR,
        survey)
-
-# library(here)
-# library(SqlRender)
-# library(DBI)
-# library(DatabaseConnector)
-# library(CohortGenerator)
-# library(CohortDiagnostics)
-# library(dplyr)
-# library(dbplyr)
-# library(tidyr)
-# library(CDMConnector)
-# library(stringr)
-# library(CirceR)
-# library(lubridate)
-# library(MatchIt)
-# library(tsibble)
-# library(survey)
-
 
 # Connection details ----
 server    <- Sys.getenv("SERVER_JUN22")

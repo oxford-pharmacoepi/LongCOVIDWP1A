@@ -37,7 +37,14 @@ library(survey)
 full_testing_start_date <- as.Date("2020-09-01", "%Y-%m-%d")
 
 load(here("data", "table1_data.Rdata"))
-load(here("data", "table1_data_matched.Rdata"))
+#load(here("data", "table1_data_matched.Rdata"))
+load(here("data", "table1_data_matched_age_week.Rdata"))
+
+nice.num<-function(x){
+  prettyNum(x, big.mark=",", nsmall = 0, digits=0,scientific = FALSE)}
+nice.num2<-function(x){
+  prettyNum(x, big.mark=",", nsmall = 2, digits=2,scientific = FALSE)}
+
 
 ```
 
@@ -59,11 +66,36 @@ vars<-c(
         "cancer",
         "hypertension",
         "renal_impairment",
-        "long_covid"
+        "long_covid",
+        "abdominal_pain",
+        "allergy", 
+        "altered_smell_taste",
+        "anxiety" , 
+        "blurred_vision" ,
+        "chest_pain" ,
+        "cognitive_dysfunction_brain_fog", 
+        "cough" ,
+        "depression" ,
+        "dizziness" ,
+        "dyspnea",
+        "fatigue_malaise" ,
+        "gastrointestinal_issues",
+        "headache" ,
+        "intermittent_fever",
+        "joint_pain"  , 
+        "memory_issues_v2" ,
+        "menstrual_problems" ,
+        "muscle_spams_pain",
+        "neuralgia" , 
+        "pins_sensation",  
+        "sleep_disorder" ,
+        "tachycardia" ,
+        "tinnitus_hearing_problems", 
+        "all_symp"
 )
 
 factor.vars<- c(
-        "age_gr2",
+  "age_gr2",
         "gender",
         "trimester",
         "vaccination_status",
@@ -76,7 +108,32 @@ factor.vars<- c(
         "cancer",
         "hypertension",
         "renal_impairment",
-        "long_covid"
+        "long_covid",
+        "abdominal_pain",
+        "allergy", 
+        "altered_smell_taste",
+        "anxiety" , 
+        "blurred_vision" ,
+        "chest_pain" ,
+        "cognitive_dysfunction_brain_fog", 
+        "cough" ,
+        "depression" ,
+        "dizziness" ,
+        "dyspnea",
+        "fatigue_malaise" ,
+        "gastrointestinal_issues",
+        "headache" ,
+        "intermittent_fever",
+        "joint_pain"  , 
+        "memory_issues_v2" ,
+        "menstrual_problems" ,
+        "muscle_spams_pain",
+        "neuralgia" , 
+        "pins_sensation",  
+        "sleep_disorder" ,
+        "tachycardia" ,
+        "tinnitus_hearing_problems", 
+        "all_symp"
 )
 
 
@@ -98,18 +155,18 @@ table1.data<-rbind(
         table1_data_tested_negative_earliest  %>%
         mutate(group = "5 Tested negative, earliest"),
        table1_data_tested_negative_all %>%
-        mutate(group = "6 Tested negative, all "),
+        mutate(group = "6 Tested negative, all"),
        table1_data_pcr_negative_earliest  %>%
-        mutate(group = "7 PCR negative, earliest "),
+        mutate(group = "7 PCR negative, earliest"),
        table1_data_pcr_negative_all  %>%
-        mutate(group = "8 PCR negative, all ")) %>%
+        mutate(group = "8 PCR negative, all")) %>%
   filter(cohort_start_date >=full_testing_start_date)
 
 
 summary.characteristics <-print(CreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
-  includeNA=T,
+  includeNA=F,
   data = table1.data,
   strata=c("group"),
   test = F), 
@@ -117,9 +174,19 @@ summary.characteristics <-print(CreateTableOne(
   smd=F,
   nonnormal = vars, #all 
   noSpaces = TRUE,
-  contDigits = 0,
-  catDigits = 0,
   printToggle=FALSE)
+
+for(i in 1:8) {
+# tidy up 
+  cur_column <- summary.characteristics[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+ summary.characteristics[, i] <- str_replace(string=summary.characteristics[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
 
 
 ```
@@ -149,7 +216,7 @@ data <- m.new_covid_tested_negative_earliest[[3]]
 summary.characteristics_covid_negative <-print(svyCreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
-  includeNA=T,
+  includeNA=F,
   data = data,
   strata=c("name"),
   test = F), 
@@ -157,11 +224,19 @@ summary.characteristics_covid_negative <-print(svyCreateTableOne(
   smd=T,
   nonnormal = vars, #all 
   noSpaces = TRUE,
-  catDigits = 0,
-  contDigits = 0,
   printToggle=FALSE)
 
-
+for(i in 1:2) {
+# tidy up 
+  cur_column <- summary.characteristics_covid_negative[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+ summary.characteristics_covid_negative[, i] <- str_replace(string=summary.characteristics_covid_negative[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
  
 ```
 
@@ -181,7 +256,7 @@ data <- m.confirmed_infection_negative_earliest[[3]]
 summary.characteristics.confirmed<-print(svyCreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
-  includeNA=T,
+  includeNA=F,
   data = data,
   strata=c("name"),
   test = F), 
@@ -189,9 +264,19 @@ summary.characteristics.confirmed<-print(svyCreateTableOne(
   smd=T,
   nonnormal = vars, #all 
   noSpaces = TRUE,
-  contDigits = 0,
-  catDigits = 0,
   printToggle=FALSE)
+
+for(i in 1:2) {
+# tidy up 
+  cur_column <- summary.characteristics.confirmed[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+ summary.characteristics.confirmed[, i] <- str_replace(string=summary.characteristics.confirmed[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
 
 ```
 
@@ -208,12 +293,13 @@ kable(summary.characteristics.confirmed
 ## First infections vs reinfections, after matching by week/year of testing and 5y age group
 
 ```{r include=FALSE}
+
 data <- m.first_infection_reinfections[[3]]
 
 summary.characteristics.reinfections<-print(svyCreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
-  includeNA=T,
+  includeNA=F,
   data = data,
   strata=c("name"),
   test = F), 
@@ -221,11 +307,19 @@ summary.characteristics.reinfections<-print(svyCreateTableOne(
   smd=T,
   nonnormal = vars, #all 
   noSpaces = TRUE,
-  contDigits = 0,
-  catDigits = 0,
   printToggle=FALSE)
 
-
+for(i in 1:2) {
+# tidy up 
+  cur_column <- summary.characteristics.reinfections[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+ summary.characteristics.reinfections[, i] <- str_replace(string=summary.characteristics.reinfections[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
  
 ```
 
@@ -386,7 +480,7 @@ s.data <- svydesign(ids = ~matched_pair,
 summary.characteristics_symptoms <-print(svyCreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
-  includeNA=T,
+  includeNA=F,
   data = s.data,
   strata=c("name"),
   test = F), 
@@ -394,9 +488,19 @@ summary.characteristics_symptoms <-print(svyCreateTableOne(
   smd=T,
   nonnormal = vars, #all 
   noSpaces = TRUE,
-  contDigits = 0,
-   catDigits = 0,
   printToggle=FALSE)
+
+for(i in 1:2) {
+# tidy up 
+  cur_column <- summary.characteristics_symptoms[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+summary.characteristics_symptoms[, i] <- str_replace(string=summary.characteristics_symptoms[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
 
 
 ```
@@ -434,7 +538,7 @@ s.data <- svydesign(ids = ~matched_pair,
 summary.characteristics_symptoms <-print(svyCreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
-  includeNA=T,
+  includeNA=F,
   data = s.data,
   strata=c("name"),
   test = F), 
@@ -442,9 +546,20 @@ summary.characteristics_symptoms <-print(svyCreateTableOne(
   smd=T,
   nonnormal = vars, #all 
   noSpaces = TRUE,
-  contDigits = 0,
-  catDigits = 0,
   printToggle=FALSE)
+
+for(i in 1:2) {
+# tidy up 
+  cur_column <- summary.characteristics_symptoms[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+summary.characteristics_symptoms[, i] <- str_replace(string=summary.characteristics_symptoms[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
+
 ```
 
 
@@ -511,7 +626,7 @@ s.data <- svydesign(ids = ~matched_pair,
 summary.characteristics_symptoms <-print(svyCreateTableOne(
   vars =  vars,
   factorVars = factor.vars,
-  includeNA=T,
+  includeNA=F,
   data = s.data,
   strata=c("name"),
   test = F), 
@@ -519,9 +634,19 @@ summary.characteristics_symptoms <-print(svyCreateTableOne(
   smd=T,
   nonnormal = vars, #all 
   noSpaces = TRUE,
-  contDigits = 0,
-  catDigits = 0,
   printToggle=FALSE)
+
+for(i in 1:2) {
+# tidy up 
+  cur_column <- summary.characteristics_symptoms[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+summary.characteristics_symptoms[, i] <- str_replace(string=summary.characteristics_symptoms[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
 
 ```
 
