@@ -52,15 +52,14 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "postgres
                                                                 pathToDriver = here::here())
 
 ## Parameters ----
-# to get rid of covid diagnoses captured before the start of the pandemic --
-covid_start_date    <- as.Date("2020-02-25", "%Y-%m-%d")
+# to keep only records after the first wave  --
+covid_start_date    <- as.Date("2020-09-01", "%Y-%m-%d")
 # we are not interested in old influenza diagnoses - so we can filter these
 influenza_start_date<- as.Date("2019-12-01", "%Y-%m-%d")
 # for symptoms, we only need symptoms occurring during covid + 180 days washout
 symptoms_start_date <- as.Date("2019-08-29","%Y-%m-%d")
 end_index_date      <- as.Date("2021-09-02", "%Y-%m-%d")
-# for filtering some results 
-full_testing_start_date <- as.Date("2020-09-01", "%Y-%m-%d")
+
 
 # Create initial Json cohorts ---- 
 create_initial_json_cohorts     <- TRUE

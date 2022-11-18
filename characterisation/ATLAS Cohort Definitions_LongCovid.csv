@@ -20,7 +20,7 @@ atlas_id;name;cohort_definition_id;type;name_var
 1780627;LongCov-ER_Menstrual_problems;19;symptom;Menstrual_problems
 1780628;LongCov-ER_Muscle spasms and pain;20;symptom;Muscle_spams_pain
 1780629;LongCov-ER_Neuralgia w considerations;21;symptom;Neuralgia
-1780580;LongCov-ER_New_Infection;22;covid-19;New_Infection
+1781117;LongCov-ER_New_Infection;22;covid-19;New_Infection
 1780634;LongCov-ER_PCR_Negative_all_events;23;control;PCR_Negative_all_events
 1780587;LongCov-ER_PCR_Negative_earliest_event;24;control;PCR_Negative_earliest_event
 1780630;LongCov-ER_Pins and needles sensation;25;symptom;Pins_sensation
@@ -29,7 +29,7 @@ atlas_id;name;cohort_definition_id;type;name_var
 1780632;LongCov-ER_Tachycardia w considerations;28;symptom;Tachycardia
 1780635;LongCov-ER_Tested_Negative_all_events;29;control;Tested_Negative_all_events
 1780582;LongCov-ER_Tested_Negative_earliest_event;30;control;Tested_Negative_earliest_event
-1780581;LongCov-ER_Tested_Positive;31;covid-19;Tested_Positive
+1781126;LongCov-ER_Tested_Positive_and_diagnoses;31;covid-19;Tested_Positive_and_diagnoses
 1780589;LongCov-ER_Tinnitus and hearing problems w considerations;32;symptom;Tinnitus_hearing_problems
 ;Vaccinated_AstraZeneca;33;vaccine;Astrazeneca
 ;Vaccinated_Janssen;34;vaccine;Janssen

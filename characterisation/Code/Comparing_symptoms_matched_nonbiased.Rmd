@@ -1,0 +1,361 @@
+---
+title: "Descriptive characteristics of Long COVID cohrots, matched"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE,
+                      warning=FALSE, 
+                      message=FALSE, 
+                      comment = FALSE,
+                      cache = FALSE,
+                      cache.lazy=FALSE)
+options(scipen=999)
+
+```
+
+
+```{r include=FALSE}
+# packages
+library(here)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(lubridate)
+library(gtsummary)
+library(tableone)
+library(kableExtra)
+library(ggplot2)
+library(forcats)
+library(tsibble)
+library(survey)
+
+# get data for table 1
+# get full testing_start from Code to Run
+# source("Code_to_Run.R", local = knitr::knit_global())
+full_testing_start_date <- as.Date("2020-09-01", "%Y-%m-%d")
+
+load(here("data", "table1_data.Rdata"))
+load(here("data", "table1_data_matched.Rdata"))
+#load(here("data", "table1_data_matched_age_week.Rdata"))
+
+nice.num<-function(x){
+  prettyNum(x, big.mark=",", nsmall = 0, digits=0,scientific = FALSE)}
+nice.num2<-function(x){
+  prettyNum(x, big.mark=",", nsmall = 2, digits=2,scientific = FALSE)}
+
+
+```
+
+
+```{r include=FALSE}
+# variables for Table 1 
+vars<-c(
+        "age",
+        "age_gr2",
+        "gender",
+        "trimester",
+        "vaccination_status",
+        "asthma",
+        "autoimmune_disease",
+        "copd",
+        "dementia",
+        "diabetes",
+        "heart_disease",
+        "cancer",
+        "hypertension",
+        "renal_impairment",
+        "long_covid",
+        "abdominal_pain",
+        "allergy", 
+        "altered_smell_taste",
+        "anxiety" , 
+        "blurred_vision" ,
+        "chest_pain" ,
+        "cognitive_dysfunction_brain_fog", 
+        "cough" ,
+        "depression" ,
+        "dizziness" ,
+        "dyspnea",
+        "fatigue_malaise" ,
+        "gastrointestinal_issues",
+        "headache" ,
+        "intermittent_fever",
+        "joint_pain"  , 
+        "memory_issues_v2" ,
+        "menstrual_problems" ,
+        "muscle_spams_pain",
+        "neuralgia" , 
+        "pins_sensation",  
+        "sleep_disorder" ,
+        "tachycardia" ,
+        "tinnitus_hearing_problems", 
+        "all_symp"
+)
+
+factor.vars<- c(
+  "age_gr2",
+        "gender",
+        "trimester",
+        "vaccination_status",
+        "asthma",
+        "autoimmune_disease",
+        "copd",
+        "dementia",
+        "diabetes",
+        "heart_disease",
+        "cancer",
+        "hypertension",
+        "renal_impairment",
+        "long_covid",
+        "abdominal_pain",
+        "allergy", 
+        "altered_smell_taste",
+        "anxiety" , 
+        "blurred_vision" ,
+        "chest_pain" ,
+        "cognitive_dysfunction_brain_fog", 
+        "cough" ,
+        "depression" ,
+        "dizziness" ,
+        "dyspnea",
+        "fatigue_malaise" ,
+        "gastrointestinal_issues",
+        "headache" ,
+        "intermittent_fever",
+        "joint_pain"  , 
+        "memory_issues_v2" ,
+        "menstrual_problems" ,
+        "muscle_spams_pain",
+        "neuralgia" , 
+        "pins_sensation",  
+        "sleep_disorder" ,
+        "tachycardia" ,
+        "tinnitus_hearing_problems", 
+        "all_symp"
+)
+
+
+```
+
+
+# Baseline characteristics 
+```{r}
+table1.data<-rbind(  
+# those without missing values
+       table1_data_new_infections   %>%
+        mutate(group = "1 COVID-19 infection"),
+       table1_data_confirmed_infection  %>%
+        mutate(group = "2 Confirmed infection"),
+       table1_data_first_infection %>%
+        mutate(group = "3 First infection"),
+       table1_data_reinfections  %>%
+        mutate(group = "4 Reinfections"),
+        table1_data_tested_negative_earliest  %>%
+        mutate(group = "5 Tested negative, earliest"),
+       table1_data_tested_negative_all %>%
+        mutate(group = "6 Tested negative, all"),
+       table1_data_pcr_negative_earliest  %>%
+        mutate(group = "7 PCR negative, earliest"),
+       table1_data_pcr_negative_all  %>%
+        mutate(group = "8 PCR negative, all")) %>%
+  filter(cohort_start_date >=full_testing_start_date) %>%
+     mutate(abdominal_pain=ifelse(is.na(abdominal_pain),0,abdominal_pain)) %>% 
+       mutate(allergy =ifelse(is.na(allergy ),0,allergy)) %>% 
+       mutate(altered_smell_taste =ifelse(is.na(altered_smell_taste ),0,altered_smell_taste)) %>% 
+       mutate(blurred_vision  =ifelse(is.na(blurred_vision  ),0,blurred_vision )) %>% 
+       mutate( anxiety =ifelse(is.na(  anxiety),0, anxiety)) %>% 
+       mutate(chest_pain =ifelse(is.na(chest_pain ),0,chest_pain)) %>% 
+       mutate(cognitive_dysfunction_brain_fog=ifelse(is.na(cognitive_dysfunction_brain_fog),0,cognitive_dysfunction_brain_fog)) %>% 
+       mutate( cough  =ifelse(is.na( cough  ),0, cough )) %>% 
+       mutate(depression =ifelse(is.na(depression ),0,depression)) %>% 
+       mutate(dizziness =ifelse(is.na(dizziness ),0,dizziness)) %>% 
+       mutate(dyspnea =ifelse(is.na( dyspnea),0,dyspnea)) %>% 
+       mutate(fatigue_malaise =ifelse(is.na(fatigue_malaise ),0,fatigue_malaise)) %>% 
+       mutate(gastrointestinal_issues =ifelse(is.na(gastrointestinal_issues ),0,gastrointestinal_issues)) %>% 
+       mutate(headache  =ifelse(is.na( headache ),0,headache )) %>% 
+       mutate(intermittent_fever =ifelse(is.na(intermittent_fever ),0,intermittent_fever)) %>% 
+       mutate( joint_pain =ifelse(is.na( joint_pain ),0, joint_pain)) %>% 
+       mutate( memory_issues_v2  =ifelse(is.na( memory_issues_v2 ),0, memory_issues_v2 )) %>% 
+       mutate(menstrual_problems =ifelse(is.na( menstrual_problems),0,menstrual_problems)) %>% 
+       mutate( muscle_spams_pain =ifelse(is.na(  muscle_spams_pain),0, muscle_spams_pain)) %>% 
+       mutate(neuralgia =ifelse(is.na(neuralgia),0,neuralgia)) %>% 
+       mutate(pins_sensation =ifelse(is.na(pins_sensation ),0,pins_sensation)) %>% 
+       mutate( sleep_disorder =ifelse(is.na(  sleep_disorder),0, sleep_disorder)) %>% 
+       mutate(tachycardia =ifelse(is.na(tachycardia ),0,tachycardia)) %>% 
+       mutate(tinnitus_hearing_problems =ifelse(is.na(tinnitus_hearing_problems ),0,tinnitus_hearing_problems)) %>% 
+       mutate(all_symp =ifelse(is.na(all_symp ),0,all_symp)) 
+
+
+summary.characteristics <-print(CreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=F,
+  data = table1.data,
+  strata=c("group"),
+  test = F), 
+  showAllLevels=F,
+  smd=F,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  printToggle=FALSE)
+
+for(i in 1:8) {
+# tidy up 
+  cur_column <- summary.characteristics[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+ summary.characteristics[, i] <- str_replace(string=summary.characteristics[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
+
+
+```
+
+```{r}
+kable(summary.characteristics,
+        col.names = c(
+        "COVID-19 infection",
+        "Confirmed infection",
+        "First infection",
+        "Reinfections",
+        "Tested negative, earliest",
+        "Tested negative, all ",
+        "PCR negative, earliest ",
+        "PCR negative, all "
+                    ))%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) 
+
+
+```
+
+
+## New COVID-19 infection vs Tested negative (earliest event), after matching by week/year of testing and 5y age group
+```{r include=FALSE}
+data <- m.new_covid_tested_negative_earliest[[3]]
+
+
+summary.characteristics_covid_negative <-print(svyCreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=F,
+  data = data,
+  strata=c("name"),
+  test = T), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  printToggle=FALSE)
+
+for(i in 1:2) {
+# tidy up 
+  cur_column <- summary.characteristics_covid_negative[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+ summary.characteristics_covid_negative[, i] <- str_replace(string=summary.characteristics_covid_negative[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
+ 
+```
+
+
+```{r}
+
+kable(summary.characteristics_covid_negative)%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) 
+
+
+```
+
+## Confirmed infections vs tested negative (earliest), after matching by week/year of testing and 5y age group
+```{r}
+data <- m.confirmed_infection_negative_earliest[[3]]
+
+summary.characteristics.confirmed<-print(svyCreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=F,
+  data = data,
+  strata=c("name"),
+  test = T), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  printToggle=FALSE)
+
+for(i in 1:2) {
+# tidy up 
+  cur_column <- summary.characteristics.confirmed[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+ summary.characteristics.confirmed[, i] <- str_replace(string=summary.characteristics.confirmed[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
+
+```
+
+
+```{r}
+kable(summary.characteristics.confirmed
+     )%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) 
+
+```
+
+
+
+## First infections vs reinfections, after matching by week/year of testing and 5y age group
+
+```{r include=FALSE}
+
+data <- m.first_infection_reinfections[[3]]
+
+summary.characteristics.reinfections<-print(svyCreateTableOne(
+  vars =  vars,
+  factorVars = factor.vars,
+  includeNA=F,
+  data = data,
+  strata=c("name"),
+  test = T), 
+  showAllLevels=F,
+  smd=T,
+  nonnormal = vars, #all 
+  noSpaces = TRUE,
+  printToggle=FALSE)
+
+for(i in 1:2) {
+# tidy up 
+  cur_column <- summary.characteristics.reinfections[, i]
+  cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+                as.numeric() 
+  cur_column <-nice.num(cur_column)
+  # add back in
+ summary.characteristics.reinfections[, i] <- str_replace(string=summary.characteristics.reinfections[, i],
+                              pattern='[0-9.]+\\b', 
+                              replacement=cur_column)    
+}
+ 
+```
+
+```{r echo=FALSE}
+
+kable(summary.characteristics.reinfections 
+     )%>%
+  kable_styling(bootstrap_options = c("striped", "bordered")) #%>%
+ # pack_rows("Baseline comorbidities", 40, 44)
+
+
+```
+
