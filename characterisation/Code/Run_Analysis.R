@@ -832,21 +832,13 @@ moderna_id <- cohorts_ids %>%
                     select(cohort_definition_id) %>% pull()
 
 
-## cohrot of interest - first New Covid infections
-# 90 days long Covid cohort
-# first two digits are for the "mother cohort"
-# digits 3,4 are for the symptoms cohort (99 is for any symptom") 
-# last two digits for window period
-## testing function
-# main_cohort_interest <- cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == 22)
-# long_covid_cohort <- cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == 229990)
-
-
-# Function to get the data for the table 
-# !! pendent add PCR for postivie test----
-generate_data_table1 <- function(main_cohort_interest, long_covid_cohort){
-working_cohort <- main_cohort_interest %>% 
- rename(person_id=subject_id) %>%
+# function to get baseline characteristics in each cohort
+# pendent add PCR for postivie test----
+get_baseline_characteristics <- function(main_cohort_id){
+                                             
+working_cohort <-   cdm$er_long_covid_final_cohorts %>% 
+  filter(cohort_definition_id == main_cohort_id) %>%
+  rename(person_id=subject_id) %>%
   left_join(cdm$person  %>%
               select(person_id, gender_concept_id, year_of_birth) %>%
               mutate(gender= ifelse(gender_concept_id==8507, "Male",
@@ -1056,331 +1048,6 @@ vaccines <- rbind(cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == 
     filter(drug_exposure_start_date < cohort_start_date) %>%
     distinct() %>%
     compute()
-
- # SIDIAP specific vaccines   
-# vaccinations <- cdm$drug_exposure%>% 
-#       filter(drug_concept_id %in% 
-#            c("37003436","724905",  "37003518", "739906")) %>% 
-#   full_join(main_cohort_interest %>% rename(person_id=subject_id)) %>%
-#   filter(drug_exposure_start_date < cohort_start_date) %>%
-#   compute()  %>%
-#    #"BNT162b2" #"ChAdOx1" #"mRNA-1273" #Ad26.COV2.S
-#    select(person_id, drug_concept_id, drug_exposure_start_date) %>%
-#   distinct() %>%
-#    mutate(vaccine_type=
-#             ifelse(drug_concept_id=="37003436", "BNT162b2",
-#                    ifelse(drug_concept_id=="724905", "ChAdOx1",
-#                           ifelse(drug_concept_id=="37003518", "mRNA-1273",
-#                                  ifelse(drug_concept_id=="739906", "Ad26.COV2.S",NA ))))) %>%
-#   compute()
- 
-# get  dates and vaccines types for the different doses
-vaccines <- vaccinations %>%
-  rename(person_id = subject_id,
-         cohort_start_date = drug_exposure_start_date) %>%
-      group_by(person_id) %>% 
-      arrange(drug_exposure_start_date) %>% 
-      mutate(seq=row_number())   %>%
-      mutate(second_dose_type = ifelse(seq==1, lead(vaccine_type, order_by = c("drug_exposure_start_date")),  NA),
-             second_dose_date = ifelse(seq==1, lead(drug_exposure_start_date, order_by = c("drug_exposure_start_date")), NA)) %>%
-  ungroup() %>%
-  compute()
-
-vaccines <- vaccines %>%
-  filter(seq!=2) %>%
-  group_by(person_id) %>%
-  arrange(drug_exposure_start_date) %>% 
-  mutate( third_dose_type = ifelse(seq==1,lead(vaccine_type, order_by = c("drug_exposure_start_date")), NA),
-             third_dose_date = ifelse(seq==1, lead(drug_exposure_start_date, order_by = c("drug_exposure_start_date")), NA)) %>%
-  ungroup() %>%
-  filter(seq==1) %>%
-  rename(first_dose_type = vaccine_type,
-         first_dose_date = drug_exposure_start_date) %>%
-  select( -seq) %>%
-  mutate(one_dose_vaccine = ifelse(is.na(first_dose_date), 0, 1)) %>%
-  mutate(fully_vaccinated = ifelse(first_dose_type=="Ad26.COV2.S", 1,
-                                   ifelse(is.na(second_dose_date), 0,1))) %>%
-  mutate(booster_doses = ifelse(first_dose_type=="Ad26.COV2.S" & !(is.na(second_dose_date)),  1,
-                                ifelse(is.na(third_dose_date), 0,1))) %>%
-  mutate(vaccination_status = ifelse(booster_doses==1, "Booster doses", 
-                              ifelse( fully_vaccinated ==1, "Two doses vaccination",
-                              ifelse( one_dose_vaccine == 1, "First dose vaccination", NA)
-                              ))) %>%
-  compute()
-
- 
-working_cohort <- working_cohort%>%
-  left_join(vaccines)%>% 
-  mutate(vaccination_status = ifelse(is.na(vaccination_status), "Non vaccinated", vaccination_status)) %>%
-                                     compute()
-
-# add variables for timester of infection   
-     working_cohort <- working_cohort %>%
-     mutate(year = lubridate::year(cohort_start_date),
-         month = lubridate::month(cohort_start_date)) %>%
-  mutate(trimester=ifelse(year==2020 & month<4,                         "Jan-Mar 2020", 
-                   ifelse(year==2020 & (month==4 | month==5| month==6), "Apr-Jun 2020", 
-                   ifelse(year==2020 & (month==7 | month==8| month==9), "Jul-Sep 2020",
-                   ifelse(year==2020 & month>9,                         "Oct-Dec 2020",
-                   ifelse(year==2021 & month<4,                         "Jan-Mar 2021",
-                   ifelse(year==2021 & (month==4 | month==5| month==6), "Apr-Jun 2021",
-                   ifelse(year==2021 & (month==7 | month==8| month==9), "Jul-Sep 2021",
-                   ifelse(year==2021 & month>9,                         "Oct-Dec 2021", 
-                   NA))))))))) %>%
-  select(-year, -month) %>%
-   collect()%>%
-       # add factors fo table 1 
-     mutate(age_gr2= factor(age_gr2, 
-                         levels = c("<=34",
-                                    "35-49", 
-                                    "50-64",
-                                    "65-79",
-                                    ">=80"))) %>%
-    mutate(trimester= factor(trimester, 
-                         levels = c("Jan-Mar 2020",
-                                    "Apr-Jun 2020", 
-                                    "Jul-Sep 2020",
-                                    "Oct-Dec 2020",
-                                    "Jan-Mar 2021",
-                                    "Apr-Jun 2021",
-                                    "Jul-Sep 2021",
-                                    "Oct-Dec 2021"
-                                    )))
-
- 
-working_cohort
-}
-
-# !! pendent add PCR for postivie test----
-get_baseline_characteristics <- function(main_cohort_interest){
-working_cohort <- main_cohort_interest %>% 
- rename(person_id=subject_id) %>%
-  left_join(cdm$person  %>%
-              select(person_id, gender_concept_id, year_of_birth) %>%
-              mutate(gender= ifelse(gender_concept_id==8507, "Male",
-                             ifelse(gender_concept_id==8532, "Female", NA ))) %>%
-              select(-gender_concept_id)) %>%
-  # SIDIAP specific  - MEDEA 
- # left_join(cdm$observation %>%
- #             filter(observation_source_value == "medea") %>% 
- #             select(person_id, observation_source_value, value_as_string) %>%
- #             filter(value_as_string %in% c("R", "U1", "U2", "U3", "U4", "U5")) %>%
- #             mutate(medea=value_as_string) %>%
- #             select(person_id, medea)) %>%
-  compute()
-         
-  # get age 
-    working_cohort<- working_cohort %>%
-    mutate(age= year(cohort_start_date)-year_of_birth) %>%
-    select(-year_of_birth) %>%
-      mutate(age_gr2=ifelse(age<=34,  "<=34",
-                 ifelse(age>=35 & age<=49,  "35-49",    
-                 ifelse(age>=50 & age<=64,  "50-64",    
-                 ifelse(age>=65 & age<=79,  "65-79",    
-                 ifelse(age>=80, ">=80",
-                       NA)))))) %>% 
-      # 5y age band for matching
-   mutate(age_gr5=ifelse(age<20,  "<20",
-                  ifelse(age>=20 & age<=24,  "20-24", 
-                  ifelse(age>=25 & age<=29,  "25-29",    
-                  ifelse(age>=30 & age<=34,  "30-34",    
-                  ifelse(age>=35 & age<=39,  "35-39",   
-                  ifelse(age>=40 & age<=44,  "40-44",    
-                  ifelse(age>=45 & age<=49,  "45-49",    
-                  ifelse(age>=50 & age<=54,  "50-54",               
-                  ifelse(age>=55 & age<=59,  "55-59",  
-                  ifelse(age>=60 & age<=64,  "60-64",    
-                  ifelse(age>=65 & age<=69,  "65-69",
-                  ifelse(age>=70 & age<=74,  "70-74",
-                  ifelse(age>=75 & age<=79,  "75-79",
-                  ifelse(age>=80 & age<=84,  "80-84",
-                  ifelse(age>=85 & age<=89,  "85-89",
-                  ifelse(age>=90 & age<=94,  "90-94",
-                  ifelse(age>=95 & age<=99,  "95-99",
-                  ifelse(age>=100 , ">=100",
-                       NA))))))))))))))))))) %>%
-      # get week and year of test for matching
-   mutate(week_year = yearweek(as.Date(cohort_start_date))) %>%
-   mutate(week_year = as.character(week_year)) %>%
-  compute() 
-
-
- #### Comorbidities at baseline
-autoimmune_disease.codes<- cdm$concept_ancestor %>% 
-   filter(ancestor_concept_id ==434621) %>% 
-   collect()
- 
- autoimmune_disease <- cdm$condition_occurrence %>% 
-   filter(condition_concept_id %in% !!autoimmune_disease.codes$descendant_concept_id) %>% 
-   full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
-   filter(condition_start_date < cohort_start_date) %>%
-   select(person_id) %>% 
-   distinct() %>% 
-   compute() 
- 
- asthma.codes<- cdm$concept_ancestor %>% 
-   filter(ancestor_concept_id ==317009) %>% 
-   collect()
- 
- asthma <- cdm$condition_occurrence %>% 
-   filter(condition_concept_id %in% !!asthma.codes$descendant_concept_id) %>% 
-   full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
-   filter(condition_start_date < cohort_start_date) %>%
-   select(person_id) %>% 
-   distinct() %>% 
-   compute() 
- 
- malignant_neoplastic_disease.codes<- cdm$concept_ancestor %>% 
-   filter(ancestor_concept_id ==443392) %>% 
-   collect()
- 
- malignant_neoplastic_disease <- cdm$condition_occurrence %>% 
-   filter(condition_concept_id %in% !!malignant_neoplastic_disease.codes$descendant_concept_id) %>% 
-      full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
-   filter(condition_start_date < cohort_start_date) %>%
-   select(person_id) %>% 
-   distinct() %>% 
-     compute() 
-  
- diabetes.codes<- cdm$concept_ancestor %>% 
-   filter(ancestor_concept_id ==201820) %>% 
-   collect()
- 
- diabetes <- cdm$condition_occurrence %>% 
-   filter(condition_concept_id %in% !!diabetes.codes$descendant_concept_id) %>% 
-      full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
-   filter(condition_start_date < cohort_start_date) %>%
-   select(person_id) %>% 
-   distinct() %>% 
-      compute() 
- 
- heart_disease.codes<- cdm$concept_ancestor %>% 
-   filter(ancestor_concept_id ==321588) %>% 
-   collect()
- 
- heart_disease <- cdm$condition_occurrence %>% 
-   filter(condition_concept_id %in% !!heart_disease.codes$descendant_concept_id) %>% 
-      full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
-   filter(condition_start_date < cohort_start_date) %>%
-   select(person_id) %>% 
-   distinct() %>% 
-   compute() 
- 
- hypertensive_disorder.codes<- cdm$concept_ancestor %>% 
-   filter(ancestor_concept_id ==316866) %>% 
-      collect() 
- 
- hypertensive_disorder <- cdm$condition_occurrence %>% 
-   filter(condition_concept_id %in% !!hypertensive_disorder.codes$descendant_concept_id) %>%
-      full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
-   filter(condition_start_date < cohort_start_date) %>%
-   select(person_id) %>% 
-   distinct() %>% 
-   compute() 
-  
- renal_impairment.codes<- cdm$concept_ancestor %>% 
-   filter(ancestor_concept_id ==4030518) %>% 
-   collect()
- 
- renal_impairment <- cdm$condition_occurrence %>% 
-   filter(condition_concept_id %in% !!renal_impairment.codes$descendant_concept_id) %>%
-      full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
-   filter(condition_start_date < cohort_start_date) %>%
-   select(person_id) %>% 
-   distinct() %>% 
-   compute() 
- 
- copd.codes<- cdm$concept_ancestor %>% 
-   filter(ancestor_concept_id ==255573) %>% 
-   collect()
- 
- copd <- cdm$condition_occurrence %>% 
-   filter(condition_concept_id %in% !!copd.codes$descendant_concept_id) %>% 
-      full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
-   filter(condition_start_date < cohort_start_date) %>%
-   select(person_id) %>% 
-   distinct() %>% 
-   compute()
- 
- dementia.codes<- cdm$concept_ancestor %>% 
-   filter(ancestor_concept_id ==4182210) %>% 
-   collect()
- 
- dementia <- cdm$condition_occurrence %>% 
-   filter(condition_concept_id %in% !!dementia.codes$descendant_concept_id) %>% 
-      full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
-   filter(condition_start_date < cohort_start_date) %>%
-   select(person_id) %>% 
-   distinct() %>% 
-   compute()
- # add to cohort
- working_cohort <- working_cohort %>%
-   left_join(asthma %>% mutate(asthma = 1)) %>%
-   left_join(autoimmune_disease %>% mutate(autoimmune_disease = 1)) %>%
-   left_join(copd %>% mutate(copd = 1 )) %>%
-   left_join(dementia %>% mutate(dementia = 1)) %>%
-   left_join(diabetes %>% mutate(diabetes = 1)) %>%
-   left_join(heart_disease %>% mutate(heart_disease = 1)) %>%
-   left_join(hypertensive_disorder %>% mutate(hypertension = 1)) %>%
-   left_join(malignant_neoplastic_disease %>% mutate(cancer = 1)) %>%
-   left_join(renal_impairment %>% mutate(renal_impairment = 1)) %>%
-   mutate(asthma=ifelse(is.na(asthma),0,asthma)) %>% 
-   mutate(autoimmune_disease=ifelse(is.na(autoimmune_disease),0,autoimmune_disease)) %>% 
-   mutate(copd=ifelse(is.na(copd),0,copd)) %>% 
-   mutate(dementia=ifelse(is.na(dementia),0,dementia)) %>% 
-   mutate(diabetes=ifelse(is.na(diabetes),0,diabetes)) %>% 
-   mutate(heart_disease=ifelse(is.na(heart_disease),0,heart_disease)) %>% 
-   mutate(hypertension=ifelse(is.na(hypertension),0,hypertension)) %>% 
-   mutate(cancer=ifelse(is.na(cancer),0,cancer)) %>% 
-   mutate(renal_impairment=ifelse(is.na(renal_impairment),0,renal_impairment)) 
- 
- rm(autoimmune_disease.codes,
-    asthma.codes,
-    malignant_neoplastic_disease.codes,
-    diabetes.codes,
-    heart_disease.codes,
-    hypertensive_disorder.codes,
-    renal_impairment.codes,
-    copd.codes,
-    dementia.codes,
-    autoimmune_disease,
-    asthma,
-    copd,
-    dementia,
-    diabetes,
-    heart_disease,
-    hypertensive_disorder,
-    malignant_neoplastic_disease,
-    renal_impairment)
- 
- #!!! get vaccines ----
-vaccines <- rbind(cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == astrazeneca_id) %>% mutate(vaccine_type = "ChAdOx1"),
-                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == moderna_id) %>% mutate(vaccine_type = "mRNA-1273"),
-                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == pfizer_id)  %>% mutate(vaccine_type = "BNT162b2"),
-                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == janssen_id) %>% mutate(vaccine_type = "Ad26.COV2.S")
-                  ) %>%
-    select(-cohort_end_date, -cohort_definition_id) %>%
-    full_join(main_cohort_interest) %>%
-    filter(drug_exposure_start_date < cohort_start_date) %>%
-    distinct() %>%
-    compute()
-
- # SIDIAP specific vaccines   
-# vaccinations <- cdm$drug_exposure%>% 
-#       filter(drug_concept_id %in% 
-#            c("37003436","724905",  "37003518", "739906")) %>% 
-#   full_join(main_cohort_interest %>% rename(person_id=subject_id)) %>%
-#   filter(drug_exposure_start_date < cohort_start_date) %>%
-#   compute()  %>%
-#    #"BNT162b2" #"ChAdOx1" #"mRNA-1273" #Ad26.COV2.S
-#    select(person_id, drug_concept_id, drug_exposure_start_date) %>%
-#   distinct() %>%
-#    mutate(vaccine_type=
-#             ifelse(drug_concept_id=="37003436", "BNT162b2",
-#                    ifelse(drug_concept_id=="724905", "ChAdOx1",
-#                           ifelse(drug_concept_id=="37003518", "mRNA-1273",
-#                                  ifelse(drug_concept_id=="739906", "Ad26.COV2.S",NA ))))) %>%
-#   compute()
  
 # get  dates and vaccines types for the different doses
 vaccines <- vaccinations %>%
@@ -1442,15 +1109,20 @@ working_cohort <- working_cohort%>%
 working_cohort
 }
 
+# function to add long covid + symptoms 
+# In long COVID cohorts, first two digits are for the "mother cohort"
+# digits 3,4 are for the symptoms cohort (99 is for any symptom - so lOng covid) 
+# last two digits for window period
 
-# add long covid symptoms 
+ get_long_cov_symptoms <- function(main_cohort, main_cohort_id,  window_id){
+   # identify long covid cohort specific to the main cohort and for the time window of interest
+  long_covid_id <- main_cohort_id*10^4+99*10^2+window_id
+  long_covid_cohort <- cdm$er_long_covid_final_cohorts %>%  filter(cohort_definition_id == long_covid_id) %>% compute()
 
- ## we add long covid 90 days 
- get_long_cov_symptoms <- function(main_cohort, long_covid_cohort){
-   
-    working_cohort <- main_cohort %>%
+  # add this to main cohort
+  working_cohort <- main_cohort %>%
    left_join( long_covid_cohort   %>% 
-                 distinct() %>%
+                distinct() %>%
                 select(-cohort_definition_id) %>%
                 mutate(long_covid = 1) %>%
                 rename(long_covid_date = cohort_end_date,
@@ -1518,89 +1190,59 @@ left_join(cdm$er_long_covid_all_symptoms_cohorts %>%
 working_cohort
  }
   
-   
 
-
-# Symptoms - long Covid is 99
-symptom_id <- 99
-window_id <- 90
 ## New COVID-19 infection 
-main_cohort_id <- cohorts_ids %>%
-                    filter(str_detect(name, "New_Infection")) %>% 
-                    select(cohort_definition_id) %>% pull()
+new_infection_id            <- cohorts_ids %>%
+                               filter(str_detect(name, "New_Infection")) %>% 
+                               select(cohort_definition_id) %>% pull()
+first_infection_id          <- 70
+reinfections_id             <- 71
+tested_negative_all_id      <- cohorts_ids %>%  filter(str_detect(name, "Tested_Negative_all")) %>%
+                               select(cohort_definition_id) %>% pull()
+tested_negative_earliest_id <- cohorts_ids %>%  filter(str_detect(name, "Tested_Negative_earliest")) %>%
+                               select(cohort_definition_id) %>% pull()
+PCR_negative_earliest_id    <- cohorts_ids %>% filter(str_detect(name, "PCR_Negative_earliest")) %>%
+                               select(cohort_definition_id) %>% pull()
+PCR_negative_all_id         <- cohorts_ids %>%  filter(str_detect(name, "PCR_Negative_all")) %>%
+                               select(cohort_definition_id) %>% pull()
 
-baseline_new_infections <- get_baseline_characteristics(
-                          main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == main_cohort_id))
+# add baseline characteristics 
+baseline_new_infections            <- get_baseline_characteristics(main_cohort_id = new_infection_id) 
+baseline_first_infection           <- get_baseline_characteristics(main_cohort_id = first_infection_id) 
+baseline_reinfections              <- get_baseline_characteristics(main_cohort_id = reinfection_id) 
+baseline_tested_negative_earliest  <- get_baseline_characteristics(main_cohort_id = tested_negative_earliest_id ) 
+baseline_new_tested_negative_all   <- get_baseline_characteristics(main_cohort_id = tested_negative_all_id) 
+baseline_new_PCR_negative_earliest <- get_baseline_characteristics(main_cohort_id = PCR_negative_earliest_id) 
+baseline_new_PCR_negative_all      <- get_baseline_characteristics(main_cohort_id = PCR_negative_all_id) 
 
-long_covid_id <- main_cohort_id*10^4+symptom_id*10^2+window_id
+# add long covid symptoms , 28 or 90 days
 table1_data_new_infections <- get_long_cov_symptoms(main_cohort = baseline_new_infections,
-                                                    long_covid_cohort = cdm$er_long_covid_final_cohorts %>% 
-                                                      filter(cohort_definition_id == long_covid_id))
+                                                    main_cohort_id = new_infection_id,
+                                                    window_id  = 90)
 
+table1_data_first_infection <- get_long_cov_symptoms(main_cohort = baseline_first_infection ,
+                                                    main_cohort_id = first_infection_id,
+                                                    window_id  = 90)
 
+table1_data_reinfections <- get_long_cov_symptoms(main_cohort = baseline_reinfections ,
+                                                    main_cohort_id = reinfections_id,
+                                                    window_id  = 90)
 
-##First infection 
-main_cohort_id <- 70
-long_covid_id <- main_cohort_id*10^4+symptom_id*10^2+window_id
+table1_data_tested_negative_earliest <- get_long_cov_symptoms(main_cohort = baseline_tested_negative_earliest ,
+                                                    main_cohort_id = tested_negative_earliest_id ,
+                                                    window_id  = 90)
 
-table1_data_first_infection <- generate_data_table1(
-  main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == main_cohort_id) ,
-  long_covid_cohort = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == long_covid_id))
+table1_data_tested_negative_all <- get_long_cov_symptoms(main_cohort = baseline_tested_negative_all ,
+                                                    main_cohort_id = tested_negative_all_id ,
+                                                    window_id  = 90)
 
-### Reinfections 
-main_cohort_id <- 71
-long_covid_id <- main_cohort_id*10^4+symptom_id*10^2+window_id
+table1_data_pcr_negative_earliest <- get_long_cov_symptoms(main_cohort = baseline_pcr_negative_earliest ,
+                                                    main_cohort_id = pcr_negative_earliest_id ,
+                                                    window_id  = 90)
 
-table1_data_reinfections <- generate_data_table1(
-  main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == main_cohort_id) ,
-  long_covid_cohort = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == long_covid_id))
-
-## Tested negative, earliest 
-main_cohort_id <- cohorts_ids %>%
-                    filter(str_detect(name, "Tested_Negative_earliest")) %>% 
-                    select(cohort_definition_id) %>% pull()
-long_covid_id <- main_cohort_id*10^4+symptom_id*10^2+window_id
-
-
-table1_data_tested_negative_earliest <- generate_data_table1(
-  main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == main_cohort_id) ,
-  long_covid_cohort = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == long_covid_id))
-
-## Tested negative, all 
-main_cohort_id <- cohorts_ids %>%
-                    filter(str_detect(name, "Tested_Negative_all")) %>% 
-                    select(cohort_definition_id) %>% pull()
-long_covid_id <- main_cohort_id*10^4+symptom_id*10^2+window_id
-
-
-table1_data_tested_negative_all <- generate_data_table1(
-  main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == main_cohort_id) ,
-  long_covid_cohort = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == long_covid_id))
-
-## PCR negative, earliest 
-main_cohort_id <- cohorts_ids %>%
-                    filter(str_detect(name, "PCR_Negative_earliest")) %>% 
-                    select(cohort_definition_id) %>% pull()
-long_covid_id <- main_cohort_id*10^4+symptom_id*10^2+window_id
-
-
-table1_data_pcr_negative_earliest <- generate_data_table1(
-  main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == main_cohort_id) ,
-  long_covid_cohort = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == long_covid_id))
-
-## PCR negative, all 
-main_cohort_id <- cohorts_ids %>%
-                    filter(str_detect(name, "PCR_Negative_all")) %>% 
-                    select(cohort_definition_id) %>% pull()
-long_covid_id <- main_cohort_id*10^4+symptom_id*10^2+window_id
-
-
-table1_data_pcr_negative_all <- generate_data_table1(
-  main_cohort_interest = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == main_cohort_id) ,
-  long_covid_cohort = cdm$er_long_covid_final_cohorts %>% filter(cohort_definition_id == long_covid_id))
-
-
-
+table1_data_pcr_negative_all <- get_long_cov_symptoms(main_cohort = baseline_pcr_negative_all ,
+                                                    main_cohort_id = pcr_negative_all_id ,
+                                                    window_id  = 90)
 
 
 ## save results 
@@ -1611,8 +1253,43 @@ save(table1_data_new_infections,
      table1_data_tested_negative_all,
      table1_data_pcr_negative_all,
      table1_data_pcr_negative_earliest,
-     file = here("data", "table1_data.Rdata"))
+     file = here("data", "table1_data_90.Rdata"))
 
+table1_data_new_infections_28 <- get_long_cov_symptoms(main_cohort = baseline_new_infections,
+                                                    main_cohort_id = new_infection_id,
+                                                    window_id  = 28)
+
+table1_data_first_infection_28 <- get_long_cov_symptoms(main_cohort = baseline_first_infection ,
+                                                    main_cohort_id = first_infection_id,
+                                                    window_id  = 28)
+
+table1_data_reinfections_28 <- get_long_cov_symptoms(main_cohort = baseline_reinfections ,
+                                                    main_cohort_id = reinfections_id,
+                                                    window_id  = 28)
+
+table1_data_tested_negative_earliest_28 <- get_long_cov_symptoms(main_cohort = baseline_tested_negative_earliest ,
+                                                    main_cohort_id = tested_negative_earliest_id ,
+                                                    window_id  = 28)
+
+table1_data_tested_negative_all_28 <- get_long_cov_symptoms(main_cohort = baseline_tested_negative_all ,
+                                                    main_cohort_id = tested_negative_all_id ,
+                                                    window_id  = 28)
+
+table1_data_pcr_negative_earliest_28 <- get_long_cov_symptoms(main_cohort = baseline_pcr_negative_earliest ,
+                                                    main_cohort_id = pcr_negative_earliest_id ,
+                                                    window_id  = 28)
+
+table1_data_pcr_negative_all_28 <- get_long_cov_symptoms(main_cohort = baseline_pcr_negative_all ,
+                                                    main_cohort_id = pcr_negative_all_id ,
+                                                    window_id  = 28)
+save(table1_data_new_infections_28,
+     table1_data_first_infection_28,
+     table1_data_reinfections_28,
+     table1_data_tested_negative_earliest_28,
+     table1_data_tested_negative_all_28,
+     table1_data_pcr_negative_all_28,
+     table1_data_pcr_negative_earliest_28,
+     file = here("data", "table1_data_28.Rdata"))
 
 
 #### Generate  Matched cohort ----
@@ -1627,60 +1304,60 @@ matching_cohorts <- function(cohort1, cohort2,
   data <- rbind(cohort1 %>%  mutate(cohort = 1, name = name1) ,
                 cohort2 %>% mutate(cohort =0,   name = name2))%>% # comparator cohort
           # 5y age band for matching
-   mutate(age_gr5=ifelse(age<20,  "<20",
-                  ifelse(age>=20 & age<=24,  "20-24",
-                  ifelse(age>=25 & age<=29,  "25-29",
-                  ifelse(age>=30 & age<=34,  "30-34",
-                  ifelse(age>=35 & age<=39,  "35-39",
-                  ifelse(age>=40 & age<=44,  "40-44",
-                  ifelse(age>=45 & age<=49,  "45-49",
-                  ifelse(age>=50 & age<=54,  "50-54",
-                  ifelse(age>=55 & age<=59,  "55-59",
-                  ifelse(age>=60 & age<=64,  "60-64",
-                  ifelse(age>=65 & age<=69,  "65-69",
-                  ifelse(age>=70 & age<=74,  "70-74",
-                  ifelse(age>=75 & age<=79,  "75-79",
-                  ifelse(age>=80 & age<=84,  "80-84",
-                  ifelse(age>=85 & age<=89,  "85-89",
-                  ifelse(age>=90 & age<=94,  "90-94",
-                  ifelse(age>=95 & age<=99,  "95-99",
-                  ifelse(age>=100 , ">=100",
-                       NA))))))))))))))))))) %>%
-      # get week and year of test for matching
-   mutate(week_year = yearweek(as.Date(cohort_start_date))) %>%
-   mutate(week_year = as.character(week_year)) %>%
-       mutate(abdominal_pain=ifelse(is.na(abdominal_pain),0,abdominal_pain)) %>% 
-       mutate(allergy =ifelse(is.na(allergy ),0,allergy)) %>% 
-       mutate(altered_smell_taste =ifelse(is.na(altered_smell_taste ),0,altered_smell_taste)) %>% 
-       mutate(blurred_vision  =ifelse(is.na(blurred_vision  ),0,blurred_vision )) %>% 
-       mutate( anxiety =ifelse(is.na(  anxiety),0, anxiety)) %>% 
-       mutate(chest_pain =ifelse(is.na(chest_pain ),0,chest_pain)) %>% 
-       mutate(cognitive_dysfunction_brain_fog=ifelse(is.na(cognitive_dysfunction_brain_fog),0,cognitive_dysfunction_brain_fog)) %>% 
-       mutate( cough  =ifelse(is.na( cough  ),0, cough )) %>% 
-       mutate(depression =ifelse(is.na(depression ),0,depression)) %>% 
-       mutate(dizziness =ifelse(is.na(dizziness ),0,dizziness)) %>% 
-       mutate(dyspnea =ifelse(is.na( dyspnea),0,dyspnea)) %>% 
-       mutate(fatigue_malaise =ifelse(is.na(fatigue_malaise ),0,fatigue_malaise)) %>% 
-       mutate(gastrointestinal_issues =ifelse(is.na(gastrointestinal_issues ),0,gastrointestinal_issues)) %>% 
-       mutate(headache  =ifelse(is.na( headache ),0,headache )) %>% 
-       mutate(intermittent_fever =ifelse(is.na(intermittent_fever ),0,intermittent_fever)) %>% 
-       mutate( joint_pain =ifelse(is.na( joint_pain ),0, joint_pain)) %>% 
-       mutate( memory_issues_v2  =ifelse(is.na( memory_issues_v2 ),0, memory_issues_v2 )) %>% 
-       mutate(menstrual_problems =ifelse(is.na( menstrual_problems),0,menstrual_problems)) %>% 
-       mutate( muscle_spams_pain =ifelse(is.na(  muscle_spams_pain),0, muscle_spams_pain)) %>% 
-       mutate(neuralgia =ifelse(is.na(neuralgia),0,neuralgia)) %>% 
-       mutate(pins_sensation =ifelse(is.na(pins_sensation ),0,pins_sensation)) %>% 
-       mutate( sleep_disorder =ifelse(is.na(  sleep_disorder),0, sleep_disorder)) %>% 
-       mutate(tachycardia =ifelse(is.na(tachycardia ),0,tachycardia)) %>% 
-       mutate(tinnitus_hearing_problems =ifelse(is.na(tinnitus_hearing_problems ),0,tinnitus_hearing_problems)) %>% 
-       mutate(all_symp =ifelse(is.na(all_symp ),0,all_symp)) # comparator cohort 
+   # mutate(age_gr5=ifelse(age<20,  "<20",
+   #                ifelse(age>=20 & age<=24,  "20-24",
+   #                ifelse(age>=25 & age<=29,  "25-29",
+   #                ifelse(age>=30 & age<=34,  "30-34",
+   #                ifelse(age>=35 & age<=39,  "35-39",
+   #                ifelse(age>=40 & age<=44,  "40-44",
+   #                ifelse(age>=45 & age<=49,  "45-49",
+   #                ifelse(age>=50 & age<=54,  "50-54",
+   #                ifelse(age>=55 & age<=59,  "55-59",
+   #                ifelse(age>=60 & age<=64,  "60-64",
+   #                ifelse(age>=65 & age<=69,  "65-69",
+   #                ifelse(age>=70 & age<=74,  "70-74",
+   #                ifelse(age>=75 & age<=79,  "75-79",
+   #                ifelse(age>=80 & age<=84,  "80-84",
+   #                ifelse(age>=85 & age<=89,  "85-89",
+   #                ifelse(age>=90 & age<=94,  "90-94",
+   #                ifelse(age>=95 & age<=99,  "95-99",
+   #                ifelse(age>=100 , ">=100",
+   #                     NA))))))))))))))))))) %>%
+   #    # get week and year of test for matching
+   # mutate(week_year = yearweek(as.Date(cohort_start_date))) %>%
+   # mutate(week_year = as.character(week_year)) %>%
+   #     mutate(abdominal_pain=ifelse(is.na(abdominal_pain),0,abdominal_pain)) %>% 
+   #     mutate(allergy =ifelse(is.na(allergy ),0,allergy)) %>% 
+   #     mutate(altered_smell_taste =ifelse(is.na(altered_smell_taste ),0,altered_smell_taste)) %>% 
+   #     mutate(blurred_vision  =ifelse(is.na(blurred_vision  ),0,blurred_vision )) %>% 
+   #     mutate( anxiety =ifelse(is.na(  anxiety),0, anxiety)) %>% 
+   #     mutate(chest_pain =ifelse(is.na(chest_pain ),0,chest_pain)) %>% 
+   #     mutate(cognitive_dysfunction_brain_fog=ifelse(is.na(cognitive_dysfunction_brain_fog),0,cognitive_dysfunction_brain_fog)) %>% 
+   #     mutate( cough  =ifelse(is.na( cough  ),0, cough )) %>% 
+   #     mutate(depression =ifelse(is.na(depression ),0,depression)) %>% 
+   #     mutate(dizziness =ifelse(is.na(dizziness ),0,dizziness)) %>% 
+   #     mutate(dyspnea =ifelse(is.na( dyspnea),0,dyspnea)) %>% 
+   #     mutate(fatigue_malaise =ifelse(is.na(fatigue_malaise ),0,fatigue_malaise)) %>% 
+   #     mutate(gastrointestinal_issues =ifelse(is.na(gastrointestinal_issues ),0,gastrointestinal_issues)) %>% 
+   #     mutate(headache  =ifelse(is.na( headache ),0,headache )) %>% 
+   #     mutate(intermittent_fever =ifelse(is.na(intermittent_fever ),0,intermittent_fever)) %>% 
+   #     mutate( joint_pain =ifelse(is.na( joint_pain ),0, joint_pain)) %>% 
+   #     mutate( memory_issues_v2  =ifelse(is.na( memory_issues_v2 ),0, memory_issues_v2 )) %>% 
+   #     mutate(menstrual_problems =ifelse(is.na( menstrual_problems),0,menstrual_problems)) %>% 
+   #     mutate( muscle_spams_pain =ifelse(is.na(  muscle_spams_pain),0, muscle_spams_pain)) %>% 
+   #     mutate(neuralgia =ifelse(is.na(neuralgia),0,neuralgia)) %>% 
+   #     mutate(pins_sensation =ifelse(is.na(pins_sensation ),0,pins_sensation)) %>% 
+   #     mutate( sleep_disorder =ifelse(is.na(  sleep_disorder),0, sleep_disorder)) %>% 
+   #     mutate(tachycardia =ifelse(is.na(tachycardia ),0,tachycardia)) %>% 
+   #     mutate(tinnitus_hearing_problems =ifelse(is.na(tinnitus_hearing_problems ),0,tinnitus_hearing_problems)) %>% 
+   #     mutate(all_symp =ifelse(is.na(all_symp ),0,all_symp)) # comparator cohort 
 
   # Matching
 m.week_year <- matchit(cohort~    week_year + age_gr5, 
                         data = data,
                         method = "nearest", 
                         exact = ~   week_year +age_gr5,
-                       ratio = ratio
+                        ratio = ratio
                        )
 
 # extract results of matching
@@ -1719,7 +1396,6 @@ m.new_covid_tested_negative_earliest <- matching_cohorts(
 )
 
 ### First infections with reinfections ---- 
-## change this to matching 1:3 ----
 m.first_infection_reinfections <- matching_cohorts(
     cohort1 = table1_data_reinfections,
   name1 = "Reinfections",
@@ -1740,8 +1416,7 @@ if(generate_results  =="FALSE"){
 print(paste0("Skipping  generating descriptive tables"))
 } else { 
 print(paste0("Generating descriptive tables"))
-rmarkdown::render(here("Code/Comparing_symptoms.Rmd"))
-rmarkdown::render(here("Code/Comparing_symptoms_matched.Rmd"))
+rmarkdown::render(here("Code/Descriptive_tables.Rmd"))
   
 } 
 
