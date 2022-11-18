@@ -4218,6 +4218,84 @@
         "CriteriaList": [
           {
             "Criteria": {
+              "Measurement": {
+                "CodesetId": 4,
+                "ValueAsConcept": [
+                  {
+                    "CONCEPT_CODE": "LA11882-0",
+                    "CONCEPT_ID": 45877985,
+                    "CONCEPT_NAME": "Detected",
+                    "DOMAIN_ID": "Meas Value",
+                    "INVALID_REASON_CAPTION": "Unknown",
+                    "STANDARD_CONCEPT_CAPTION": "Unknown",
+                    "VOCABULARY_ID": "LOINC"
+                  },
+                  {
+                    "CONCEPT_CODE": "LA6576-8",
+                    "CONCEPT_ID": 45884084,
+                    "CONCEPT_NAME": "Positive",
+                    "DOMAIN_ID": "Meas Value",
+                    "INVALID_REASON_CAPTION": "Unknown",
+                    "STANDARD_CONCEPT_CAPTION": "Unknown",
+                    "VOCABULARY_ID": "LOINC"
+                  },
+                  {
+                    "CONCEPT_CODE": "LA9633-4",
+                    "CONCEPT_ID": 45879438,
+                    "CONCEPT_NAME": "Present",
+                    "DOMAIN_ID": "Meas Value",
+                    "INVALID_REASON_CAPTION": "Unknown",
+                    "STANDARD_CONCEPT_CAPTION": "Unknown",
+                    "VOCABULARY_ID": "LOINC"
+                  },
+                  {
+                    "CONCEPT_CODE": "52101004",
+                    "CONCEPT_ID": 4181412,
+                    "CONCEPT_NAME": "Present",
+                    "DOMAIN_ID": "Meas Value",
+                    "INVALID_REASON_CAPTION": "Unknown",
+                    "STANDARD_CONCEPT_CAPTION": "Unknown",
+                    "VOCABULARY_ID": "SNOMED"
+                  },
+                  {
+                    "CONCEPT_CODE": "260373001",
+                    "CONCEPT_ID": 4126681,
+                    "CONCEPT_NAME": "Detected",
+                    "DOMAIN_ID": "Meas Value",
+                    "INVALID_REASON_CAPTION": "Unknown",
+                    "STANDARD_CONCEPT_CAPTION": "Unknown",
+                    "VOCABULARY_ID": "SNOMED"
+                  },
+                  {
+                    "CONCEPT_CODE": "10828004",
+                    "CONCEPT_ID": 9191,
+                    "CONCEPT_NAME": "Positive",
+                    "DOMAIN_ID": "Meas Value",
+                    "INVALID_REASON_CAPTION": "Unknown",
+                    "STANDARD_CONCEPT_CAPTION": "Unknown",
+                    "VOCABULARY_ID": "SNOMED"
+                  }
+                ]
+              }
+            },
+            "StartWindow": {
+              "Start": {
+                "Days": 42,
+                "Coeff": -1
+              },
+              "End": {
+                "Days": 1,
+                "Coeff": -1
+              },
+              "UseEventEnd": false
+            },
+            "Occurrence": {
+              "Type": 0,
+              "Count": 0
+            }
+          },
+          {
+            "Criteria": {
               "ConditionOccurrence": {
                 "CodesetId": 2
               }
@@ -4252,6 +4330,28 @@
               "End": {
                 "Days": 1,
                 "Coeff": -1
+              },
+              "UseEventEnd": false
+            },
+            "Occurrence": {
+              "Type": 0,
+              "Count": 0
+            }
+          },
+          {
+            "Criteria": {
+              "Observation": {
+                "CodesetId": 4
+              }
+            },
+            "StartWindow": {
+              "Start": {
+                "Days": 42,
+                "Coeff": -1
+              },
+              "End": {
+                "Days": 1,
+                "Coeff": 1
               },
               "UseEventEnd": false
             },
