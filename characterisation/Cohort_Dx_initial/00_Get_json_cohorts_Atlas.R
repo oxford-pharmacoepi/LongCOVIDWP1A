@@ -11,16 +11,44 @@ library(ROhdsiWebApi)
 baseUrl <- "https://atlas-demo.ohdsi.org/WebAPI"
 # list of cohort ids
 cohortIds <- c(
-1780619,1780589,1780628,1780624,1780622,1780617,1780615,1780618,1780621,1780620,
-  1780626,1780612,1780625,1780614,1780613,1780631,1780623,1780627,1780629,1780630,
-1780632,1780603,1780604,  1780846,1780611,1780580,1780634,1780587,1780635,1780582,1780581, 1780608
+1780604,
+1780604,
+1780608,
+1780612,
+1780613,
+1780614,
+1780603,
+1780615,
+1780617,
+1780618,
+1780620,
+1780621,
+1780622,
+1780619,
+1780623,
+1780611,
+1780624,
+1780625,
+1780626,
+1780627,
+1780628,
+1780629,
+1781117,
+1781135,
+1780630,
+1780846,
+1780631,
+1780632,
+1780635,
+1781126,
+1780589
 )
 
 # cohorts with measurements
 
 
 # create folder to save cohorts if needed
-cohorts.folder <- here::here("Cohort_Dx_initial/1_InstantiateCohorts/Cohorts_v2")
+cohorts.folder <- here::here("Cohort_Dx_initial/1_InstantiateCohorts/Cohorts")
 if (!file.exists(cohorts.folder)){
   dir.create(cohorts.folder)
 }

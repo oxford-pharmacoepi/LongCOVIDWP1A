@@ -84,7 +84,7 @@
 } 
 ],
 "ObservationWindow": {
- "PriorDays":                      180,
+ "PriorDays":                        0,
 "PostDays":                        0 
 },
 "PrimaryCriteriaLimit": {
@@ -4798,11 +4798,97 @@
 } 
 },
 {
- "name": "Without a prior Covid infection or 120 days after index date",
+ "name": "At least 180 days of prior history",
 "expression": {
  "Type": "ALL",
 "CriteriaList": [
  {
+ "Criteria": {
+ "ObservationPeriod": {} 
+},
+"StartWindow": {
+ "Start": {
+ "Days":                      179,
+"Coeff":                       -1 
+},
+"End": {
+ "Days":                        0,
+"Coeff":                       -1 
+},
+"UseIndexEnd": false,
+"UseEventEnd": false 
+},
+"RestrictVisit": false,
+"IgnoreObservationPeriod": false,
+"Occurrence": {
+ "Type":                        0,
+"Count":                        0,
+"IsDistinct": false 
+} 
+} 
+],
+"DemographicCriteriaList": [],
+"Groups": [] 
+} 
+},
+{
+ "name": "Without a prior Covid infection (broad definition)",
+"expression": {
+ "Type": "ALL",
+"CriteriaList": [
+ {
+ "Criteria": {
+ "Observation": {
+ "CodesetId":                        2,
+"ObservationTypeExclude": false 
+} 
+},
+"StartWindow": {
+ "Start": {
+ "Coeff":                       -1 
+},
+"End": {
+ "Days":                        0,
+"Coeff":                       -1 
+},
+"UseIndexEnd": false,
+"UseEventEnd": false 
+},
+"RestrictVisit": false,
+"IgnoreObservationPeriod": false,
+"Occurrence": {
+ "Type":                        0,
+"Count":                        0,
+"IsDistinct": false 
+} 
+},
+{
+ "Criteria": {
+ "ConditionOccurrence": {
+ "CodesetId":                        2,
+"ConditionTypeExclude": false 
+} 
+},
+"StartWindow": {
+ "Start": {
+ "Coeff":                       -1 
+},
+"End": {
+ "Days":                        0,
+"Coeff":                       -1 
+},
+"UseIndexEnd": false,
+"UseEventEnd": false 
+},
+"RestrictVisit": false,
+"IgnoreObservationPeriod": false,
+"Occurrence": {
+ "Type":                        0,
+"Count":                        0,
+"IsDistinct": false 
+} 
+},
+{
  "Criteria": {
  "Measurement": {
  "CodesetId":                        4,
@@ -4888,34 +4974,8 @@
  "Coeff":                       -1 
 },
 "End": {
- "Days":                      120,
-"Coeff":                        1 
-},
-"UseIndexEnd": false,
-"UseEventEnd": false 
-},
-"RestrictVisit": false,
-"IgnoreObservationPeriod": false,
-"Occurrence": {
- "Type":                        0,
-"Count":                        0,
-"IsDistinct": false 
-} 
-},
-{
- "Criteria": {
- "ConditionOccurrence": {
- "CodesetId":                        2,
-"ConditionTypeExclude": false 
-} 
-},
-"StartWindow": {
- "Start": {
- "Coeff":                       -1 
-},
-"End": {
- "Days":                      120,
-"Coeff":                        1 
+ "Days":                        0,
+"Coeff":                       -1 
 },
 "UseIndexEnd": false,
 "UseEventEnd": false 
@@ -4931,7 +4991,7 @@
 {
  "Criteria": {
  "Observation": {
- "CodesetId":                        2,
+ "CodesetId":                        4,
 "ObservationTypeExclude": false 
 } 
 },
@@ -4940,8 +5000,8 @@
  "Coeff":                       -1 
 },
 "End": {
- "Days":                      120,
-"Coeff":                        1 
+ "Days":                        0,
+"Coeff":                       -1 
 },
 "UseIndexEnd": false,
 "UseEventEnd": false 
@@ -4960,7 +5020,7 @@
 } 
 },
 {
- "name": "Without influenza 6 weeks before or 120 days after index date",
+ "name": "Without influenza 42 days before",
 "expression": {
  "Type": "ALL",
 "CriteriaList": [
@@ -4977,8 +5037,8 @@
 "Coeff":                       -1 
 },
 "End": {
- "Days":                      120,
-"Coeff":                        1 
+ "Days":                        0,
+"Coeff":                       -1 
 },
 "UseIndexEnd": false,
 "UseEventEnd": false 
@@ -5004,8 +5064,8 @@
 "Coeff":                       -1 
 },
 "End": {
- "Days":                      120,
-"Coeff":                        1 
+ "Days":                        0,
+"Coeff":                       -1 
 },
 "UseIndexEnd": false,
 "UseEventEnd": false 
@@ -5106,7 +5166,7 @@
 },
 "End": {
  "Days":                      120,
-"Coeff":                        1 
+"Coeff":                       -1 
 },
 "UseIndexEnd": false,
 "UseEventEnd": false 
@@ -5206,8 +5266,119 @@
 "Coeff":                       -1 
 },
 "End": {
- "Days":                      120,
-"Coeff":                        1 
+ "Days":                        0,
+"Coeff":                       -1 
+},
+"UseIndexEnd": false,
+"UseEventEnd": false 
+},
+"RestrictVisit": false,
+"IgnoreObservationPeriod": false,
+"Occurrence": {
+ "Type":                        0,
+"Count":                        0,
+"IsDistinct": false 
+} 
+} 
+],
+"DemographicCriteriaList": [],
+"Groups": [] 
+} 
+},
+{
+ "name": "Without a prior COVID-19 negative test 42 days before",
+"expression": {
+ "Type": "ALL",
+"CriteriaList": [
+ {
+ "Criteria": {
+ "Measurement": {
+ "CodesetId":                        4,
+"MeasurementTypeExclude": false,
+"ValueAsConcept": [
+ {
+ "CONCEPT_ID":                 45878583,
+"CONCEPT_NAME": "Negative",
+"STANDARD_CONCEPT": null,
+"STANDARD_CONCEPT_CAPTION": "Unknown",
+"INVALID_REASON": null,
+"INVALID_REASON_CAPTION": "Unknown",
+"CONCEPT_CODE": "LA6577-6",
+"DOMAIN_ID": "Meas Value",
+"VOCABULARY_ID": "LOINC",
+"CONCEPT_CLASS_ID": null 
+},
+{
+ "CONCEPT_ID":                     9189,
+"CONCEPT_NAME": "Negative",
+"STANDARD_CONCEPT": null,
+"STANDARD_CONCEPT_CAPTION": "Unknown",
+"INVALID_REASON": null,
+"INVALID_REASON_CAPTION": "Unknown",
+"CONCEPT_CODE": "260385009",
+"DOMAIN_ID": "Meas Value",
+"VOCABULARY_ID": "SNOMED",
+"CONCEPT_CLASS_ID": null 
+},
+{
+ "CONCEPT_ID":                  4132135,
+"CONCEPT_NAME": "Absent",
+"STANDARD_CONCEPT": null,
+"STANDARD_CONCEPT_CAPTION": "Unknown",
+"INVALID_REASON": null,
+"INVALID_REASON_CAPTION": "Unknown",
+"CONCEPT_CODE": "2667000",
+"DOMAIN_ID": "Meas Value",
+"VOCABULARY_ID": "SNOMED",
+"CONCEPT_CLASS_ID": null 
+},
+{
+ "CONCEPT_ID":                 45884086,
+"CONCEPT_NAME": "Absent",
+"STANDARD_CONCEPT": null,
+"STANDARD_CONCEPT_CAPTION": "Unknown",
+"INVALID_REASON": null,
+"INVALID_REASON_CAPTION": "Unknown",
+"CONCEPT_CODE": "LA9634-2",
+"DOMAIN_ID": "Meas Value",
+"VOCABULARY_ID": "LOINC",
+"CONCEPT_CLASS_ID": null 
+},
+{
+ "CONCEPT_ID":                     9190,
+"CONCEPT_NAME": "Not detected",
+"STANDARD_CONCEPT": null,
+"STANDARD_CONCEPT_CAPTION": "Unknown",
+"INVALID_REASON": null,
+"INVALID_REASON_CAPTION": "Unknown",
+"CONCEPT_CODE": "260415000",
+"DOMAIN_ID": "Meas Value",
+"VOCABULARY_ID": "SNOMED",
+"CONCEPT_CLASS_ID": null 
+},
+{
+ "CONCEPT_ID":                 45880296,
+"CONCEPT_NAME": "Not detected",
+"STANDARD_CONCEPT": null,
+"STANDARD_CONCEPT_CAPTION": "Unknown",
+"INVALID_REASON": null,
+"INVALID_REASON_CAPTION": "Unknown",
+"CONCEPT_CODE": "LA11883-8",
+"DOMAIN_ID": "Meas Value",
+"VOCABULARY_ID": "LOINC",
+"CONCEPT_CLASS_ID": null 
+} 
+] 
+} 
+},
+"StartWindow": {
+ "Start": {
+ "Days":                       42,
+"Coeff":                       -1 
+},
+"End": {
+ "Days":                        1,
+"Coeff":                       -1 
 },
 "UseIndexEnd": false,
 "UseEventEnd": false 
@@ -5229,7 +5400,7 @@
 "EndStrategy": {
  "DateOffset": {
  "DateField": "StartDate",
-"Offset":                       41 
+"Offset":                        0 
 } 
 },
 "CensoringCriteria": [],

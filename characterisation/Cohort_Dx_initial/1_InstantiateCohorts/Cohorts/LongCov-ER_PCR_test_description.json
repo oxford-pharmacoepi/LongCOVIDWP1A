@@ -1,0 +1,67 @@
+{
+ "cdmVersionRange": ">=5.0.0",
+"PrimaryCriteria": {
+ "CriteriaList": [
+ {
+ "Measurement": {
+ "CodesetId":                        5,
+"MeasurementTypeExclude": false,
+"ValueAsConcept": [] 
+} 
+} 
+],
+"ObservationWindow": {
+ "PriorDays":                        0,
+"PostDays":                        0 
+},
+"PrimaryCriteriaLimit": {
+ "Type": "All" 
+} 
+},
+"ConceptSets": [
+ {
+ "id":                        5,
+"name": "covid-19 pcr",
+"expression": {
+ "items": [
+ {
+ "concept": {
+ "CONCEPT_ID":                 44789510,
+"CONCEPT_NAME": "Coronavirus nucl acid detect",
+"STANDARD_CONCEPT": "S",
+"STANDARD_CONCEPT_CAPTION": "Standard",
+"INVALID_REASON": "V",
+"INVALID_REASON_CAPTION": "Valid",
+"CONCEPT_CODE": "204351000000100",
+"DOMAIN_ID": "Measurement",
+"VOCABULARY_ID": "SNOMED",
+"CONCEPT_CLASS_ID": "Procedure" 
+},
+"isExcluded": false,
+"includeDescendants": true,
+"includeMapped": false 
+} 
+] 
+} 
+} 
+],
+"QualifiedLimit": {
+ "Type": "First" 
+},
+"ExpressionLimit": {
+ "Type": "All" 
+},
+"InclusionRules": [],
+"EndStrategy": {
+ "DateOffset": {
+ "DateField": "StartDate",
+"Offset":                        0 
+} 
+},
+"CensoringCriteria": [],
+"CollapseSettings": {
+ "CollapseType": "ERA",
+"EraPad":                        0 
+},
+"CensorWindow": {} 
+}
