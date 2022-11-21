@@ -13,26 +13,23 @@ atlas_id;name;cohort_definition_id;type;name_var
 1780622;LongCov-ER_Fatigue_malaise;12;symptom;Fatigue_malaise
 1780619;LongCov-ER_Gastrointestinal issues;13;symptom;Gastrointestinal_issues
 1780623;LongCov-ER_Headache;14;symptom;Headache
-1780611;LongCov-ER_Influenza_dx_positive_test;15;influenza;Influenza_dx_positive_test
+1780611;LongCov-ER_Influenza_dx_positive_test_censoring;15;influenza;Influenza_dx_positive_test
 1780624;LongCov-ER_Intermittent fever;16;symptom;Intermittent_fever
 1780625;LongCov-ER_Joint pain;17;symptom;Joint_pain
-1780626;LongCov-ER_Memory_issues_v2;18;symptom;Memory_issues_v2
+1780626;LongCov-ER_Memory_issues_v2;18;symptom;Memory_issues
 1780627;LongCov-ER_Menstrual_problems;19;symptom;Menstrual_problems
 1780628;LongCov-ER_Muscle spasms and pain;20;symptom;Muscle_spams_pain
 1780629;LongCov-ER_Neuralgia w considerations;21;symptom;Neuralgia
 1781117;LongCov-ER_New_Infection;22;covid-19;New_Infection
-1780634;LongCov-ER_PCR_Negative_all_events;23;control;PCR_Negative_all_events
-1780587;LongCov-ER_PCR_Negative_earliest_event;24;control;PCR_Negative_earliest_event
-1780630;LongCov-ER_Pins and needles sensation;25;symptom;Pins_sensation
-1780846;LongCov-ER_Postexertional_fatigue;26;symptom;Postexertional_fatigue
-1780631;LongCov-ER_Sleep_disorder_raw;27;symptom;Sleep_disorder
-1780632;LongCov-ER_Tachycardia w considerations;28;symptom;Tachycardia
-1780635;LongCov-ER_Tested_Negative_all_events;29;control;Tested_Negative_all_events
-1780582;LongCov-ER_Tested_Negative_earliest_event;30;control;Tested_Negative_earliest_event
-1781126;LongCov-ER_Tested_Positive_and_diagnoses;31;covid-19;Tested_Positive_and_diagnoses
-1780589;LongCov-ER_Tinnitus and hearing problems w considerations;32;symptom;Tinnitus_hearing_problems
-;Vaccinated_AstraZeneca;33;vaccine;Astrazeneca
-;Vaccinated_Janssen;34;vaccine;Janssen
-;Vaccinated_Moderna;35;vaccine;Moderna
-;Vaccinated_Pfizer;36;vaccine;Pfizer
-;x_LongCov-ER_PCRpos;37;covid-19;PCR_Positive
+1781135;LongCov-ER_PCR_test_description;23;description;PCR_test_description
+1780630;LongCov-ER_Pins and needles sensation;24;symptom;Pins_sensation
+1780846;LongCov-ER_Postexertional_fatigue;25;symptom;Postexertional_fatigue
+1780631;LongCov-ER_Sleep_disorder_raw;26;symptom;Sleep_disorder
+1780632;LongCov-ER_Tachycardia w considerations;27;symptom;Tachycardia
+1780635;LongCov-ER_Tested_Negative_all_events;28;symptom;Tested_Negative_all_events
+1781126;LongCov-ER_Tested_Positive_and_diagnoses_censoring;29;covid_censoring;Tested_Positive_and_diagnoses_censoring
+1780589;LongCov-ER_Tinnitus and hearing problems w considerations;30;control;Tinnitus_and _hearing _problems
+;Vaccinated_AstraZeneca;31;vaccine;Astrazeneca
+;Vaccinated_Janssen;32;vaccine;Janssen
+;Vaccinated_Moderna;33;vaccine;Moderna
+;Vaccinated_Pfizer;34;vaccine;Pfizer
