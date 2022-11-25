@@ -26,10 +26,15 @@ atlas_id;name;cohort_definition_id;type;name_var
 1780846;LongCov-ER_Postexertional_fatigue;25;symptom;Postexertional_fatigue
 1780631;LongCov-ER_Sleep_disorder_raw;26;symptom;Sleep_disorder
 1780632;LongCov-ER_Tachycardia w considerations;27;symptom;Tachycardia
-1780635;LongCov-ER_Tested_Negative_all_events;28;symptom;Tested_Negative_all_events
+1780635;LongCov-ER_Tested_Negative_all_events;28;control;Tested_Negative_all_events
 1781126;LongCov-ER_Tested_Positive_and_diagnoses_censoring;29;covid_censoring;Tested_Positive_and_diagnoses_censoring
-1780589;LongCov-ER_Tinnitus and hearing problems w considerations;30;control;Tinnitus_and _hearing _problems
+1780589;LongCov-ER_Tinnitus and hearing problems w considerations;30;symptom;Tinnitus_and _hearing _problems
 ;Vaccinated_AstraZeneca;31;vaccine;Astrazeneca
 ;Vaccinated_Janssen;32;vaccine;Janssen
 ;Vaccinated_Moderna;33;vaccine;Moderna
 ;Vaccinated_Pfizer;34;vaccine;Pfizer
+;First_infection;70;covid-19;First infection
+;Reinfection;71;covid-19;Reinfection
+;Tested negative, earliest;75;control;Tested negative
+;Long COVID-19 symptoms (with test start date);99;long-covid;Long COVID-19 symptoms (with test start date)
+;Long COVID-19 symptoms (with symptom start date);89;long-covid;Long COVID-19 symptoms (with symptom start date)
