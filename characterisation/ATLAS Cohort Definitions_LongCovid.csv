@@ -28,7 +28,7 @@ atlas_id;name;cohort_definition_id;type;name_var
 1780632;LongCov-ER_Tachycardia w considerations;27;symptom;Tachycardia
 1780635;LongCov-ER_Tested_Negative_all_events;28;control;Tested_Negative_all_events
 1781126;LongCov-ER_Tested_Positive_and_diagnoses_censoring;29;covid_censoring;Tested_Positive_and_diagnoses_censoring
-1780589;LongCov-ER_Tinnitus and hearing problems w considerations;30;symptom;Tinnitus_and _hearing _problems
+1780589;LongCov-ER_Tinnitus and hearing problems w considerations;30;symptom;Tinnitus_and_hearing_problems
 ;Vaccinated_AstraZeneca;31;vaccine;Astrazeneca
 ;Vaccinated_Janssen;32;vaccine;Janssen
 ;Vaccinated_Moderna;33;vaccine;Moderna
