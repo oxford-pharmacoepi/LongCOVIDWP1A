@@ -303,9 +303,7 @@ covid_infection <- covid_infection %>%
 exclusion_table<-rbind(exclusion_table,
                        tibble(N_current=covid_infection %>%tally()%>%collect()%>%pull(), 
                           exclusion_reason="Less than 120 days of follow-up",
-                          cohort_definition_id = covid_infection %>%
-                                                 select(cohort_definition_id) %>% 
-                            distinct() %>%pull()
+                          cohort_definition_id = covid_id
                          ))
 
 ### First COVID-19 infection  
@@ -1355,7 +1353,7 @@ m.new_covid_tested_negative_earliest_90 <- matching_cohorts(
   name1 = "New infections",
   cohort2 = table1_data_tested_negative_earliest, 
   name2 = "Tested negative, earliest",
-  ratio = 1,
+  ratio = 3,
   window_id = 90
 )
 
@@ -1364,7 +1362,7 @@ m.new_covid_tested_negative_all_90 <- matching_cohorts(
   name1 = "New infections",
   cohort2 = table1_data_tested_negative_all, 
   name2 = "Tested negative, all",
-  ratio = 1,
+  ratio = 3,
   window_id = 90
 )
 
@@ -1374,7 +1372,7 @@ m.first_infection_reinfections_90 <- matching_cohorts(
   name1 = "Reinfections",
   cohort2 = table1_data_first_infection,
   name2 = "First infection",
-  ratio = 3,
+  ratio = 6,
   window_id = 90
 )
 
@@ -1391,7 +1389,7 @@ m.new_covid_tested_negative_earliest_28 <- matching_cohorts(
   name1 = "New infections",
   cohort2 = table1_data_tested_negative_earliest, 
   name2 = "Tested negative, earliest",
-  ratio = 1,
+  ratio = 3,
   window_id = 28
 )
 
@@ -1400,7 +1398,7 @@ m.new_covid_tested_negative_all_28 <- matching_cohorts(
   name1 = "New infections",
   cohort2 = table1_data_tested_negative_all, 
   name2 = "Tested negative, all",
-  ratio = 1,
+  ratio = 3,
   window_id = 28
 )
 
@@ -1411,7 +1409,7 @@ m.first_infection_reinfections_28 <- matching_cohorts(
   cohort2 = table1_data_first_infection,
   name2 = "First infection",
   # cohort2
-  ratio = 3,
+  ratio = 6,
   window_id = 28
 )
 
@@ -1694,13 +1692,95 @@ m.first_infection_reinfections <-  get(paste0("m.first_infection_reinfections_",
   
   
   # get exclusion counts ----
-stats           <- read.csv(here("Cohort_Dx_initial/Results/cohortIncStats.csv"))
-label_inclusion <- read.csv2(here("inclusion_criteria_labels.csv"))
-  read.csv2(here("results/exclusion_table_CPRD.csv"))
+stats           <- read.csv(here("Cohort_Dx_initial/Results/cohortIncResult.csv"))
+label_inclusion <- read.csv(here("Cohort_Dx_initial/inclusion_criteria_labels.csv"))%>% select(-X,-X.1)
+exclusion_table <-read.csv2(here("results/exclusion_table_CPRD.csv")) 
 
   
+exclusion_df <- stats %>%
+  left_join(label_inclusion)
+
+get_counts_exclusion <- function(cohort.id, mode.ID){
+  exclusion <- exclusion_df %>% filter(cohortDefinitionId==cohort.id & modeId ==mode.ID)
   
+  counts_exclusion <- tibble(order = 0,
+                             exclusion_reason = "Initial record of COVID-19 tests",
+                             n = sum(exclusion$personCount)
+  )
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 1,
+                                   exclusion_reason = "<18 years",
+                                   n = exclusion %>% filter(exclusion_criteria=="first") %>% group_by(cohortDefinitionId) %>%
+                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()
+                            ))
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 2,
+                                   exclusion_reason = "Without 180d of prior history",
+                                   n = exclusion %>% filter(exclusion_criteria=="second") %>% group_by(cohortDefinitionId) %>%
+                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()
+                            ))
   
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 3,
+                                   exclusion_reason = "With a prior COVID-19 infection",
+                                   n = exclusion %>% filter(exclusion_criteria=="third") %>% group_by(cohortDefinitionId) %>%
+                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
+  
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 4,
+                                   exclusion_reason = "With an influenza infection 42d before",
+                                   n = exclusion %>% filter(exclusion_criteria=="four") %>% group_by(cohortDefinitionId) %>%
+                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
+  
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 5,
+                                   exclusion_reason = "With a COVID-19 negative test 42d before",
+                                   n = exclusion %>% filter(exclusion_criteria=="five") %>% group_by(cohortDefinitionId) %>%
+                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
+  
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 6,
+                                   exclusion_reason = "Records included",
+                                   n = exclusion$personCount[[which(exclusion$label=="final_count")]])) %>%
+    arrange(order) %>%
+    mutate(N_current = ifelse(order==0, n, NA))
+  
+  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
+  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
+  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
+  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
+  counts_exclusion$cohort_definition_id <- cohort.id
+  counts_exclusion
+  
+}
+
+counts <- rbind(get_counts_exclusion(cohort.id = 22, mode.ID = 0 ),
+                get_counts_exclusion(cohort.id =28, mode.ID = 0)%>% 
+                  mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
+)
+
+exclusion_table$X <- NULL
+# exclusion_table <- exclusion_table %>%
+#   mutate(cohort_definition_id = ifelse(cohort_definition_id == 0 & N_current == 303835, 22,
+#          ifelse(cohort_definition_id == 0 & N_current == 1265539, 28, cohort_definition_id)))
+
+counts <- counts %>%
+  filter(exclusion_reason != "Records included") %>%
+  rbind(exclusion_table %>% mutate(order = NA, n=NA)) %>%
+  filter(exclusion_reason != "initial pop") %>%
+  mutate(order = ifelse(exclusion_reason=="Tests prior to 2020-09-01", 7, order)) %>%
+  mutate(order = ifelse(exclusion_reason=="Less than 120 days of follow-up", 8, order)) %>%
+  group_by(cohort_definition_id) %>%
+  arrange(order) %>%
+  mutate(n = ifelse(exclusion_reason=="Tests prior to 2020-09-01", lag(N_current)-N_current, n)) %>%
+  mutate(n = ifelse(exclusion_reason=="Less than 120 days of follow-up", lag(N_current)-N_current, n)) %>%
+    ungroup()
+
+write.csv2(counts,
+           here(paste0("results/final_exclusion_table_",
+                       database_name,
+                       ".csv")),
+           row.names = FALSE)
   
   
   
