@@ -1,5 +1,3 @@
-# Tables in the write_schema to save Inital Json cohorts
-cohortTableJsons <-"er_cohorts_for_longcov"
 
 # create results folder if needed
 cohorts.folder <- here::here("results")
@@ -13,6 +11,27 @@ if (!file.exists(cohorts.folder)){
   dir.create(cohorts.folder)
 }
 
+#  IDs of the cohorts of interest ----
+# Cohort ids are in a csv with all cohorts ids
+cohorts_ids  <- read.csv2(here("ATLAS Cohort Definitions_LongCovid.csv")) %>%
+  mutate(name= paste(sub(".*LongCov-ER_", "", name)))
+
+get_id_interest <- function(name_id) {
+  cohorts_ids %>%
+    filter(name == name_id) %>% 
+    select(cohort_definition_id) %>%
+    pull()
+}
+
+new_infection_id            <- get_id_interest("New_Infection") 
+first_infection_id          <- get_id_interest("First_infection")
+reinfection_id              <- get_id_interest("Reinfection") 
+tested_negative_all_id      <- get_id_interest("Tested_Negative_all_events") 
+tested_negative_earliest_id <- get_id_interest("Tested negative, earliest") 
+long_covid_id               <- get_id_interest("Long COVID-19 symptoms (with test start date)")
+long_covid_symptom_id       <- get_id_interest("Long COVID-19 symptoms (with symptom start date)") 
+
+
 
 # Initial Json cohorts ----
 if(create_initial_json_cohorts=="FALSE"){
@@ -20,7 +39,9 @@ print(paste0("- Skipping creating initial json cohorts"))
 } else { 
 print(paste0("- Creating initial json cohorts"))
 
-
+  # Tables in the write_schema to save Inital Json cohorts
+  cohortTableJsons <-"er_cohorts_for_longcov"
+  
 ### Get cohort details -----
  cohortJsonFiles <- list.files(here("Cohort_Dx_initial","1_InstantiateCohorts", "Cohorts"))
 cohortJsonFiles <- cohortJsonFiles[str_detect(cohortJsonFiles,".json")]
@@ -99,25 +120,6 @@ rm(cohortDefinitionSet, cohortExpression,cohortTableNames)
 
 }
 
-#  IDs of the cohorts of interest ----
-# Cohort ids are in a csv with all cohorts ids
-cohorts_ids  <- read.csv2(here("ATLAS Cohort Definitions_LongCovid.csv")) %>%
-  mutate(name= paste(sub(".*LongCov-ER_", "", name)))
-
-get_id_interest <- function(name_id) {
-  cohorts_ids %>%
-    filter(name == name_id) %>% 
-    select(cohort_definition_id) %>%
-    pull()
-}
-
-new_infection_id   <- get_id_interest("New_Infection") 
-first_infection_id <- get_id_interest("First_infection")
-reinfection_id     <- get_id_interest("Reinfection") 
-tested_negative_all_id  <- get_id_interest("Tested_Negative_all_events") 
-tested_negative_earliest_id <- get_id_interest("Tested negative, earliest") 
-long_covid_id <- get_id_interest("Long COVID-19 symptoms (with test start date)")
-long_covid_symptom_id <- get_id_interest("Long COVID-19 symptoms (with symptom start date)") 
 
 # Creating Long Covid cohorts ----
 if(create_long_covid_cohorts=="FALSE"){
@@ -143,8 +145,7 @@ influenza_id <- cohorts_ids %>% filter(type=="influenza") %>% select(cohort_defi
 symptoms_ids <- cohorts_ids %>% filter(type=="symptom") %>% select(cohort_definition_id) %>% pull()
 
 ## get initial cohorts ----
-cohorts <- cdm$er_cohorts_for_longcov %>%
-  compute()
+cohorts <- cdm$er_cohorts_for_longcov %>% compute()
 
 # combine observation period (to have observation period end date) and death with our study cohorts
 observation_death <- cdm$observation_period %>%
@@ -410,8 +411,8 @@ exclusion_table <- rbind(confirmed_infections[[4]], negative_infections[[4]])
 excluded_shorter_follow_up <- rbind(confirmed_infections[[5]] %>%mutate(cohort= "COVID-19"),
                                     negative_infections[[5]]%>%mutate(cohort= "Negative"))
 
-write.csv2(exclusion_table, here(paste0("results/exclusion_table_", database_name, ".csv")))
-write.csv2(excluded_shorter_follow_up, here(paste0("results/exclusions_followup", database_name, ".csv")))
+write.csv2(exclusion_table, here(paste0("results/exclusion_table_", database_name, ".csv")), row.names = FALSE)
+write.csv2(excluded_shorter_follow_up, here(paste0("results/exclusions_followup_", database_name, ".csv")), row.names = FALSE)
 
 ## getting Symptoms cohorts  ----
 ### parameters for loop
@@ -577,7 +578,7 @@ denominator <- rbind(covid_infection_symp[[2]],
                      tested_negative_all_symp[[2]])
 
 # save  denominator table
-write.csv2(denominator, here(paste0("results/denominator_each_symptom_", database_name, ".csv")))
+write.csv2(denominator, here(paste0("results/denominator_each_symptom_", database_name, ".csv")),row.names = FALSE)
 
 #collect cohorts if R session aborted - it always happens with CPRD
 cdm <- cdm_from_con(db, 
@@ -610,7 +611,7 @@ for (i in 1:length(ids)){
 cohorts_list
 }
 
-covid_infection_symp <- collect_cohorts(ids = tested_positive_ids)
+covid_infection_symp     <- collect_cohorts(ids = tested_positive_ids)
 tested_negative_all_symp <-  collect_cohorts(ids = tested_negative_ids)
 
 # generate any symptom cohorts 
@@ -618,7 +619,7 @@ tested_negative_all_symp <-  collect_cohorts(ids = tested_negative_ids)
 ## function to generate any sypmtom cohort
 create_any_symptom <- function(list_cohorts){
   # we first bind the rows from the previous function result
-  any_symp_cohort <- bind_rows(list_cohorts[1]) %>%
+  any_symp_cohort <- bind_rows(list_cohorts) %>%
     # we generate a new cohort_definition_id -- for any symtpom we use 99
     mutate(cohort_definition_id = 
              (as.numeric(substr(cohort_definition_id, 1, 2))*10^4) +
@@ -626,14 +627,15 @@ create_any_symptom <- function(list_cohorts){
              as.numeric(substr(cohort_definition_id, 
                                nchar(cohort_definition_id[1])-1, 
                                nchar(cohort_definition_id[1])))) %>%
-    distinct() %>%
+    distinct()  %>%
     group_by(subject_id, cohort_definition_id, cohort_start_date) %>%
     arrange(cohort_end_date) %>% 
     # we keep just first symptom recorded by unique cohort, subject id and cohort start id
     mutate(seq=row_number()) %>%
     filter(seq==1) %>%
-    select(-seq)%>%
-    ungroup()
+    ungroup() %>%
+    select(-seq)
+  
 }
 
 
@@ -642,6 +644,10 @@ tested_negative_all_any_symp      <- create_any_symptom(list_cohorts = tested_ne
 # first_infection_any_symp          <- create_any_symptom(list_cohorts = first_infection_symp)
 # reinfections_any_symp             <- create_any_symptom(list_cohorts = reinfections_symp)
 # tested_negative_earliest_any_symp <- create_any_symptom(list_cohorts = tested_negative_earliest_symp )
+
+# to remove a specific cohort if needed
+# dbExecute(db, "DELETE FROM results.er_long_covid_final_cohorts WHERE cohort_definition_id = 289928")
+
 
 # append any symptoms cohorts to the table
 append_table<- function(data){
@@ -686,7 +692,7 @@ symps_cohort <- bind_rows(list_cohorts)%>%
   mutate(chest_pain = if (exists('chest_pain', where = .)) chest_pain else 0) %>%
   mutate(cough = if (exists('cough', where = .)) cough else 0) %>%
   mutate(cognitive_dysfunction_brain_fog=ifelse(is.na(cognitive_dysfunction_brain_fog),0,cognitive_dysfunction_brain_fog)) %>% 
-    mutate(depression = if (exists('depression', where = .)) depression else 0) %>%
+  mutate(depression = if (exists('depression', where = .)) depression else 0) %>%
   mutate(dizziness = if (exists('dizziness', where = .)) dizziness else 0) %>%
   mutate(dyspnea = if (exists('dyspnea', where = .)) dyspnea else 0) %>%
   mutate(fatigue_malaise = if (exists('fatigue_malaise', where = .)) fatigue_malaise else 0) %>%
@@ -704,8 +710,7 @@ symps_cohort <- bind_rows(list_cohorts)%>%
   mutate(tachycardia = if (exists('tachycardia', where = .)) tachycardia else 0) %>%
   mutate(tinnitus_and_hearing_problems = if (exists('tinnitus_and_hearing_problems', where = .)) tinnitus_and_hearing_problems else 0) 
 
-#!fix this to use names instead of indexig? ----
-symps_cohort$all_symp<-rowSums(symps_cohort[,5:28],na.rm=T)
+symps_cohort$all_symp<-rowSums(symps_cohort[,5:29],na.rm=T)
 symps_cohort 
 }
 
@@ -715,6 +720,9 @@ tested_negative_all_numb_symp      <- create_numb_symptom(list_cohorts = tested_
 # reinfections_numb_symp             <- create_numb_symptom(list_cohorts = reinfections_symp)
 # tested_negative_earliest_numb_symp <- create_numb_symptom(list_cohorts = tested_negative_earliest_symp )
 
+
+# sql_query <- glue::glue("DROP TABLE {write_schema}.er_long_covid_all_symptoms_cohorts\n" )
+# DBI::dbExecute(db, as.character(sql_query))
 # save this in a different table in the database, since it has a different structure
 # create the new table
   insertTable(
@@ -734,13 +742,13 @@ append_table_all<- function(data){
   createTable = FALSE
 )
 }  
-                                                            
 append_table_all(tested_negative_all_numb_symp)
 # append_table_all(first_infection_numb_symp)
 # append_table_all(reinfections_numb_symp)
 # append_table_all(tested_negative_earliest_numb_symp)
 
-
+# dbExecute(db, "DELETE FROM results.er_long_covid_final_cohorts WHERE cohort_definition_id = 288928")
+# dbExecute(db, "DELETE FROM results.er_long_covid_final_cohorts WHERE cohort_definition_id = 228928")
 # save the cohort for any symptoms keeping the date of start of symptoms as cohort_start_date 
 # to use these cohorts with the IncidencePrevalence package
 # these cohorts need a different id - 
@@ -767,6 +775,9 @@ append_table(tested_negative_all_any_symp)
 # append_table(first_infection_any_symp)
 # append_table(reinfections_any_symp)
 # append_table(tested_negative_earliest_any_symp)
+
+
+# exclusion table
 
 
 }
@@ -1067,6 +1078,21 @@ autoimmune_disease.codes<- cdm$concept_ancestor %>%
 working_cohort
 }
 
+#  get baseline characteristics and save just in case the server crashes
+baseline_new_infections            <- get_baseline_characteristics(main_cohort_id = new_infection_id) 
+# save just in case... 
+sql_query <- glue::glue("SELECT * INTO {write_schema}.er_long_covid_baseline_new_infections\n",
+                        "FROM (\n",
+                        dbplyr::sql_render(baseline_new_infections),
+                        "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
+
+baseline_tested_negative_all  <- get_baseline_characteristics(main_cohort_id = tested_negative_all_id )
+sql_query <- glue::glue("SELECT * INTO {write_schema}.er_long_covid_baseline_tested_negative_all\n",
+                        "FROM (\n",
+                        dbplyr::sql_render(baseline_tested_negative_all),
+                        "\n) AS from_table")
+DBI::dbExecute(db, as.character(sql_query))
 # function to add long covid + symptoms 
 # In long COVID cohorts, first two digits are for the "mother cohort"
 # digits 3,4 are for the symptoms cohort (99 is for any symptom - so lOng covid) 
@@ -1074,8 +1100,8 @@ working_cohort
 
  get_long_cov_symptoms <- function(main_cohort, main_cohort_id,  window_id){
    # identify long covid cohort specific to the main cohort and for the time window of interest
-  long_covid_id <- main_cohort_id*10^4+long_covid_id*10^2+window_id
-  long_covid_cohort <- cdm$er_long_covid_final_cohorts %>%  filter(cohort_definition_id == long_covid_id) %>% compute()
+  long_covid_specific_id <- main_cohort_id*10^4+long_covid_id*10^2+window_id
+  long_covid_cohort <- cdm$er_long_covid_final_cohorts %>%  filter(cohort_definition_id == long_covid_specific_id) %>% compute()
   # add this to main cohort
   working_cohort <- main_cohort %>%
     mutate(sex = ifelse(gender=="Female", 1,0)) %>%
@@ -1088,6 +1114,7 @@ working_cohort
     mutate(long_covid=ifelse(is.na(long_covid),0,long_covid)) %>%
 compute()
  
+  
  # we add long covid symmptoms  # these cohorts are saved in a different table
 working_cohort <- working_cohort %>%
 left_join(cdm$er_long_covid_all_symptoms_cohorts %>%
@@ -1098,33 +1125,8 @@ left_join(cdm$er_long_covid_all_symptoms_cohorts %>%
    filter(window_days == window_id) %>%
    select(-cohort_id ) %>%
    rename(person_id = subject_id)) %>% 
-    #! create variable for each symptom if it doesn't exist - move this to create numb symp ------ 
-  mutate(abdominal_pain = if (exists('abdominal_pain', where = .)) abdominal_pain else 0) %>%
-  mutate(allergy = if (exists('allergy', where = .)) allergy else 0) %>%
-  mutate(altered_smell_taste = if (exists('altered_smell_taste', where = .)) altered_smell_taste else 0) %>%
-  mutate(anxiety = if (exists('anxiety', where = .)) anxiety else 0) %>%
-  mutate(blurred_vision = if (exists('blurred_vision', where = .)) blurred_vision else 0) %>%
-  mutate(chest_pain = if (exists('chest_pain', where = .)) chest_pain else 0) %>%
-  mutate(cognitive_dysfunction_brain_fog = if (exists('cognitive_dysfunction_brain_fog', where = .)) cognitive_dysfunction_brain_fog else 0) %>% 
-  mutate(cough = if (exists('cough', where = .)) cough else 0) %>%
-  mutate(depression = if (exists('depression', where = .)) depression else 0) %>%
-  mutate(dizziness = if (exists('dizziness', where = .)) dizziness else 0) %>%
-  mutate(dyspnea = if (exists('dyspnea', where = .)) dyspnea else 0) %>%
-  mutate(fatigue_malaise = if (exists('fatigue_malaise', where = .)) fatigue_malaise else 0) %>%
-  mutate(gastrointestinal_issues = if (exists('gastrointestinal_issues', where = .)) gastrointestinal_issues else 0) %>%
-  mutate(headache = if (exists('headache', where = .)) headache else 0) %>%
-  mutate(intermittent_fever = if (exists('intermittent_fever', where = .)) intermittent_fever else 0) %>%
-  mutate(joint_pain = if (exists('joint_pain', where = .)) joint_pain  else 0) %>%
-  mutate(memory_issues = if (exists('memory_issues', where = .)) memory_issues else 0) %>%
-  mutate(menstrual_problems = if (exists('menstrual_problems', where = .)) menstrual_problems  else 0) %>%
-  mutate(muscle_spams_pain = if (exists('muscle_spams_pain', where = .)) muscle_spams_pain else 0) %>%
-  mutate(neuralgia = if (exists('neuralgia', where = .)) neuralgia else 0) %>%
-  mutate(pins_sensation = if (exists('pins_sensation', where = .))  pins_sensation else 0) %>%
-  mutate(postexertional_fatigue = if (exists('postexertional_fatigue', where = .))postexertional_fatigue  else 0) %>%
-  mutate(sleep_disorder = if (exists('sleep_disorder', where = .)) sleep_disorder  else 0) %>%
-  mutate(tachycardia = if (exists('tachycardia', where = .)) tachycardia else 0) %>%
-  mutate(tinnitus_and_hearing_problems = if (exists('tinnitus_and_hearing_problems', where = .)) tinnitus_and_hearing_problems else 0) 
-# replace NA for each symptom variable with 0 
+  mutate(window_days = ifelse(is.na(window_days), window_id, window_days)) %>%
+# # replace NA for each symptom variable with 0 
   mutate(abdominal_pain= ifelse(is.na(abdominal_pain),0,abdominal_pain)) %>% 
   mutate(allergy = ifelse(is.na(allergy ),0,allergy)) %>% 
   mutate(altered_smell_taste =ifelse(is.na(altered_smell_taste ),0,altered_smell_taste)) %>% 
@@ -1156,19 +1158,18 @@ left_join(cdm$er_long_covid_all_symptoms_cohorts %>%
 working_cohort
  }
   
-# COVID-19 cohorts
-#  get baseline characteristics 
-baseline_new_infections            <- get_baseline_characteristics(main_cohort_id = new_infection_id) 
-
-# save just in case... 
-sql_query <- glue::glue("SELECT * INTO {write_schema}.er_long_covid_baseline_new_infections\n",
-                        "FROM (\n",
-                        dbplyr::sql_render(baseline_new_infections),
-                        "\n) AS from_table")
-DBI::dbExecute(db, as.character(sql_query))
+cdm <- cdm_from_con(db, 
+                    cdm_schema = cdm_database_schema,
+                    write_schema = write_schema,
+                    cohort_tables = c("er_cohorts_for_longcov", # here are the vaccines talbes 
+                                      "er_long_covid_final_cohorts",  # here are the long covid cohorts
+                                      "er_long_covid_all_symptoms_cohorts", # here are the cohorts with all symptoms
+                                      "er_long_covid_baseline_new_infections", # here are baseline characteristics for tested positive
+                                      "er_long_covid_baseline_tested_negative_all"
+                                      ))  # here are baseline characteristics for tested negative
 
 # add long covid symptoms , 90 days
-table1_data_new_infections         <- get_long_cov_symptoms(main_cohort = baseline_new_infections,
+table1_data_new_infections         <- get_long_cov_symptoms(main_cohort = cdm$er_long_covid_baseline_new_infections,
                                                             main_cohort_id = new_infection_id,
                                                             window_id  = 90)
 
@@ -1183,7 +1184,7 @@ sql_query <- glue::glue("SELECT * INTO {write_schema}.er_long_covid_table1_cohor
 DBI::dbExecute(db, as.character(sql_query))
 
 # add long covid symptoms , 28 days
-table1_data_new_infections_28 <- get_long_cov_symptoms(main_cohort = baseline_new_infections,
+table1_data_new_infections_28 <- get_long_cov_symptoms(main_cohort = cdm$er_long_covid_baseline_new_infections,
                                                        main_cohort_id = new_infection_id,
                                                        window_id  = 28)
 # append rows to existing table 
@@ -1200,72 +1201,76 @@ add_sql_query_table1(table1_data_new_infections_28)
 # get first infections / tests  and reinfections
 get_n_infection <- function(main_table_1){
   table1 <- main_table_1 %>%
-    group_by(person_id, cohort_start_date) %>%
-    arrange(cohort_start_date) %>%
-    mutate(seq= row_number()) %>%
-    ungroup()
+    left_join(cdm$er_long_covid_final_cohorts %>%
+                filter(cohort_definition_id == first_infection_id) %>%
+                select(-cohort_definition_id) %>%
+                rename(person_id = subject_id) %>%
+                mutate(infection = "first infection")) %>%
+    mutate(infection = ifelse(is.na(infection), "reinfection", infection))
   table1
 } 
 
 # 90 days symptom cohorts 
-table1_data_first_infection          <- get_n_infection(main_table_1 = table1_data_new_infections) %>% filter(seq==1) %>% select(-seq)
-table1_data_reinfections             <- get_n_infection(main_table_1 = table1_data_new_infections) %>% filter(seq!=1) %>% select(-seq)
+table1_data_first_infection          <- get_n_infection(main_table_1 = table1_data_new_infections) %>% 
+                                        filter(infection=="first infection") %>% select(-infection) %>%
+                                        mutate(cohort_definition_id = first_infection_id)
+                                            
+table1_data_reinfections             <- get_n_infection(main_table_1 = table1_data_new_infections) %>%
+                                        filter(infection=="reinfection") %>% select(-infection) %>%
+                                        mutate(cohort_definition_id = reinfection_id)
+
 
 add_sql_query_table1(table1_data_first_infection)
 add_sql_query_table1(table1_data_reinfections) 
 
 # 28 days symptom cohorts
-table1_data_first_infection_28 <- get_n_infection(main_table_1 = table1_data_new_infections_28) %>% filter(seq==1) %>% select(-seq)
-table1_data_reinfections_28    <- get_n_infection(main_table_1 = table1_data_new_infections_28) %>% filter(seq!=1) %>% select(-seq)
+table1_data_first_infection_28 <- get_n_infection(main_table_1 = table1_data_new_infections_28) %>% 
+                                  filter(infection=="first infection") %>% select(-infection) %>%
+                                  mutate(cohort_definition_id = first_infection_id)
+
+table1_data_reinfections_28    <- get_n_infection(main_table_1 = table1_data_new_infections_28) %>% 
+                                  filter(infection=="reinfection") %>% select(-infection) %>%
+                                  mutate(cohort_definition_id = reinfection_id)
 add_sql_query_table1(table1_data_first_infection_28)
 add_sql_query_table1(table1_data_reinfections_28) 
 
 
 # Tested negative cohorts 
-baseline_tested_negative_all  <- get_baseline_characteristics(main_cohort_id = tested_negative_all_id )
-sql_query <- glue::glue("SELECT * INTO {write_schema}.er_long_covid_baseline_tested_negative_all\n",
-                        "FROM (\n",
-                        dbplyr::sql_render(baseline_tested_negative_all),
-                        "\n) AS from_table")
-DBI::dbExecute(db, as.character(sql_query))
 # 90 days symptom cohort
-table1_data_tested_negative_all <- get_long_cov_symptoms(main_cohort = baseline_tested_negative_all ,
+table1_data_tested_negative_all <- get_long_cov_symptoms(main_cohort = cdm$er_long_covid_baseline_tested_negative_all ,
                                                          main_cohort_id = tested_negative_all_id ,
                                                          window_id  = 90)
 add_sql_query_table1(table1_data_tested_negative_all)
 # 28 days symptom cohort
-table1_data_tested_negative_all_28 <- get_long_cov_symptoms(main_cohort = baseline_tested_negative_all ,
+table1_data_tested_negative_all_28 <- get_long_cov_symptoms(main_cohort = cdm$er_long_covid_baseline_tested_negative_all ,
                                                             main_cohort_id = tested_negative_all_id ,
                                                             window_id  = 28)
 add_sql_query_table1(table1_data_tested_negative_all_28)
 
+get_n_test <- function(main_table_1){
+  table1 <- main_table_1 %>%
+    left_join(cdm$er_long_covid_final_cohorts %>%
+                filter(cohort_definition_id == tested_negative_earliest_id) %>%
+                select(-cohort_definition_id) %>%
+                rename(person_id = subject_id) %>%
+                mutate(test = "first test")) %>%
+    mutate(test = ifelse(is.na(test), "repeated tests", test))
+  table1
+} 
+
 # earliest tested negative 
-table1_data_tested_negative_earliest    <- get_n_infection(main_table_1 = table1_data_tested_negative_all) %>% filter(seq==1) %>% select(-seq)
-table1_data_tested_negative_earliest_28 <- get_n_infection(main_table_1 = table1_data_tested_negative_all_28) %>% filter(seq==1) %>% select(-seq)
+table1_data_tested_negative_earliest    <- get_n_test(main_table_1 = table1_data_tested_negative_all) %>%
+                                           filter(test == "first test") %>% select(-test) %>%
+                                            mutate(cohort_definition_id = tested_negative_earliest_id)
+table1_data_tested_negative_earliest_28 <- get_n_test(main_table_1 = table1_data_tested_negative_all_28) %>%
+                                           filter(test == "first test") %>% select(-test) %>%
+                                           mutate(cohort_definition_id = tested_negative_earliest_id)
+
 add_sql_query_table1(table1_data_tested_negative_earliest)
 add_sql_query_table1(table1_data_tested_negative_earliest_28)
 
 
-# ## save results 
-# save(table1_data_new_infections,
-#      table1_data_first_infection,
-#      table1_data_reinfections,
-#      table1_data_tested_negative_earliest,
-#      table1_data_tested_negative_all,
-#      file = here("data", "table1_data_90.Rdata"))
-
-
-                                          
-# save(table1_data_new_infections_28,
-#      table1_data_first_infection_28,
-#      table1_data_reinfections_28,
-#      table1_data_tested_negative_earliest_28,
-#      table1_data_tested_negative_all_28,
-#      file = here("data", "table1_data_28.Rdata"))
-
-
 #### Generate  Matched cohort ----
-#load(here("data", "table1_data_90.Rdata"))
 cdm <- cdm_from_con(db, 
                     cdm_schema = cdm_database_schema,
                     write_schema = write_schema,
@@ -1274,7 +1279,7 @@ cdm <- cdm_from_con(db,
 ### New infections with tested negative  ----
 table1_data_new_infections           <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == new_infection_id)
 table1_data_first_infection          <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == first_infection_id)
-table1_data_reinfection              <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == reinfection_id)
+table1_data_reinfections              <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == reinfection_id)
 table1_data_tested_negative_earliest <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == tested_negative_earliest_id)
 table1_data_tested_negative_all      <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == tested_negative_all_id)
 
@@ -1282,8 +1287,8 @@ table1_data_tested_negative_all      <- cdm$er_long_covid_table1_cohorts %>% fil
 matching_cohorts <- function(cohort1, cohort2, 
                              name1, name2, ratio, window_id) {
   results_list <- list()
-  cohort_1 <- cohort1 %>% filter(window_days == window_id) %>% collect()
-  cohort_2 <- cohort2 %>% filter(window_days == window_id) %>% collect()
+  cohort_1 <- cohort1 %>% filter(window_days == window_id) %>% collect()    # cohort1 is the Exposed cohort
+  cohort_2 <- cohort2 %>% filter(window_days == window_id) %>% collect()    # cohort2 is the control cohort
   
   data <- rbind(cohort_1 %>%  mutate(cohort = 1, name = name1) ,
                 # comparator cohort
@@ -1300,19 +1305,22 @@ matching_cohorts <- function(cohort1, cohort2,
                                   "May-Aug 2021",
                                   "Sep-Dec 2021",
                                   "Jan-Apr 2022", 
-                                  "May 2022 or later", 
+                                  "May 2022 or later" 
                                   ))) %>%
-  mutate(vaccination = factor(vaccination,
-                              levels = c("Non vaccinated", "First dose vaccination", "Two doses vaccination", "Booster doses" )))
+    mutate(pcr = ifelse(is.na(pcr), 0, pcr)) %>%
+  mutate(vaccination_status = factor(vaccination_status,
+                              levels = c("Non vaccinated", "First dose vaccination", "Two doses vaccination", "Booster doses" ))) %>%
+    mutate(age_gr5 = factor(age_gr5)) %>%
+    droplevels() 
    
   
 
   # Matching - add PCR? ----
-m.week_year <- matchit(cohort ~    week + year + age_gr5, 
-                        data = data,
+m.week_year <- matchit(cohort  ~ week + year + pcr + age_gr5, 
+                        data   = data,
                         method = "nearest", 
-                        exact = ~   week + year +age_gr5,
-                        ratio = ratio
+                        exact  = ~ week + year + pcr + age_gr5,
+                        ratio  = ratio
                        )
 
 # extract results of matching
@@ -1331,7 +1339,7 @@ m.data <- match.data(
            data = data,
            drop.unmatched = TRUE)
 
-# we also save this in survey object - this is needed to create later the summary tables using tableone and tbl_summary
+# save this in survey object - this is needed to create later the summary tables using svytableone and tbl_summary
 s.data <- svydesign(ids = ~matched_pair, # clusters
           data = m.data,
           weights= ~ps_weights) # weights
@@ -1342,7 +1350,7 @@ results_list
 
 ### New infections with tested negative  ----
   
-m.new_covid_tested_negative_earliest <- matching_cohorts(
+m.new_covid_tested_negative_earliest_90 <- matching_cohorts(
   cohort1 = table1_data_new_infections,
   name1 = "New infections",
   cohort2 = table1_data_tested_negative_earliest, 
@@ -1351,7 +1359,7 @@ m.new_covid_tested_negative_earliest <- matching_cohorts(
   window_id = 90
 )
 
-m.new_covid_tested_negative_all <- matching_cohorts(
+m.new_covid_tested_negative_all_90 <- matching_cohorts(
   cohort1 = table1_data_new_infections,
   name1 = "New infections",
   cohort2 = table1_data_tested_negative_all, 
@@ -1361,22 +1369,22 @@ m.new_covid_tested_negative_all <- matching_cohorts(
 )
 
 ### First infections with reinfections ---- 
-m.first_infection_reinfections <- matching_cohorts(
-    cohort1 = table1_data_reinfections,
+m.first_infection_reinfections_90 <- matching_cohorts(
+  cohort1 = table1_data_reinfections,
   name1 = "Reinfections",
   cohort2 = table1_data_first_infection,
   name2 = "First infection",
-  # cohort2
   ratio = 3,
   window_id = 90
 )
 
 ## Save matched datasets 
-save(m.new_covid_tested_negative_earliest,
-     m.new_covid_tested_negative_all,
-     m.first_infection_reinfections,
-     file = here("data", "table1_data_matched.Rdata"))
+save(m.new_covid_tested_negative_earliest_90,
+     m.new_covid_tested_negative_all_90,
+     m.first_infection_reinfections_90,
+     file = here("data", "table1_data_matched_90.Rdata"))
 
+rm(m.new_covid_tested_negative_earliest_90, m.new_covid_tested_negative_all_90, m.first_infection_reinfections_90)
 
 m.new_covid_tested_negative_earliest_28 <- matching_cohorts(
   cohort1 = table1_data_new_infections,
@@ -1412,84 +1420,8 @@ save(m.new_covid_tested_negative_earliest_28,
      m.first_infection_reinfections_28,
      file = here("data", "table1_data_matched_28.Rdata"))
 
-# Calculate RR wiht 95% CI
+rm(m.new_covid_tested_negative_earliest_28, m.new_covid_tested_negative_all_28, m.first_infection_reinfections_28)
 
-# symptoms
-#!change this to pulling the symptoms of the cohort! ----
-symptoms <- c("abdominal_pain", "allergy", "altered_smell_taste",  "anxiety" , 
-         "blurred_vision","chest_pain" ,"cognitive_dysfunction_brain_fog", "cough" ,"depression" ,
-         "dizziness" ,"dyspnea" , "fatigue_malaise" , "gastrointestinal_issues","headache" ,"intermittent_fever" ,
-         "joint_pain",  "memory_issues", "menstrual_problems", "muscle_spams_pain", "neuralgia", "pins_sensation",  
-         "sleep_disorder", "tachycardia" ,"tinnitus_and_hearing_problems")
-
-
-
-get_rr <- function(data){
-  results_rr<- list()
-  for (i in 1:length(symptoms)){
-  symptom_id <-symptoms[i]
-message(paste0("working on ", symptom_id))
-
-  counts_1 <- data %>%
-    mutate(symptom =paste0(symptom_id)) %>%
-    rename(name_1 = name) %>%
-    filter(cohort==1) %>%
-    mutate(total_pop_1 = length(person_id)) %>% # get total pop
-    filter((!!sym(symptom_id))==1) %>%
-    mutate(events_1= length(person_id))%>% # get number of people with the symtpom
-    select(symptom, name_1, events_1, total_pop_1) %>% 
-    distinct()  %>%
-    mutate(prop_1 = (events_1/total_pop_1)*100)  # get proportion of people with the symtpmm
-  
-  counts_2<- data %>%
-    mutate(symptom =paste0(symptom_id)) %>%
-    rename(name_2 = name) %>%
-    filter(cohort==0) %>%
-    mutate(total_pop_2 = length(person_id)) %>% 
-    filter((!!sym(symptom_id))==1) %>%
-    mutate(events_2= length(person_id))%>% 
-    select(symptom, name_2, events_2, total_pop_2) %>% 
-      distinct()  %>%
-    mutate(prop_2 = (events_2/total_pop_2)*100) 
-  
-  data_rr <- counts_1 %>%
-    left_join(counts_2) %>%
-    mutate(database = database_name) %>%
-    mutate(symptom = str_to_sentence(str_replace_all(symptom, "_", " "))) 
-  
-  getting_rr <- riskratio(data_rr$events_1,
-                          data_rr$events_2,
-                          data_rr$total_pop_1,
-                          data_rr$total_pop_2,
-                          conf.level = 0.95)
- 
-  data_rr$relative_risk <- getting_rr$estimate
-  data_rr$low_ci <- getting_rr$conf.int[1]
-  data_rr$up_ci <- getting_rr$conf.int[2]
-  data_rr
-  results_rr[[i]] <- data_rr      
-  }
-  results_rr
-}
-
-rr_new_covid_tested_negative_earliest <- bind_rows(get_rr(m.new_covid_tested_negative_earliest[[2]])) 
-rr_new_covid_tested_negative_all      <- bind_rows(get_rr(m.new_covid_tested_negative_all[[2]])) 
-rr_first_infection_reinfections       <- bind_rows(get_rr(m.first_infection_reinfections[[2]]))
-
-write.csv2(rr_new_covid_tested_negative_earliest,
-           here(paste0("results/rr_new_covid_tested_negative_earliest",
-                       database_name, 
-                       ".csv")))
-           
-write.csv2(rr_new_covid_tested_negative_all,
-           here(paste0("results/rr_new_covid_tested_negative_all",
-                       database_name,
-                       ".csv")))
-
-write.csv2(rr_first_infection_reinfections,
-           here(paste0("results/rr_first_infection_reinfections", 
-                                                        database_name,
-                                                        ".csv")))
 
 }
   
@@ -1498,76 +1430,110 @@ if(generate_results  =="FALSE"){
 print(paste0("Skipping  generating descriptive tables"))
 } else { 
 print(paste0("Generating descriptive tables"))
-
-  # load data
-  load(here("data", "table1_data.Rdata"))
-  load(here("data", "table1_data_matched.Rdata"))
   
+  # cdm to get the cohorts for Table 1 - unmatched cohorts 
+  cdm <- cdm_from_con(db, 
+                      cdm_schema = cdm_database_schema,
+                      write_schema = write_schema,
+                      cohort_tables = c("er_long_covid_table1_cohorts")) # here are the cohorts with all symptoms
   # functions for numbers
   nice.num<-function(x){
-    prettyNum(x, big.mark=",", nsmall = 0, digits=0,scientific = FALSE)}
+    prettyNum(x, big.mark=",", nsmall = 0, digits=0,scientific = FALSE)
+  }
   
-  # variables for Table 1 
-  # factor variables 
-  factor.vars<- c(
-    "age_gr2",
-    "sex",
-    "trimester",
-    "vaccination_status",
-    #comorbidities
-    "asthma",
-    "autoimmune_disease",
-    "copd",
-    "dementia",
-    "diabetes",
-    "heart_disease",
-    "cancer",
-    "hypertension",
-    "renal_impairment",
-    # long covid + symptoms
-    "long_covid",
-    "abdominal_pain",
-    "allergy", 
-    "altered_smell_taste",
-    "anxiety" , 
-    "blurred_vision" ,
-    "chest_pain" ,
-    "cognitive_dysfunction_brain_fog", 
-    "cough" ,
-    "depression" ,
-    "dizziness" ,
-    "dyspnea",
-    "fatigue_malaise" ,
-    "gastrointestinal_issues",
-    "headache" ,
-    "intermittent_fever",
-    "joint_pain"  , 
-    "memory_issues_v2" ,
-    "menstrual_problems" ,
-    "muscle_spams_pain",
-    "neuralgia" , 
-    "pins_sensation",  
-    "sleep_disorder" ,
-    "tachycardia" ,
-    "tinnitus_hearing_problems", 
-    "all_symp"
-  )
-  # all variables - (includes continous variables)
-  vars <- c("age", factor.vars)
+  # variables of interest 
+  symptoms <- c("abdominal_pain", "allergy", "altered_smell_taste",  "anxiety" , 
+                "blurred_vision","chest_pain" ,"cognitive_dysfunction_brain_fog", "cough" ,"depression" ,
+                "dizziness" ,"dyspnea" , "fatigue_malaise" , "gastrointestinal_issues","headache" ,"intermittent_fever" ,
+                "joint_pain",  "memory_issues", "menstrual_problems", "muscle_spams_pain", "neuralgia", "pins_sensation", 
+                "postexertional_fatigue",    "sleep_disorder", "tachycardia" ,"tinnitus_and_hearing_problems")
+  
+ other_factor_vars <- c( "age_gr2",
+                         "sex",
+                         "trimester",
+                         "vaccination_status",
+                         #comorbidities
+                         "asthma",
+                         "autoimmune_disease",
+                         "copd",
+                         "dementia",
+                         "diabetes",
+                         "heart_disease",
+                         "cancer",
+                         "hypertension",
+                         "renal_impairment",
+                         # long covid + symptoms
+                         "long_covid")
+ 
+ factor.vars <- c(other_factor_vars, symptoms, "all_symp")
+ rm(other_factor_vars)
+   
+# all variables - (includes continous variables)
+vars <- c("age", factor.vars)
+  
+# load matched data 
+load(here("data/table1_data_matched_28.Rdata"))
+load(here("data/table1_data_matched_90.Rdata"))
+  
+# function to create descriptive tables for matched data
+get_characteristics_matched <- function(df){
+    summary_characteristics <-print(svyCreateTableOne(
+      vars =  vars,
+      factorVars = factor.vars,
+      includeNA=F,
+      data = df,
+      strata=c("name"),
+      test = F), 
+      showAllLevels=F,
+      smd=T,
+      nonnormal = vars, #all 
+      noSpaces = TRUE,
+      printToggle=FALSE)
+    
+    for(i in 1:2) {
+      # tidy up numbers
+      cur_column <- summary_characteristics[, i]
+      cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
+        as.numeric() 
+      cur_column <-nice.num(cur_column)
+      # add back in
+      summary_characteristics[, i] <- str_replace(string=summary_characteristics[, i],
+                                                  pattern='[0-9.]+\\b', 
+                                                  replacement=cur_column)    
+    }
+    # tidy up rownames
+    rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics), "age_gr2", "Age, categories")
+    rownames(summary_characteristics)<- str_replace(rownames(summary_characteristics), " = 1", "")
+    rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics), "a_", "")
+    rownames(summary_characteristics)<-str_replace_all(rownames(summary_characteristics) , "_", " ")
+    rownames(summary_characteristics)<-str_to_sentence(rownames(summary_characteristics))
+    rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics) , "Copd", "COPD")
+    rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics) , "Sex", "Sex, male")
+    summary_characteristics
+  }
+
+# function to get all the descriptive tables  
+get_descriptive_tables <- function(window_id){ 
+
+  # Get table1 data for each cohort of interest
+  table1_data_new_infections           <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == new_infection_id   & window_days == window_id) %>% collect()
+  table1_data_first_infection          <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == first_infection_id & window_days == window_id) %>% collect()
+  table1_data_reinfections             <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == reinfection_id     & window_days == window_id) %>% collect()
+  table1_data_tested_negative_earliest <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == tested_negative_earliest_id & window_days == window_id) %>% collect()
+  table1_data_tested_negative_all      <- cdm$er_long_covid_table1_cohorts %>% filter(cohort_definition_id == tested_negative_all_id      & window_days == window_id) %>% collect()
   
   table1.data<-rbind(  
     table1_data_new_infections %>%
-      mutate(group = "1 COVID-19 infection"),
+      mutate(group = "COVID-19 infection"),
     table1_data_first_infection %>%
-      mutate(group = "3 First infection"),
+      mutate(group = "First infection"),
     table1_data_reinfections  %>%
-      mutate(group = "4 Reinfections"),
+      mutate(group = "Reinfections"),
     table1_data_tested_negative_earliest  %>%
-      mutate(group = "5 Tested negative, earliest"),
+      mutate(group = "Tested negative, earliest"),
     table1_data_tested_negative_all %>%
-      mutate(group = "6 Tested negative, all")
+      mutate(group = "Tested negative, all")
   ) 
-  
   
   summary.characteristics <-print(CreateTableOne(
     vars =  vars,
@@ -1603,54 +1569,166 @@ print(paste0("Generating descriptive tables"))
   rownames(summary.characteristics)<- str_replace(rownames(summary.characteristics) , "Sex", "Sex, female")
   
   # save Table 1
-  write.csv2(summary.characteristics, file = here(paste0("results/Table1_", database_name, ".csv")))
+  write.csv2(summary.characteristics, file = here(paste0("results/Table1_", window_id, "days_", database_name, ".csv")))
   
   # Comparing characteristics of matched infections vs tested negative, earliest
-  get_characteristics_matched <- function(df){
-    summary_characteristics <-print(svyCreateTableOne(
-      vars =  vars,
-      factorVars = factor.vars,
-      includeNA=F,
-      data = df,
-      strata=c("name"),
-      test = F), 
-      showAllLevels=F,
-      smd=T,
-      nonnormal = vars, #all 
-      noSpaces = TRUE,
-      printToggle=FALSE)
-    
-    for(i in 1:2) {
-      # tidy up 
-      cur_column <- summary_characteristics[, i]
-      cur_column <- str_extract(cur_column, '[0-9.]+\\b') %>% 
-        as.numeric() 
-      cur_column <-nice.num(cur_column)
-      # add back in
-      summary_characteristics[, i] <- str_replace(string=summary_characteristics[, i],
-                                                  pattern='[0-9.]+\\b', 
-                                                  replacement=cur_column)    
+m.covid_tested_neg_earliest   <-  get(paste0("m.new_covid_tested_negative_earliest_", window_id))[[3]]    
+m.covid_tested_neg_all         <-  get(paste0("m.new_covid_tested_negative_all_", window_id))[[3]]
+m.first_infection_reinfections <-  get(paste0("m.first_infection_reinfections_", window_id))[[3]]
+  
+  sum_characteristics_covid_negative_earliest <- get_characteristics_matched(df = m.covid_tested_neg_earliest)
+  sum_characteristics_covid_negative_all      <- get_characteristics_matched(df = m.covid_tested_neg_all)
+  sum_characteristics_reinfections            <- get_characteristics_matched(df = m.first_infection_reinfections) 
+  
+  write.csv2(sum_characteristics_covid_negative_earliest, 
+             file = here(paste0("results/Table_Matched_Infection_Tested_Negative_earliest_", window_id, "days_", database_name, ".csv"))
+             )
+  write.csv2(sum_characteristics_covid_negative_all, 
+             file = here(paste0("results/Table_Matched_Infection_Tested_Negative_all_", window_id, "days_", database_name, ".csv"))
+             )
+  write.csv2(sum_characteristics_reinfections, 
+             file = here(paste0("results/Table_Matched_First_infection_Reinfections_", window_id, "days_", database_name, ".csv"))
+             )
+  }
+
+
+# function to get RR and AR ----
+  get_rr <- function(data){
+    results_rr<- list()
+    # for each symptom
+    for (i in 1:length(symptoms)){
+      symptom_id <-symptoms[i]
+      message(paste0("working on ", symptom_id))
+      # get number of events & number of people per cohort
+      counts_1 <- data %>%
+        mutate(symptom =paste0(symptom_id)) %>%
+        rename(name_1 = name) %>%
+        filter(cohort==1) %>%
+        mutate(total_pop_1 = length(person_id)) %>% # get total pop
+        filter((!!sym(symptom_id))==1) %>%
+        mutate(events_1= length(person_id))%>% # get number of people with the symtpom
+        select(symptom, name_1, events_1, total_pop_1) %>% 
+        distinct()  %>%
+        mutate(prop_1 = (events_1/total_pop_1)*100)  # get proportion of people with the symtpmm
+      
+      counts_2<- data %>%
+        mutate(symptom =paste0(symptom_id)) %>%
+        rename(name_2 = name) %>%
+        filter(cohort==0) %>%
+        mutate(total_pop_2 = length(person_id)) %>% 
+        filter((!!sym(symptom_id))==1) %>%
+        mutate(events_2= length(person_id))%>% 
+        select(symptom, name_2, events_2, total_pop_2) %>% 
+        distinct()  %>%
+        mutate(prop_2 = (events_2/total_pop_2)*100) 
+      
+      data_rr <- counts_1 %>%
+        left_join(counts_2) %>%
+        mutate(database = database_name) %>%
+        mutate(symptom = str_to_sentence(str_replace_all(symptom, "_", " "))) 
+      
+      # getting relative risl with 95%Ci
+      getting_rr <- riskratio(data_rr$events_1,
+                              data_rr$events_2,
+                              data_rr$total_pop_1,
+                              data_rr$total_pop_2,
+                              conf.level = 0.95)
+      
+      data_rr$relative_risk <- getting_rr$estimate
+      data_rr$low_ci <- getting_rr$conf.int[1]
+      data_rr$up_ci <- getting_rr$conf.int[2]
+      
+      # getting absolute risk difference with 95%C
+      getting_ar <- BinomDiffCI(
+        data_rr$events_1,   # events exposed
+        data_rr$total_pop_1,# pop exposed
+        data_rr$events_2,
+        data_rr$total_pop_2,
+        conf.level = 0.95, 
+        sides = "two.sided",
+        method = "wald")
+      
+      data_rr$absolute_risk <- getting_ar[1]*100
+      data_rr$ar_low_ci <- getting_ar[2]*100
+      data_rr$ar_up_ci <- getting_ar[3]*100
+      
+      data_rr
+      results_rr[[i]] <- data_rr      
     }
-    rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics), "age_gr2", "Age, categories")
-    rownames(summary_characteristics)<- str_replace(rownames(summary_characteristics), " = 1", "")
-    rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics), "a_", "")
-    rownames(summary_characteristics)<-str_replace_all(rownames(summary_characteristics) , "_", " ")
-    rownames(summary_characteristics)<-str_to_sentence(rownames(summary_characteristics))
-    rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics) , "Copd", "COPD")
-    rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics) , "Sex", "Sex, male")
-    summary_characteristics
+    results_rr
   }
   
+  save_rr <- function(window_id){
+    m.covid_tested_neg_earliest    <-  get(paste0("m.new_covid_tested_negative_earliest_", window_id))[[2]]    
+    m.covid_tested_neg_all         <-  get(paste0("m.new_covid_tested_negative_all_", window_id))[[2]]
+    m.first_infection_reinfections <-  get(paste0("m.first_infection_reinfections_", window_id))[[2]]
+    
+    rr_new_covid_tested_negative_earliest <- bind_rows(get_rr(m.covid_tested_neg_earliest)) 
+    rr_new_covid_tested_negative_all      <- bind_rows(get_rr(m.covid_tested_neg_all)) 
+    rr_first_infection_reinfections       <- bind_rows(get_rr(m.first_infection_reinfections))
+    
+    write.csv2(rr_new_covid_tested_negative_earliest,
+               here(paste0("results/RR_new_covid_tested_negative_earliest_", window_id, "days_",
+                           database_name, 
+                           ".csv")),
+               row.names = FALSE)
+    
+    write.csv2(rr_new_covid_tested_negative_all,
+               here(paste0("results/RR_new_covid_tested_negative_all_", window_id, "days_",
+                           database_name,
+                           ".csv")),
+               row.names = FALSE)
+    
+    write.csv2(rr_first_infection_reinfections,
+               here(paste0("results/RR_first_infection_reinfections_", window_id, "days_",
+                           database_name,
+                           ".csv")),
+               row.names = FALSE)
+  }
   
-  sum_characteristics_covid_negative <- get_characteristics_matched(df = m.new_covid_tested_negative_earliest[[3]] )
-  sum_characteristics_reinfections <-   get_characteristics_matched(df = m.first_infection_reinfections[[3]]) 
+  get_descriptive_tables(window_id = 90) 
+  get_descriptive_tables(window_id = 28) 
   
-  write.csv2(sum_characteristics_covid_negative, 
-             file = here(paste0("results/Table_Matched_Infection_Tested_Negative", database_name, ".csv")))
-  write.csv2(sum_characteristics_reinfections, 
-             file = here(paste0("results/Table_Matched_First_infection_Reinfections", database_name, ".csv")))
+  save_rr(window_id = 90)
+  save_rr(window_id = 28)
+  
+  
+  # get exclusion counts ----
+stats           <- read.csv(here("Cohort_Dx_initial/Results/cohortIncStats.csv"))
+label_inclusion <- read.csv2(here("inclusion_criteria_labels.csv"))
+  read.csv2(here("results/exclusion_table_CPRD.csv"))
+
+  
+  
+  
+  
   
   
 } 
+
+
+# print("Zipping results to output folder")
+# unlink(paste0(output.folder, "/OutputToShare_", db.name, ".zip"))
+# zipName <- paste0(output.folder, "/OutputToShare_", db.name, ".zip")
+# 
+if (generate_results == TRUE){
+  
+}
+# if(run.vax.cohorts==TRUE | run.covid.cohorts==TRUE){
+#   files<-c(paste0(output.folder, "/IR.summary_", db.name, ".RData"),
+#            paste0(output.folder, "/Survival.summary_", db.name, ".RData"),
+#            paste0(output.folder, "/Patient.characteristcis_", db.name, ".RData"))
+# } else {
+#   files<-c(paste0(output.folder, "/IR.summary_", db.name, ".RData"),
+#            paste0(output.folder, "/Patient.characteristcis_", db.name, ".RData")) 
+# }
+# files <- files[file.exists(files)==TRUE]
+# createZipFile(zipFile = zipName,
+#               rootFolder=output.folder,
+#               files = files)
+
+print("Done!")
+print("-- If all has worked, there should now be a zip folder with your results in the results folder to share")
+print("-- Thank you for running the study!")
 
 
