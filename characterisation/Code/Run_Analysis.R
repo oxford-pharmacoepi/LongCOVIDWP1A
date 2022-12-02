@@ -1291,7 +1291,7 @@ matching_cohorts <- function(cohort1, cohort2,
   data <- rbind(cohort_1 %>%  mutate(cohort = 1, name = name1) ,
                 # comparator cohort
                 cohort_2 %>% mutate(cohort =0,   name = name2)) %>%
-   mutate(age_gr2 = factor(age_gr2,
+  mutate(age_gr2 = factor(age_gr2,
                        levels = c("<=34",
                                   "35-49",
                                   "50-64",
@@ -1429,11 +1429,7 @@ print(paste0("Skipping  generating descriptive tables"))
 } else { 
 print(paste0("Generating descriptive tables"))
   
-  # cdm to get the cohorts for Table 1 - unmatched cohorts 
-  cdm <- cdm_from_con(db, 
-                      cdm_schema = cdm_database_schema,
-                      write_schema = write_schema,
-                      cohort_tables = c("er_long_covid_table1_cohorts")) # here are the cohorts with all symptoms
+
   # functions for numbers
   nice.num<-function(x){
     prettyNum(x, big.mark=",", nsmall = 0, digits=0,scientific = FALSE)
@@ -1450,6 +1446,7 @@ print(paste0("Generating descriptive tables"))
                          "sex",
                          "trimester",
                          "vaccination_status",
+                         "pcr",
                          #comorbidities
                          "asthma",
                          "autoimmune_disease",
@@ -1463,12 +1460,17 @@ print(paste0("Generating descriptive tables"))
                          # long covid + symptoms
                          "long_covid")
  
- factor.vars <- c(other_factor_vars, symptoms, "all_symp")
+factor.vars <- c(other_factor_vars, symptoms, "all_symp")
  rm(other_factor_vars)
    
 # all variables - (includes continous variables)
 vars <- c("age", factor.vars)
   
+# cdm to get the cohorts for Table 1 - unmatched cohorts 
+cdm <- cdm_from_con(db, 
+                    cdm_schema = cdm_database_schema,
+                    write_schema = write_schema,
+                    cohort_tables = c("er_long_covid_table1_cohorts")) # here are the cohorts with all symptoms
 # load matched data 
 load(here("data/table1_data_matched_28.Rdata"))
 load(here("data/table1_data_matched_90.Rdata"))
@@ -1506,7 +1508,7 @@ get_characteristics_matched <- function(df){
     rownames(summary_characteristics)<-str_replace_all(rownames(summary_characteristics) , "_", " ")
     rownames(summary_characteristics)<-str_to_sentence(rownames(summary_characteristics))
     rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics) , "Copd", "COPD")
-    rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics) , "Sex", "Sex, male")
+    rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics) , "Sex", "Sex, female")
     summary_characteristics
   }
 
@@ -1531,7 +1533,24 @@ get_descriptive_tables <- function(window_id){
       mutate(group = "Tested negative, earliest"),
     table1_data_tested_negative_all %>%
       mutate(group = "Tested negative, all")
-  ) 
+  ) %>%
+    mutate(age_gr2 = factor(age_gr2,
+                            levels = c("<=34",
+                                       "35-49",
+                                       "50-64",
+                                       "65-79",
+                                       ">=80"))) %>%
+    mutate(trimester = factor(trimester,
+                              levels = c("Sep-Dec 2020",
+                                         "Jan-Apr 2021",
+                                         "May-Aug 2021",
+                                         "Sep-Dec 2021",
+                                         "Jan-Apr 2022", 
+                                         "May 2022 or later" 
+                              ))) %>%
+    mutate(vaccination_status = factor(vaccination_status,
+                                       levels = c("Non vaccinated", "First dose vaccination", "Two doses vaccination", "Booster doses" ))) 
+    
   
   summary.characteristics <-print(CreateTableOne(
     vars =  vars,
