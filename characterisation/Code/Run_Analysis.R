@@ -1,4 +1,3 @@
-
 # create results folder if needed
 cohorts.folder <- here::here("results")
 if (!file.exists(cohorts.folder)){
