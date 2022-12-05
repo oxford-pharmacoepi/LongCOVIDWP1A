@@ -127,6 +127,72 @@ print(paste0("- Skipping creating Long Covid cohorts"))
 } else { 
 print(paste0("- Creating Long Covid cohorts"))
  
+
+# Get numbers for exclusion table ----
+# we get these from the cohrtintresult created after running cohort generator
+# the criteria to interprete these counts can be found in the inclusion criteria labels csv
+stats           <- read.csv(here("Cohort_Dx_initial/Results/cohortIncResult.csv"))
+label_inclusion <- read.csv(here("Cohort_Dx_initial/inclusion_criteria_labels.csv"))%>% select(-X,-X.1)
+names(label_inclusion)[1] <- "cohortDefinitionId"
+  
+exclusion_df <- stats %>%
+  left_join(label_inclusion)
+
+get_counts_exclusion <- function(cohort.id, mode.ID){
+  exclusion <- exclusion_df %>% filter(cohortDefinitionId==cohort.id & modeId ==mode.ID)
+  counts_exclusion <- tibble(order = 0,
+                             exclusion_reason = "Initial record of COVID-19 tests",
+                             n = sum(exclusion$personCount))
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 1,
+                                   exclusion_reason = "<18 years",
+                                   n = exclusion %>% filter(exclusion_criteria=="first") %>% group_by(cohortDefinitionId) %>%
+                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 2,
+                                   exclusion_reason = "Without 180d of prior history",
+                                   n = exclusion %>% filter(exclusion_criteria=="second") %>% group_by(cohortDefinitionId) %>%
+                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
+  
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 3,
+                                   exclusion_reason = "With a prior COVID-19 infection",
+                                   n = exclusion %>% filter(exclusion_criteria=="third") %>% group_by(cohortDefinitionId) %>%
+                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
+  
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 4,
+                                   exclusion_reason = "With an influenza infection 42d before",
+                                   n = exclusion %>% filter(exclusion_criteria=="four") %>% group_by(cohortDefinitionId) %>%
+                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
+  
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 5,
+                                   exclusion_reason = "With a COVID-19 negative test 42d before",
+                                   n = exclusion %>% filter(exclusion_criteria=="five") %>% group_by(cohortDefinitionId) %>%
+                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
+  
+  counts_exclusion <- rbind(counts_exclusion,
+                            tibble(order = 6,
+                                   exclusion_reason = "Records included",
+                                   n = exclusion$personCount[[which(exclusion$label=="final_count")]])) %>%
+                    arrange(order) %>%
+                    mutate(N_current = ifelse(order==0, n, NA))
+  
+  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
+  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
+  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
+  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
+  counts_exclusion$cohort_definition_id <- cohort.id
+  counts_exclusion
+}
+
+counts <- rbind(get_counts_exclusion(cohort.id = 22, mode.ID = 0 ),
+                get_counts_exclusion(cohort.id = 28, mode.ID = 0) %>% 
+                  mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current)))
+
+rm(exclusion_df, stats, label_inclusion)
+
 # cdm object to access the tables easily
 cdm <- cdm_from_con(db, 
              cdm_schema = cdm_database_schema,
@@ -386,12 +452,36 @@ appendPermanent(tested_negative_all, name = "er_long_covid_final_cohorts",  sche
 appendPermanent(tested_negative_earliest, name = "er_long_covid_final_cohorts",  schema = write_schema)
 
 #get exclusion table and save
-exclusion_table <- rbind(confirmed_infections[[4]], negative_infections[[4]])
+exclusion_table <- rbind(confirmed_infections[[4]], negative_infections[[4]]) %>% 
+  filter(!(cohort_definition_id == tested_negative_re))
+
 excluded_shorter_follow_up <- rbind(confirmed_infections[[5]] %>% mutate(cohort= "COVID-19"),
                                     negative_infections[[5]]%>% mutate(cohort= "Negative"))
 
-write.csv2(exclusion_table, here(paste0("results/exclusion_table_", database_name, ".csv")), row.names = FALSE)
+
+#get exclusion table and save ----
+exclusion_table <- rbind(confirmed_infections[[4]], negative_infections[[4]]) %>% 
+  filter(!(cohort_definition_id == tested_negative_re))
+# save also reason for censoring
+excluded_shorter_follow_up <- rbind(confirmed_infections[[5]] %>% mutate(cohort= "COVID-19"),
+                                    negative_infections[[5]]%>% mutate(cohort= "Negative"))
+counts <- counts %>%
+  filter(exclusion_reason != "Records included") %>%
+  rbind(exclusion_table %>% mutate(N_current = as.integer(N_current),
+                                    order = NA, n= NA)) %>%
+  filter(exclusion_reason != "initial pop") %>%
+  mutate(order = ifelse(exclusion_reason=="Tests prior to 2020-09-01", 7, order)) %>%
+  mutate(order = ifelse(exclusion_reason=="Less than 120 days of follow-up", 8, order)) %>%
+  group_by(cohort_definition_id) %>%
+  arrange(order)%>%
+  mutate(n = ifelse(exclusion_reason=="Tests prior to 2020-09-01", lag(N_current)-N_current, n)) %>%
+  mutate(n = ifelse(exclusion_reason=="Less than 120 days of follow-up", lag(N_current)-N_current, n)) %>%
+    ungroup()
+
+write.csv2(counts,here(paste0("results/final_exclusion_table_", database_name,".csv")), row.names = FALSE)
 write.csv2(excluded_shorter_follow_up, here(paste0("results/exclusions_followup_", database_name, ".csv")), row.names = FALSE)
+
+
 
 ## getting Symptoms cohorts  ----
 ### parameters for loop
@@ -433,7 +523,7 @@ for (i in 1:length(symptoms_ids)){
   # we find the people we need to exclude (symptom within the washout window) -
   # it's people with a negative number for days since symptom onset
   people_to_exclude <- symptom_covid %>%
-  filter(days_symptom_onset<=0) %>%
+  filter(days_symptom_onset<0) %>%
   select(subject_id, cohort_start_date) %>%
   compute()
 ## exclude considering both id & cohort_start_date (someone with more than one infection can be included for one infection but not the other)
@@ -467,15 +557,16 @@ working_symptom <- cohort %>%
   compute()
 
 working_symptom <- working_symptom %>%
-  mutate(year = lubridate::year(cohort_start_date),
+  mutate(year  = lubridate::year(cohort_start_date),
          month = lubridate::month(cohort_start_date)) %>%
-  mutate(trimester=
-                   ifelse(year==2020 & month>8, "Sept_Dec_2020",
-                   ifelse(year==2021 & month<4, "Jan_Mar_2021",
-                   ifelse(year==2021 & (month==4 | month==5| month==6), "Apr_Jun_2021",
-                   ifelse(year==2021 & (month==7 | month==8| month==9), "Jul_Sep_2021",
-                   ifelse(year==2021 & month>9, "Oct_Dec_21", 
-                   NA)))))) %>%
+ mutate(trimester=
+                   ifelse(year==2020 & month>8,                                    "Sep-Dec 2020",
+                   ifelse(year==2021 & month<5,                                    "Jan-Apr 2021",
+                   ifelse(year==2021 & (month==5 | month==6| month==7 | month==8), "May-Aug 2021",
+                   ifelse(year==2021 & month>8,                                    "Sep-Dec 2021",
+                   ifelse(year==2022 & month<5,                                    "Jan-Apr 2022", 
+                   ifelse(year==2022 & month>=5,                                   "May 2022 or later", 
+                   NA))))))) %>%
   select(-c(year,month)) %>%
   compute()
 
@@ -821,13 +912,13 @@ working_cohort <-   cdm$er_long_covid_final_cohorts %>%
    compute()
  
  # add vaccines 
-  vaccines <- union_all(cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == astrazeneca_id) %>% mutate(vaccine_type = "ChAdOx1"),
-                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == moderna_id) %>% mutate(vaccine_type = "mRNA-1273"),
-                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == pfizer_id)  %>% mutate(vaccine_type = "BNT162b2"),
-                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == janssen_id) %>% mutate(vaccine_type = "Ad26.COV2.S")
-                  ) %>%
+  vaccines <- union_all(cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == astrazeneca_id),
+                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == moderna_id),
+                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == pfizer_id),
+                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == janssen_id)) %>%
    rename(drug_exposure_start_date = cohort_start_date,
           person_id = subject_id) %>%
+    mutate(vaccine = "Vaccination") %>%
     select(-cohort_end_date, -cohort_definition_id) %>%
     full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
     filter(drug_exposure_start_date < cohort_start_date) %>%
@@ -839,30 +930,25 @@ vaccines <- vaccines %>%
       group_by(person_id) %>% 
       arrange(drug_exposure_start_date) %>% 
       mutate(seq=row_number())   %>%
-      mutate(second_dose_type = ifelse(seq==1, lead(vaccine_type, order_by = c("drug_exposure_start_date")),  NA),
-             second_dose_date = ifelse(seq==1, lead(drug_exposure_start_date, order_by = c("drug_exposure_start_date")), NA)) %>%
-  ungroup() %>%
-  compute()
+      mutate(second_dose_date = ifelse(seq==1, lead(drug_exposure_start_date, order_by = c("drug_exposure_start_date")), NA)) %>%
+      ungroup() %>%
+      compute()
 
 vaccines <- vaccines %>%
   filter(seq!=2) %>%
   group_by(person_id) %>%
   arrange(drug_exposure_start_date) %>% 
-  mutate( third_dose_type = ifelse(seq==1,lead(vaccine_type, order_by = c("drug_exposure_start_date")), NA),
-             third_dose_date = ifelse(seq==1, lead(drug_exposure_start_date, order_by = c("drug_exposure_start_date")), NA)) %>%
+  mutate(third_dose_date = ifelse(seq==1, lead(drug_exposure_start_date, order_by = c("drug_exposure_start_date")), NA)) %>%
   ungroup() %>%
   filter(seq==1) %>%
-  rename(first_dose_type = vaccine_type,
-         first_dose_date = drug_exposure_start_date) %>%
-  select( -seq) %>%
+  rename(first_dose_date = drug_exposure_start_date) %>%
+  select(-seq) %>%
   mutate(one_dose_vaccine = ifelse(is.na(first_dose_date), 0, 1)) %>%
-  mutate(fully_vaccinated = ifelse(first_dose_type=="Ad26.COV2.S", 1,
-                                   ifelse(is.na(second_dose_date), 0,1))) %>%
-  mutate(booster_doses = ifelse(first_dose_type=="Ad26.COV2.S" & !(is.na(second_dose_date)),  1,
-                                ifelse(is.na(third_dose_date), 0,1))) %>%
+  mutate(fully_vaccinated = ifelse(is.na(second_dose_date), 0,1)) %>%
+  mutate(booster_doses = ifelse(is.na(third_dose_date), 0,1)) %>%
   mutate(vaccination_status = ifelse(booster_doses==1, "Booster doses", 
-                              ifelse( fully_vaccinated ==1, "Two doses vaccination",
-                              ifelse( one_dose_vaccine == 1, "First dose vaccination", NA)
+                              ifelse(fully_vaccinated ==1, "Two doses vaccination",
+                              ifelse(one_dose_vaccine == 1, "First dose vaccination", NA)
                               ))) %>%
   compute()
 
@@ -1376,10 +1462,11 @@ print(paste0("Generating descriptive tables"))
   
   # variables of interest 
   symptoms <- c("abdominal_pain", "allergy", "altered_smell_taste",  "anxiety" , 
-                "blurred_vision","chest_pain" ,"cognitive_dysfunction_brain_fog", "cough" ,"depression" ,
-                "dizziness" ,"dyspnea" , "fatigue_malaise" , "gastrointestinal_issues","headache" ,"intermittent_fever" ,
-                "joint_pain",  "memory_issues", "menstrual_problems", "muscle_spams_pain", "neuralgia", "pins_sensation", 
-                "postexertional_fatigue",    "sleep_disorder", "tachycardia" ,"tinnitus_and_hearing_problems")
+                "blurred_vision","chest_pain" ,"cognitive_dysfunction_brain_fog", "cough" ,
+                "depression" , "dizziness" ,"dyspnea" , "fatigue_malaise", "gastrointestinal_issues",
+                "headache" ,"intermittent_fever","joint_pain",  "memory_issues", "menstrual_problems",
+                "muscle_spams_pain", "neuralgia", "pins_sensation",  "postexertional_fatigue",
+                "sleep_disorder", "tachycardia" ,"tinnitus_and_hearing_problems")
   
  other_factor_vars <- c( "age_gr2",
                          "sex",
@@ -1449,6 +1536,16 @@ get_characteristics_matched <- function(df){
     rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics) , "Copd", "COPD")
     rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics) , "Sex", "Sex, female")
     rownames(summary_characteristics)<-str_replace(rownames(summary_characteristics) , "Pcr", "PCR test")
+  rownames <- rownames(summary_characteristics)
+  # mask counts <5
+  summary_characteristics <-apply(summary_characteristics, 
+                                  # apply to columns
+                                  2, 
+                                  function(x) 
+                       ifelse(str_sub(x, 1, 2) %in%  c("0 ", "1 ","2 ", "3 ","4 "),
+                              "<5",x))
+
+rownames(summary_characteristics) <- rownames
 
     summary_characteristics
   }
@@ -1506,6 +1603,7 @@ print(paste0("Getting Table 1 -", window_id, "days"))
     noSpaces = TRUE,
     printToggle=FALSE)
   
+
   for(i in 1:5) {
     # tidy up 
     cur_column <- summary.characteristics[, i]
@@ -1526,8 +1624,19 @@ print(paste0("Getting Table 1 -", window_id, "days"))
   rownames(summary.characteristics)<- str_replace(rownames(summary.characteristics) , "Copd", "COPD")
   rownames(summary.characteristics)<- str_replace(rownames(summary.characteristics) , "Sex", "Sex, female")
   rownames(summary.characteristics)<- str_replace(rownames(summary.characteristics) , "Pcr", "PCR test")
-  
-  # save Table 1
+  rownames <- rownames(summary.characteristics)
+  # mask counts <5
+
+summary.characteristics <-apply(summary.characteristics, 
+                                  # apply to columns
+                                  2, 
+                                  function(x) 
+                       ifelse(str_sub(x, 1, 2) %in%  c("0 ", "1 ","2 ", "3 ","4 "),
+              "<5",x))
+
+rownames(summary.characteristics) <- rownames
+
+# save Table 1
   write.csv2(summary.characteristics, file = here(paste0("results/Table1_", window_id, "days_", database_name, ".csv")))
   
 print(paste0("Getting characteristics for matched cohorts -", window_id, "days"))
@@ -1621,13 +1730,23 @@ m.first_infection_reinfections <-  get(paste0("m.first_infection_reinfections_",
   }
   
   save_rr <- function(window_id){
-    m.covid_tested_neg_earliest    <-  get(paste0("m.new_covid_tested_negative_earliest_", window_id))[[2]]    
+    m.covid_tested_neg_earliest    <-  get(paste0("m.new_covid_tested_negative_earliest_", window_id))[[2]] 
     m.covid_tested_neg_all         <-  get(paste0("m.new_covid_tested_negative_all_", window_id))[[2]]
     m.first_infection_reinfections <-  get(paste0("m.first_infection_reinfections_", window_id))[[2]]
     
-    rr_new_covid_tested_negative_earliest <- bind_rows(get_rr(m.covid_tested_neg_earliest)) 
-    rr_new_covid_tested_negative_all      <- bind_rows(get_rr(m.covid_tested_neg_all)) 
-    rr_first_infection_reinfections       <- bind_rows(get_rr(m.first_infection_reinfections))
+    rr_new_covid_tested_negative_earliest <- bind_rows(get_rr(data = m.covid_tested_neg_earliest)) %>%
+      # obscure counts <5
+                                            mutate(events_1 = ifelse(events_1 <5, "<5", events_1),
+                                                   events_2 = ifelse(events_2 <5, "<5", events_2))
+
+    rr_new_covid_tested_negative_all      <- bind_rows(get_rr(data = m.covid_tested_neg_all)) %>%
+                                            mutate(events_1 = ifelse(events_1 <5, "<5", events_1),
+                                                   events_2 = ifelse(events_2 <5, "<5", events_2))
+ 
+    rr_first_infection_reinfections       <- bind_rows(get_rr(data = m.first_infection_reinfections)) %>%
+                                            mutate(events_1 = ifelse(events_1 <5, "<5", events_1),
+                                                   events_2 = ifelse(events_2 <5, "<5", events_2))
+
     
     write.csv2(rr_new_covid_tested_negative_earliest,
                here(paste0("results/RR_new_covid_tested_negative_earliest_", window_id, "days_",
@@ -1657,98 +1776,6 @@ m.first_infection_reinfections <-  get(paste0("m.first_infection_reinfections_",
   save_rr(window_id = 28)
   
   
-  # get exclusion counts ----
-stats           <- read.csv(here("Cohort_Dx_initial/Results/cohortIncResult.csv"))
-label_inclusion <- read.csv(here("Cohort_Dx_initial/inclusion_criteria_labels.csv"))%>% select(-X,-X.1)
-exclusion_table <- read.csv2(here(paste0("results/exclusion_table_", database_name, ".csv"))) 
-
-names(label_inclusion)[1] <- "cohortDefinitionId"
-  
-exclusion_df <- stats %>%
-  left_join(label_inclusion)
-
-get_counts_exclusion <- function(cohort.id, mode.ID){
-  exclusion <- exclusion_df %>% filter(cohortDefinitionId==cohort.id & modeId ==mode.ID)
-  
-  counts_exclusion <- tibble(order = 0,
-                             exclusion_reason = "Initial record of COVID-19 tests",
-                             n = sum(exclusion$personCount)
-  )
-  counts_exclusion <- rbind(counts_exclusion,
-                            tibble(order = 1,
-                                   exclusion_reason = "<18 years",
-                                   n = exclusion %>% filter(exclusion_criteria=="first") %>% group_by(cohortDefinitionId) %>%
-                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()
-                            ))
-  counts_exclusion <- rbind(counts_exclusion,
-                            tibble(order = 2,
-                                   exclusion_reason = "Without 180d of prior history",
-                                   n = exclusion %>% filter(exclusion_criteria=="second") %>% group_by(cohortDefinitionId) %>%
-                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()
-                            ))
-  
-  counts_exclusion <- rbind(counts_exclusion,
-                            tibble(order = 3,
-                                   exclusion_reason = "With a prior COVID-19 infection",
-                                   n = exclusion %>% filter(exclusion_criteria=="third") %>% group_by(cohortDefinitionId) %>%
-                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
-  
-  counts_exclusion <- rbind(counts_exclusion,
-                            tibble(order = 4,
-                                   exclusion_reason = "With an influenza infection 42d before",
-                                   n = exclusion %>% filter(exclusion_criteria=="four") %>% group_by(cohortDefinitionId) %>%
-                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
-  
-  counts_exclusion <- rbind(counts_exclusion,
-                            tibble(order = 5,
-                                   exclusion_reason = "With a COVID-19 negative test 42d before",
-                                   n = exclusion %>% filter(exclusion_criteria=="five") %>% group_by(cohortDefinitionId) %>%
-                                     summarize(n = sum(personCount)) %>% select(n) %>%pull()))
-  
-  counts_exclusion <- rbind(counts_exclusion,
-                            tibble(order = 6,
-                                   exclusion_reason = "Records included",
-                                   n = exclusion$personCount[[which(exclusion$label=="final_count")]])) %>%
-    arrange(order) %>%
-    mutate(N_current = ifelse(order==0, n, NA))
-  
-  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
-  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
-  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
-  counts_exclusion <-  counts_exclusion %>% mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
-  counts_exclusion$cohort_definition_id <- cohort.id
-  counts_exclusion
-  
-}
-
-counts <- rbind(get_counts_exclusion(cohort.id = 22, mode.ID = 0 ),
-                get_counts_exclusion(cohort.id =28, mode.ID = 0)%>% 
-                  mutate(N_current= ifelse(is.na(N_current), lag(N_current)-n, N_current))
-)
-
-exclusion_table$X <- NULL
-# exclusion_table <- exclusion_table %>%
-#   mutate(cohort_definition_id = ifelse(cohort_definition_id == 0 & N_current == 303835, 22,
-#          ifelse(cohort_definition_id == 0 & N_current == 1265539, 28, cohort_definition_id)))
-
-counts <- counts %>%
-  filter(exclusion_reason != "Records included") %>%
-  rbind(exclusion_table %>% mutate(order = NA, n=NA)) %>%
-  filter(exclusion_reason != "initial pop") %>%
-  mutate(order = ifelse(exclusion_reason=="Tests prior to 2020-09-01", 7, order)) %>%
-  mutate(order = ifelse(exclusion_reason=="Less than 120 days of follow-up", 8, order)) %>%
-  group_by(cohort_definition_id) %>%
-  arrange(order) %>%
-  mutate(n = ifelse(exclusion_reason=="Tests prior to 2020-09-01", lag(N_current)-N_current, n)) %>%
-  mutate(n = ifelse(exclusion_reason=="Less than 120 days of follow-up", lag(N_current)-N_current, n)) %>%
-    ungroup()
-
-write.csv2(counts,
-           here(paste0("results/final_exclusion_table_",
-                       database_name,
-                       ".csv")),
-           row.names = FALSE)
-  
   
   
 } 
@@ -1767,7 +1794,7 @@ createZipFile(zipFile = zipName,
               rootFolder= paste0(here(), "/results"),
               files = file)
 print("Done!")
-print("-- If all has worked, there should now be a zip folder with your results in the results folder to share")
-print("-- Thank you for running the study!")
+print("If all has worked, there should now be a zip folder with your results to share")
+print("Thank you for running the study!")
 
 
