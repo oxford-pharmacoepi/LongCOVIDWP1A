@@ -794,7 +794,8 @@ tested_negative_all_any_symp      <- change_any_symptom_date(tested_negative_all
 append_table(covid_infection_any_symp)
 append_table(tested_negative_all_any_symp)
 
-rm(covid_infection_symp, tested_negative_all_numb_symp, excluded_list, exclusion_table, excluded_shorter_follow_up, influenza_cohort, symptom_cohorts, tested_negative_all_symp, tested_negative_earliest, ids_to_collect, tested_negative_ids, tested_positive_ids, window_longCov, change_any_symptom_date, creating_symptom_cohorts, collect_cohorts, create_any_symptom, append_table, create_numb_symptom, append_table_all, tested_negative_re, generate_tested_cohorts, get_counts_exclusion, cohorts_list, counts)
+rm(covid_infection_symp, covid_infection_any_symp, tested_negative_all_any_symp,
+   covid_infection_numb_symp, tested_negative_all_numb_symp, excluded_list, exclusion_table, excluded_shorter_follow_up, influenza_cohort, symptom_cohorts, tested_negative_all_symp, tested_negative_earliest, ids_to_collect, tested_negative_ids, tested_positive_ids, window_longCov, change_any_symptom_date, creating_symptom_cohorts, collect_cohorts, create_any_symptom, append_table, create_numb_symptom, append_table_all, tested_negative_re, generate_tested_cohorts, get_counts_exclusion, cohorts_list, counts)
 
 }
 
@@ -1311,6 +1312,7 @@ matching_cohorts <- function(cohort1, cohort2,
   mutate(vaccination_status = factor(vaccination_status,
                               levels = c("Non vaccinated", "First dose vaccination", "Two doses vaccination", "Booster doses" ))) %>%
   mutate(age_gr5 = factor(age_gr5)) %>%
+  mutate(pcr = ifelse(is.na(pcr), 0, pcr)) %>%
   droplevels() 
 
 # Exact matching on week and year of the test, type of test, ang 5y age group
