@@ -1311,6 +1311,7 @@ matching_cohorts <- function(cohort1, cohort2,
   mutate(vaccination_status = factor(vaccination_status,
                               levels = c("Non vaccinated", "First dose vaccination", "Two doses vaccination", "Booster doses" ))) %>%
   mutate(age_gr5 = factor(age_gr5)) %>%
+  mutate(pcr = ifelse(is.na(pcr), 0, pcr)) %>%
   droplevels() 
 
 # Exact matching on week and year of the test, type of test, ang 5y age group
@@ -1455,8 +1456,7 @@ print(paste0("Generating descriptive tables"))
 
 # functions for numbers
 nice.num<-function(x){
-  prettyNum(x, big.mark=",", nsmall = 0, digits=0,scientific = FALSE)
-  }
+  prettyNum(x, big.mark=",", nsmall = 0, digits=0,scientific = FALSE)}
   
   # variables of interest 
   symptoms <- c("abdominal_pain", "allergy", "altered_smell_taste",  "anxiety" , 
@@ -1819,60 +1819,49 @@ study_cohorts <- "er_long_covid_final_cohorts" # Table in our CDM with study coh
 # age and sex stratas, first overal
 study_age_stratas <- list(c(18,150))
 study_sex_stratas <- "Both"
+# get denominators
 
-get_ir <- function(  study_age_stratas,
-                     study_sex_stratas,
-                     main_cohort_id){
-# get denominator population
-  cdm$denominator <- generateDenominatorCohortSet(
-  cdm = cdm,
-  startDate = study_start_date,
-#  endDate = NULL,
-  daysPriorHistory = study_days_prior_history,
-  ageGroups = study_age_stratas, 
-  sex = study_sex_stratas
-  )
-  
+cdm$denominator <- generateDenominatorCohortSet(cdm = cdm,
+                                                startDate = study_start_date,
+                                                daysPriorHistory = study_days_prior_history,
+                                                ageGroups = study_age_stratas,
+                                                sex = study_sex_stratas)
+excluded <- attrition(cdm$denominator)
+get_ir <- function(main_cohort_id){
 ## get incidence rates
   inc <- estimateIncidence(
   cdm = cdm,
   denominatorTable = "denominator",
+  #denominatorCohortId = "1",
   outcomeTable = "er_long_covid_final_cohorts",
   outcomeCohortId = main_cohort_id,
   completeDatabaseIntervals = TRUE,
-  outcomeWashout = 0,
   interval = c("months"),
   repeatedEvents = TRUE,
   minCellCount = 5,
+  outcomeWashout = NULL,
   confidenceInterval = "poisson",
   verbose = TRUE
-)
-inc
+) 
+ inc <- inc %>% 
+   left_join(settings(cdm$denominator) %>% 
+                            select(cohort_definition_id, age_group, sex) %>%
+                            rename(analysis_id = cohort_definition_id))
+ inc
 }
 
 
 ## get IR
-covid_genpop <- get_ir(
-                     study_age_stratas = study_age_stratas,
-                     study_sex_stratas = study_sex_stratas,
-                     main_cohort_id = new_infection_id) %>%
-  mutate(cohort = "COVID-19 infections among the general population")
+covid_genpop <- get_ir(main_cohort_id = new_infection_id) %>%
+  mutate(cohort = "COVID-19 infections")
 
 longCov_genpop_90 <- get_ir(
-                     table_name_strata = NULL,
-                     strata_cohort_id  = NULL,
-                     study_age_stratas = study_age_stratas,
-                     study_sex_stratas = study_sex_stratas,
-                     main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+90))%>%
-  mutate(cohort = "Long COVID-19 infections among the general population (90 days)")
+                     main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+90)) %>%
+  mutate(cohort = "Long COVID-19 (90 days)")
 
 longCov_genpop_28 <- get_ir(
-                     table_name_strata = NULL,
-                     strata_cohort_id  = NULL,
-                     study_age_stratas = study_age_stratas,
-                     study_sex_stratas = study_sex_stratas,
                      main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+28))%>%
-  mutate(cohort = "Long COVID-19 infections among the general population (28 days)")
+  mutate(cohort = "Long COVID-19 (28 days)")
 
 # stratified by age group and sex
 study_age_stratas <- list(
@@ -1882,38 +1871,29 @@ study_age_stratas <- list(
                          c(65,79),
                          c(80,150))
 study_sex_stratas <- c("Female", "Male")
+cdm$denominator <- generateDenominatorCohortSet(cdm = cdm,
+                                                startDate = study_start_date,
+                                                daysPriorHistory = study_days_prior_history,
+                                                ageGroups = study_age_stratas,
+                                                sex = study_sex_stratas)
 
+covid_genpop_strat <- get_ir( main_cohort_id = new_infection_id) %>%
+  mutate(cohort = "COVID-19 infections")
 
-covid_genpop_strat <- get_ir(
-                     table_name_strata = NULL,
-                     strata_cohort_id  = NULL,
-                     study_age_stratas = study_age_stratas,
-                     study_sex_stratas = study_sex_stratas,
-                     main_cohort_id = new_infection_id) %>%
-  mutate(cohort = "COVID-19 infections among the general population")
+longCov_genpop_strat_90 <- get_ir(main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+90))%>%
+  mutate(cohort = "Long COVID-19 (90 days)")
 
-longCov_genpop_strat_90 <- get_ir(
-                     table_name_strata = NULL,
-                     strata_cohort_id  = NULL,
-                     study_age_stratas = study_age_stratas,
-                     study_sex_stratas = study_sex_stratas,
-                     main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+90))%>%
-  mutate(cohort = "Long COVID-19 infections among the general population (90 days)")
-
-longCov_genpop_strat_28 <- get_ir(
-                     table_name_strata = NULL,
-                     strata_cohort_id  = NULL,
-                     study_age_stratas = study_age_stratas,
-                     study_sex_stratas = study_sex_stratas,
-                     main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+28))%>%
-  mutate(cohort = "Long COVID-19 infections among the general population (28 days)")
+longCov_genpop_strat_28 <- get_ir( main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+28))%>%
+  mutate(cohort = "Long COVID-19 (28 days)")
 
 # save results 
 incidence_estimates <- rbind(covid_genpop, longCov_genpop_90, longCov_genpop_28,
-                             covid_genpop_strat, longCov_genpop_strat_90, longCov_genpop_strat_28)
+                             covid_genpop_strat, longCov_genpop_strat_90, longCov_genpop_strat_28) %>%
+  mutate(database = database_name)
+
 
 write.csv(incidence_estimates,
-               here(paste0("results/Incidence_rates_Covid_LongCov", window_id, "days_",
+               here(paste0("results/Incidence_rates_Covid_LongCov_", 
                            database_name, 
                            ".csv")), row.names = FALSE)
   
