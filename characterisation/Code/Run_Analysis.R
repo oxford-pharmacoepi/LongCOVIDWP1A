@@ -466,8 +466,8 @@ counts <- counts %>%
   mutate(n = ifelse(exclusion_reason=="Less than 120 days of follow-up", lag(N_current)-N_current, n)) %>%
     ungroup()
 
-write.csv2(counts,here(paste0("results/final_exclusion_table_", database_name,".csv")), row.names = FALSE)
-write.csv2(excluded_shorter_follow_up, here(paste0("results/exclusions_followup_", database_name, ".csv")), row.names = FALSE)
+write.csv(counts,here(paste0("results/final_exclusion_table_", database_name,".csv")), row.names = FALSE)
+write.csv(excluded_shorter_follow_up, here(paste0("results/exclusions_followup_", database_name, ".csv")), row.names = FALSE)
 
 
 
@@ -615,7 +615,7 @@ covid_infection_symp          <- creating_symptom_cohorts(cohort = covid_infecti
 tested_negative_all_symp      <- creating_symptom_cohorts(cohort = tested_negative_all)
 denominator <- rbind(covid_infection_symp[[1]], tested_negative_all_symp[[1]])
 # save  denominator table
-write.csv2(denominator, here(paste0("results/denominator_each_symptom_", database_name, ".csv")),row.names = FALSE)
+write.csv(denominator, here(paste0("results/denominator_each_symptom_", database_name, ".csv")),row.names = FALSE)
 
 rm(covid_infection, tested_negative_all, reinfections, first_infection, covid_censoring_cohort, covid_cohorts, control_cohort, confirmed_infections, negative_infections, denominators_df, denominator)
 
@@ -1635,7 +1635,7 @@ summary_characteristics <-apply(summary_characteristics,2,  function(x)
                        ifelse(str_sub(x, 1, 2) %in%  c("0 ", "1 ","2 ", "3 ","4 "),"<5",x))
 rownames(summary_characteristics) <- rownames
 # save Table 1
-write.csv2(summary_characteristics, file = here(paste0("results/Table1_", window_id, "days_", database_name, ".csv")))
+write.csv(summary_characteristics, file = here(paste0("results/Table1_", window_id, "days_", database_name, ".csv")))
 
 print(paste0("Getting characteristics for matched cohorts -", window_id, "days"))
 
@@ -1650,15 +1650,37 @@ sum_characteristics_first_negative_earliest <- get_characteristics_matched(df = 
 sum_characteristics_covid_negative_all      <- get_characteristics_matched(df = m.covid_tested_neg_all)
 sum_characteristics_reinfections            <- get_characteristics_matched(df = m.first_infection_reinfections) 
   
-  write.csv2(sum_characteristics_covid_negative_earliest, 
+  write.csv(sum_characteristics_covid_negative_earliest, 
              file = here(paste0("results/Table_Matched_Infection_Tested_Negative_earliest_", window_id, "days_", database_name, ".csv")))
-    write.csv2( sum_characteristics_first_negative_earliest, 
+    write.csv( sum_characteristics_first_negative_earliest, 
              file = here(paste0("results/Table_Matched_First_Infection_Tested_Negative_earliest_", window_id, "days_", database_name, ".csv")))
 
-  write.csv2(sum_characteristics_covid_negative_all, 
+  write.csv(sum_characteristics_covid_negative_all, 
              file = here(paste0("results/Table_Matched_Infection_Tested_Negative_all_", window_id, "days_", database_name, ".csv")))
-  write.csv2(sum_characteristics_reinfections, 
+  write.csv(sum_characteristics_reinfections, 
              file = here(paste0("results/Table_Matched_First_infection_Reinfections_", window_id, "days_", database_name, ".csv")))
+  
+# get proportion of long covid by month - only for new infections
+prop_long_covid <- rbind(
+  table1_data_new_infections %>%
+   mutate(month_year = format(as.Date(cohort_start_date),"%Y-%m" )) %>%
+  group_by(month_year) %>%
+  summarise(n = n(),
+            long_covid = sum(long_covid)) %>%
+  mutate(prop = long_covid/n*100) %>%
+  mutate(cohort = "COVID-19 infection"), 
+# first infections
+table1_data_first_infection%>%
+   mutate(month_year = format(as.Date(cohort_start_date),"%Y-%m" )) %>%
+  group_by(month_year) %>%
+  summarise(n = n(),
+            long_covid = sum(long_covid)) %>%
+  mutate(prop = long_covid/n*100) %>%
+  mutate(cohort = "First infection")) %>%
+  mutate(database = database_name) 
+
+  write.csv(prop_long_covid, 
+             file = here(paste0("results/Proportion_LongCovid_", window_id, "days_", database_name, ".csv")), row.names = FALSE)
   }
 
 
@@ -1750,21 +1772,21 @@ sum_characteristics_reinfections            <- get_characteristics_matched(df = 
                                             mutate(events_1 = ifelse(events_1 <5, "<5", events_1),
                                                    events_2 = ifelse(events_2 <5, "<5", events_2))
     
-    write.csv2(rr_new_covid_tested_negative_earliest,
+    write.csv(rr_new_covid_tested_negative_earliest,
                here(paste0("results/RR_new_covid_tested_negative_earliest_", window_id, "days_",
                            database_name, 
                            ".csv")), row.names = FALSE)
-        write.csv2(rr_first_infection_tested_negative_earliest,
+        write.csv(rr_first_infection_tested_negative_earliest,
                here(paste0("results/RR_first_infection_tested_negative_earliest_", window_id, "days_",
                            database_name, 
                            ".csv")), row.names = FALSE)
 
-    write.csv2(rr_new_covid_tested_negative_all,
+    write.csv(rr_new_covid_tested_negative_all,
                here(paste0("results/RR_new_covid_tested_negative_all_", window_id, "days_",
                            database_name,
                            ".csv")),row.names = FALSE)
     
-    write.csv2(rr_first_infection_reinfections,
+    write.csv(rr_first_infection_reinfections,
                here(paste0("results/RR_first_infection_reinfections_", window_id, "days_",
                            database_name,
                            ".csv")), row.names = FALSE)
@@ -1777,6 +1799,132 @@ sum_characteristics_reinfections            <- get_characteristics_matched(df = 
 
   save_rr(window_id = 90)
   save_rr(window_id = 28)
+  
+}
+  
+
+# Generate tables  ----
+if(get_incidence_rate   =="FALSE"){
+print(paste0("Skipping  getting incidence rates"))
+} else { 
+print(paste0("Getting incidence rates"))
+
+cdm <- cdm_from_con(db, 
+             cdm_schema = cdm_database_schema,
+             write_schema = write_schema,
+             cohort_tables = c("er_long_covid_final_cohorts")) #cohorts with all symptoms
+  
+# parameters ---- 
+study_start_date <- covid_start_date # this is needed to get the gen pop denominator 
+study_days_prior_history <- 180  # needed for the gen pop denominator
+study_cohorts <- "er_long_covid_final_cohorts" # Table in our CDM with study cohorts
+# age and sex stratas, first overal
+study_age_stratas <- list(c(18,150))
+study_sex_stratas <- "Both"
+
+get_ir <- function(  study_age_stratas,
+                     study_sex_stratas,
+                     main_cohort_id){
+# get denominator population
+  cdm$denominator <- generateDenominatorCohortSet(
+  cdm = cdm,
+  startDate = study_start_date,
+#  endDate = NULL,
+  daysPriorHistory = study_days_prior_history,
+  ageGroups = study_age_stratas, 
+  sex = study_sex_stratas
+  )
+  
+## get incidence rates
+  inc <- estimateIncidence(
+  cdm = cdm,
+  denominatorTable = "denominator",
+  outcomeTable = "er_long_covid_final_cohorts",
+  outcomeCohortId = main_cohort_id,
+  completeDatabaseIntervals = TRUE,
+  outcomeWashout = 0,
+  interval = c("months"),
+  repeatedEvents = TRUE,
+  minCellCount = 5,
+  confidenceInterval = "poisson",
+  verbose = TRUE
+)
+inc
+}
+
+
+## get IR
+covid_genpop <- get_ir(
+                     study_age_stratas = study_age_stratas,
+                     study_sex_stratas = study_sex_stratas,
+                     main_cohort_id = new_infection_id) %>%
+  mutate(cohort = "COVID-19 infections among the general population")
+
+longCov_genpop_90 <- get_ir(
+                     table_name_strata = NULL,
+                     strata_cohort_id  = NULL,
+                     study_age_stratas = study_age_stratas,
+                     study_sex_stratas = study_sex_stratas,
+                     main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+90))%>%
+  mutate(cohort = "Long COVID-19 infections among the general population (90 days)")
+
+longCov_genpop_28 <- get_ir(
+                     table_name_strata = NULL,
+                     strata_cohort_id  = NULL,
+                     study_age_stratas = study_age_stratas,
+                     study_sex_stratas = study_sex_stratas,
+                     main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+28))%>%
+  mutate(cohort = "Long COVID-19 infections among the general population (28 days)")
+
+# stratified by age group and sex
+study_age_stratas <- list(
+                         c(18,34), # only adults for this study
+                         c(35,49),
+                         c(50,64),
+                         c(65,79),
+                         c(80,150))
+study_sex_stratas <- c("Female", "Male")
+
+
+covid_genpop_strat <- get_ir(
+                     table_name_strata = NULL,
+                     strata_cohort_id  = NULL,
+                     study_age_stratas = study_age_stratas,
+                     study_sex_stratas = study_sex_stratas,
+                     main_cohort_id = new_infection_id) %>%
+  mutate(cohort = "COVID-19 infections among the general population")
+
+longCov_genpop_strat_90 <- get_ir(
+                     table_name_strata = NULL,
+                     strata_cohort_id  = NULL,
+                     study_age_stratas = study_age_stratas,
+                     study_sex_stratas = study_sex_stratas,
+                     main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+90))%>%
+  mutate(cohort = "Long COVID-19 infections among the general population (90 days)")
+
+longCov_genpop_strat_28 <- get_ir(
+                     table_name_strata = NULL,
+                     strata_cohort_id  = NULL,
+                     study_age_stratas = study_age_stratas,
+                     study_sex_stratas = study_sex_stratas,
+                     main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+28))%>%
+  mutate(cohort = "Long COVID-19 infections among the general population (28 days)")
+
+# save results 
+incidence_estimates <- rbind(covid_genpop, longCov_genpop_90, longCov_genpop_28,
+                             covid_genpop_strat, longCov_genpop_strat_90, longCov_genpop_strat_28)
+
+write.csv(incidence_estimates,
+               here(paste0("results/Incidence_rates_Covid_LongCov", window_id, "days_",
+                           database_name, 
+                           ".csv")), row.names = FALSE)
+  
+}
+  
+  # Generate tables  ----
+if(generate_results  =="FALSE" & get_incidence_rate== "FALSE"){
+print(paste0("No results to share at this point"))
+} else { 
 
 # save results into a zip folder
 file <-c(paste0(here(), "/results"))
