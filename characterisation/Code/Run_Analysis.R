@@ -1738,7 +1738,6 @@ table1_data_first_infection%>%
       #   conf.level = 0.95, 
       #   sides = "two.sided",
       #   method = "wald")
-      # 
       # data_rr$absolute_risk <- getting_ar[1]*100
       # data_rr$ar_low_ci <- getting_ar[2]*100
       # data_rr$ar_up_ci <- getting_ar[3]*100
@@ -1847,7 +1846,7 @@ get_ir <- function(main_cohort_id){
 }
 
 ## get IR
-covid_genpop <- get_ir(main_cohort_id = new_infection_id) %>%
+covid_genpop <- get_ir(main_cohort_id = new_infection_id) %>% 
   mutate(cohort = "COVID-19 infections")
 
 longCov_genpop_90 <- get_ir(main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+90)) %>%
