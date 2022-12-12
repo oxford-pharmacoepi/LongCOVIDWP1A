@@ -1835,7 +1835,7 @@ get_ir <- function(main_cohort_id){
   repeatedEvents = TRUE,
   minCellCount = 5,
 #  outcomeWashout = NULL,
-  outcomeWashout = 1,
+  outcomeWashout = 0,
   verbose = TRUE
 ) 
  inc <- inc %>% 
