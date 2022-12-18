@@ -17,7 +17,31 @@
               "STANDARD_CONCEPT": "S",
               "STANDARD_CONCEPT_CAPTION": "Standard",
               "VOCABULARY_ID": "CVX"
-            }
+            },
+            "includeDescendants": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "name": "Janssen_vaccine",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Drug",
+              "CONCEPT_CODE": "2479835",
+              "CONCEPT_ID": 739906,
+              "CONCEPT_NAME": "SARS-COV-2 (COVID-19) vaccine, vector - Ad26 100000000000 UNT/ML Injectable Suspension",
+              "DOMAIN_ID": "Drug",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "RxNorm"
+            },
+            "includeDescendants": true
           }
         ]
       }
@@ -28,6 +52,11 @@
       {
         "DrugExposure": {
           "CodesetId": 0
+        }
+      },
+      {
+        "DrugExposure": {
+          "CodesetId": 1
         }
       }
     ],
