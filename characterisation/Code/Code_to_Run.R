@@ -25,38 +25,42 @@ p_load(SqlRender,
        fmsb,
        DescTools,
        remotes)
+# when getting error instlling from Github - 
+# options(download.file.method = "libcurl")
 #remotes::install_github("darwin-eu/IncidencePrevalence@issue_189")
-# remotes::install_github("darwin-eu/IncidencePrevalence")
+ remotes::install_github("darwin-eu/IncidencePrevalence")
 library(IncidencePrevalence)
+
 
 # Connection details ----
 
-
-# server    <- Sys.getenv("SERVER_JUN22")
-# server_dbi<- Sys.getenv("SERVER_DBI_JUN22")
-# user      <- Sys.getenv("DB_USER_JUN22")
-# password  <- Sys.getenv("DB_PASSWORD_JUN22")
-# port      <- Sys.getenv("DB_PORT_JUN22") 
-# host      <- Sys.getenv("DB_HOST_JUN22") 
-# targetDialect              <- "postgresql"
-# cdm_database_schema        <- "omop21t4_cmbd" 
-# vocabulary_database_schema <- "omop21t4_cmbd" 
-# write_schema               <- "results21t4_cmbd"
-
-
-server    <- Sys.getenv("SERVER_Long_test")
-server_dbi<- Sys.getenv("SERVER_DBI_Long_test")
+server    <- Sys.getenv("SERVER_Long_covid22t2")
+server_dbi<- Sys.getenv("SERVER_DBI_Long_covid22t2")
 user      <- Sys.getenv("DB_USER_Long_test")
 password  <- Sys.getenv("DB_PASSWORD_Long_test")
 port      <- Sys.getenv("DB_PORT_Long_test") 
 host      <- Sys.getenv("DB_HOST_Long_test") 
 
 targetDialect              <- "postgresql"
-cdm_database_schema        <- "omop21t2_test" 
-vocabulary_database_schema <- "omop21t2_test" 
+cdm_database_schema        <- "omop22t2_cmbd"
+vocabulary_database_schema <- "omop21t2_cmbd" 
+# schema to save results
+write_schema               <- "results22t2_cmbd"
 
-# this is the schema to save results in the database
-write_schema               <- "results21t2_test"
+
+# server    <- Sys.getenv("SERVER_Long_test")
+# server_dbi<- Sys.getenv("SERVER_DBI_Long_test")
+# user      <- Sys.getenv("DB_USER_Long_test")
+# password  <- Sys.getenv("DB_PASSWORD_Long_test")
+# port      <- Sys.getenv("DB_PORT_Long_test") 
+# host      <- Sys.getenv("DB_HOST_Long_test") 
+# 
+# targetDialect              <- "postgresql"
+# cdm_database_schema        <- "omop21t2_test" 
+# vocabulary_database_schema <- "omop21t2_test" 
+# 
+# # schema to save results in the database
+# write_schema               <- "results21t2_test"
 
 
 db <- dbConnect(RPostgres::Postgres(), 
@@ -67,7 +71,7 @@ db <- dbConnect(RPostgres::Postgres(),
                 password = password)
 
 ## we also cuse connection details to insert later tables using OHDSI  tools
-connectionDetails <-DatabaseConnector::downloadJdbcDrivers("postgresql", here::here())
+connectionDetails <- DatabaseConnector::downloadJdbcDrivers("postgresql", here::here())
 connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "postgresql",
                                                                 server =server,
                                                                 user = user,
@@ -78,24 +82,20 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "postgres
 ## Parameters ----
 # database name for reports
 database_name <- "SIDIAP"
-#  records after the first wave  --
+#  we'll keep only records after the first wave  --
 covid_start_date    <- as.Date("2020-09-01", "%Y-%m-%d")
-# 120 d prior to end of observation - this is needed for the IncidencePrevalence
-study_end_date      <- as.Date("2021-02-28", "%Y-%m-%d")
 # censor when COVID-19 testing ends - country specific
-# pensar en aixo - pq aleshores tambe hauria de filtar pq no entri gent diagnosticada despres d'axi
-covid_end_date      <- as.Date("2022-03-31", "%Y-%m-%d")
+covid_end_date      <- as.Date("2022-03-28", "%Y-%m-%d")
 
 
 # Create initial Json cohorts ---- 
 create_initial_json_cohorts     <- FALSE
-# Crate Long Covid  cohorts and save in the db
+# Create Long Covid  cohorts and save in the db
 create_long_covid_cohorts       <- FALSE
 # Generate data for descritptive tables
 generate_data_baseline_char     <- FALSE
 match_cohorts                   <- FALSE
-# Generate results 
-generate_results                <- FALSE
+generate_results                <- TRUE
 get_incidence_rate              <- TRUE
 
 # Run analysis
