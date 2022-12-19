@@ -1628,8 +1628,8 @@ prop_long_covid <- rbind(table1_data_new_infections %>%
   mutate(prop = long_covid/n*100) %>%
   mutate(ir = long_covid/follow_up*100000*365) %>%
   mutate(cohort = "COVID-19 infection"),
- # for first infections only
- table1_data_first_infection %>%
+ # for negative tests
+ table1_data_tested_negative_earliest %>%
    mutate(follow_up = ifelse(!(is.na(days_symptom_record)), 
                              days_symptom_record, 
                              total_days_followup)) %>%
@@ -1640,11 +1640,11 @@ prop_long_covid <- rbind(table1_data_new_infections %>%
             follow_up = sum(follow_up)) %>%
   mutate(prop = long_covid/n*100) %>%
   mutate(ir = long_covid/follow_up*100000*365) %>%
-  mutate(cohort = "First infection") %>%
+  mutate(cohort = "First negative test") %>%
   mutate(gender = "Both") %>%
   mutate(age_gr2 = "Overall"), 
   # by age group % sex
- table1_data_first_infection %>%
+ table1_data_tested_negative_earliest %>%
    mutate(follow_up = ifelse(!(is.na(days_symptom_record)),
                              days_symptom_record, 
                              total_days_followup)) %>%
@@ -1655,7 +1655,7 @@ prop_long_covid <- rbind(table1_data_new_infections %>%
             follow_up = sum(follow_up)) %>%
   mutate(prop = long_covid/n*100) %>%
   mutate(ir = long_covid/follow_up*100000*365) %>%
-  mutate(cohort = "First infection")) %>%
+  mutate(cohort = "First negative test")) %>%
   mutate(database = database_name) %>%
   # remove rows with <5 counts
   filter(!(long_covid<5)) %>%
@@ -1847,12 +1847,17 @@ get_ir <- function(main_cohort_id){
 ## get IR
 covid_genpop <- get_ir(main_cohort_id = new_infection_id) %>% 
   mutate(cohort = "COVID-19 infections")
-
 longCov_genpop_90 <- get_ir(main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+90)) %>%
   mutate(cohort = "Long COVID-19 (90 days)")
-
 longCov_genpop_28 <- get_ir(main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+28))%>%
   mutate(cohort = "Long COVID-19 (28 days)")
+
+neg_test_genpop <- get_ir(main_cohort_id = tested_negative_all_id) %>% 
+  mutate(cohort = "Tested negative")
+longCov_genpop_negative_90 <- get_ir(main_cohort_id = paste0(tested_negative_all_id*10^4+long_covid_id*10^2+90)) %>%
+  mutate(cohort = "Long COVID symptoms, tested negative (90 days)")
+longCov_genpop_negative_28 <- get_ir(main_cohort_id = paste0(tested_negative_all_id*10^4+long_covid_id*10^2+28)) %>%
+  mutate(cohort = "Long COVID-19 symptoms, tested negative (28 days)")
 
 # stratified by age group and sex
 study_age_stratas <- list(c(18,34), # only adults for this study
@@ -1876,15 +1881,35 @@ longCov_genpop_strat_90 <- get_ir(main_cohort_id = paste0(new_infection_id*10^4+
 longCov_genpop_strat_28 <- get_ir( main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+28)) %>%
   mutate(cohort = "Long COVID-19 (28 days)")
 
+neg_test_genpop_strat <- get_ir(main_cohort_id = tested_negative_all_id) %>% 
+  mutate(cohort = "Tested negative")
+longCov_genpop_negative_strat_90 <- get_ir(main_cohort_id = paste0(tested_negative_all_id*10^4+long_covid_id*10^2+90)) %>%
+  mutate(cohort = "Long COVID symptoms, tested negative (90 days)")
+longCov_genpop_negative_strat_28 <- get_ir(main_cohort_id = paste0(tested_negative_all_id*10^4+long_covid_id*10^2+28)) %>%
+  mutate(cohort = "Long COVID-19 symptoms, tested negative (28 days)")
+
+
 # save results 
 incidence_estimates <- rbind(covid_genpop, longCov_genpop_90, longCov_genpop_28,
                              covid_genpop_strat, longCov_genpop_strat_90, longCov_genpop_strat_28) %>%
+  mutate(database = database_name)
+
+incidence_estimates_negative <- rbind(neg_test_genpop,
+                                      neg_test_genpop_strat,
+                                      longCov_genpop_negative_90,
+                                      longCov_genpop_negative_28,
+                                      longCov_genpop_negative_strat_90 ,
+                                      longCov_genpop_negative_strat_28 ) %>%
   mutate(database = database_name)
 
 write.csv(incidence_estimates,
                here(paste0("results/Incidence_rates_Covid_LongCov_", 
                            database_name, 
                            ".csv")), row.names = FALSE)
+write.csv(incidence_estimates_negative,
+          here(paste0("results/Incidence_rates_Negative_LongCov_", 
+                      database_name, 
+                      ".csv")), row.names = FALSE)
   
 }
   
