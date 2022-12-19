@@ -1423,7 +1423,6 @@ cdm <- cdm_from_con(db,
 
 # load matched data 
 load(here("data/table1_data_matched_28.Rdata"))
-
 load(here("data/table1_data_matched_90.Rdata"))
   
 # function to create descriptive tables for matched data
@@ -1659,7 +1658,24 @@ prop_long_covid <- rbind(table1_data_new_infections %>%
   mutate(cohort = "First infection")) %>%
   mutate(database = database_name) %>%
   # remove rows with <5 counts
-  filter(!(long_covid<5))
+  filter(!(long_covid<5)) %>%
+  mutate(incidence_start_date = as_date(paste0(month_year, "-01"))) %>%
+  select(n_persons = n,
+         n_events = long_covid,
+         incidence_start_date,
+         person_days = follow_up,
+         ir_100000_pys = ir,
+         sex = gender,
+         age_group = age_gr2,
+         database)
+
+prop_long_covid <- cbind(prop_long_covid,
+                         pois.exact(prop_long_covid$n_events,
+                        pt = prop_long_covid$person_days,
+                        conf.level = 0.95) %>%
+  mutate(ir_100000_pys_95CI_lower = lower*100000*365,
+         ir_100000_pys_95CI_upper = upper*100000*365) %>%
+  select(ir_100000_pys_95CI_lower,ir_100000_pys_95CI_upper))
 
   write.csv(prop_long_covid, 
              file = here(paste0("results/Proportion_LongCovid_", window_id, "days_", database_name, ".csv")), row.names = FALSE)
