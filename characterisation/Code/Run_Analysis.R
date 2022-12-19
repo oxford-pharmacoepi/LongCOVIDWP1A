@@ -1660,7 +1660,8 @@ prop_long_covid <- rbind(table1_data_new_infections %>%
   # remove rows with <5 counts
   filter(!(long_covid<5)) %>%
   mutate(incidence_start_date = as_date(paste0(month_year, "-01"))) %>%
-  select(n_persons = n,
+  select(cohort, 
+         n_persons = n,
          n_events = long_covid,
          incidence_start_date,
          person_days = follow_up,

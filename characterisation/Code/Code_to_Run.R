@@ -24,11 +24,12 @@ p_load(SqlRender,
        survey,
        fmsb,
        DescTools,
-       remotes)
+       remotes,
+       epitools)
 # when getting error instlling from Github - 
 # options(download.file.method = "libcurl")
 #remotes::install_github("darwin-eu/IncidencePrevalence@issue_189")
- remotes::install_github("darwin-eu/IncidencePrevalence")
+# remotes::install_github("darwin-eu/IncidencePrevalence")
 library(IncidencePrevalence)
 
 
