@@ -1890,8 +1890,12 @@ longCov_genpop_negative_strat_28 <- get_ir(main_cohort_id = paste0(tested_negati
 
 
 # save results 
-incidence_estimates <- rbind(covid_genpop, longCov_genpop_90, longCov_genpop_28,
-                             covid_genpop_strat, longCov_genpop_strat_90, longCov_genpop_strat_28) %>%
+incidence_estimates <- rbind(covid_genpop, 
+                             longCov_genpop_90, 
+                             longCov_genpop_28,
+                             covid_genpop_strat,
+                             longCov_genpop_strat_90, 
+                             longCov_genpop_strat_28) %>%
   mutate(database = database_name)
 
 incidence_estimates_negative <- rbind(neg_test_genpop,
