@@ -816,15 +816,29 @@ working_cohort <-   cdm$er_long_covid_final_cohorts %>%
    compute()
  
  # add vaccines 
-  vaccines <- union_all(cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == astrazeneca_id),
-                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == moderna_id),
-                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == pfizer_id),
-                  cdm$er_cohorts_for_longcov %>% filter(cohort_definition_id == janssen_id)) %>%
-   rename(drug_exposure_start_date = cohort_start_date,
+ pfizer_vaccines <- cdm$er_cohorts_for_longcov %>% 
+   filter(cohort_definition_id == pfizer_id) %>%
+   compute()
+ astra_vaccines <- cdm$er_cohorts_for_longcov %>%
+   filter(cohort_definition_id == astrazeneca_id) %>%
+  compute()
+ moderna_vaccines <-   cdm$er_cohorts_for_longcov %>%
+   filter(cohort_definition_id == moderna_id) %>%
+    compute()
+ janssen_vaccines <-  cdm$er_cohorts_for_longcov %>% 
+   filter(cohort_definition_id == janssen_id) %>%
+    compute()
+  
+ vaccines <- union_all(
+    pfizer_vaccines,
+    astra_vaccines,
+    moderna_vaccines,
+    janssen_vaccines
+  ) %>% 
+     rename(drug_exposure_start_date = cohort_start_date,
           person_id = subject_id) %>%
-    mutate(vaccine = "Vaccination") %>%
     select(-cohort_end_date, -cohort_definition_id) %>%
-    full_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
+    left_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
     filter(drug_exposure_start_date < cohort_start_date) %>%
     distinct() %>%
     compute()
@@ -1719,7 +1733,7 @@ prop_long_covid <- cbind(prop_long_covid,
         mutate(symptom = str_to_sentence(str_replace_all(symptom, "_", " "))) 
       
       # getting relative risl with 95%Ci
-      getting_rr <- riskratio(data_rr$events_1,
+      getting_rr <- fmsb::riskratio(data_rr$events_1,
                               data_rr$events_2,
                               data_rr$total_pop_1,
                               data_rr$total_pop_2,
