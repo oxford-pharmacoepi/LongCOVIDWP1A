@@ -815,65 +815,51 @@ working_cohort <-   cdm$er_long_covid_final_cohorts %>%
    mutate(pcr = ifelse(is.na(pcr), 0, pcr)) %>% 
    compute()
  
- # add vaccines 
- pfizer_vaccines <- cdm$er_cohorts_for_longcov %>% 
-   filter(cohort_definition_id == pfizer_id) %>%
-   compute()
- astra_vaccines <- cdm$er_cohorts_for_longcov %>%
-   filter(cohort_definition_id == astrazeneca_id) %>%
-  compute()
- moderna_vaccines <-   cdm$er_cohorts_for_longcov %>%
-   filter(cohort_definition_id == moderna_id) %>%
-    compute()
- janssen_vaccines <-  cdm$er_cohorts_for_longcov %>% 
-   filter(cohort_definition_id == janssen_id) %>%
-    compute()
-  
- vaccines <- union_all(
-    pfizer_vaccines,
-    astra_vaccines,
-    moderna_vaccines,
-    janssen_vaccines
-  ) %>% 
-     rename(drug_exposure_start_date = cohort_start_date,
+ # add vaccines
+ vaccines <- rbind(
+   cdm$er_cohorts_for_longcov %>% 
+     filter(cohort_definition_id == pfizer_id) %>%
+     collect(),
+   cdm$er_cohorts_for_longcov %>%
+     filter(cohort_definition_id == astrazeneca_id) %>%
+     collect(),
+   cdm$er_cohorts_for_longcov %>%
+     filter(cohort_definition_id == moderna_id) %>%
+     collect(),
+   janssen_vaccines <-  cdm$er_cohorts_for_longcov %>% 
+     filter(cohort_definition_id == janssen_id) %>%
+     collect()
+ ) %>% 
+   distinct() %>%
+   rename(drug_exposure_start_date = cohort_start_date,
           person_id = subject_id) %>%
-    select(-cohort_end_date, -cohort_definition_id) %>%
-    left_join(working_cohort %>% select(person_id, cohort_start_date)) %>%
-    filter(drug_exposure_start_date < cohort_start_date) %>%
-    distinct() %>%
-    compute()
+   select(-cohort_end_date, -cohort_definition_id) %>%
+   group_by(person_id) %>%
+   arrange(drug_exposure_start_date) %>% 
+   mutate(seq = row_number()) %>%
+   left_join(working_cohort %>% 
+               collect()) %>% # only vaccines administered prior to the cohort start date
+   filter(drug_exposure_start_date < cohort_start_date)
+ # get vaccination status per individual % cohort start date
+ doses_vaccines <- rbind(
+   vaccines %>% anti_join(vaccines %>% 
+                            filter(seq!=1) %>%
+                            select(person_id, cohort_start_date)) %>%
+     mutate(vaccination_status = "First dose vaccination"),
+   vaccines %>% 
+     filter(seq ==2) %>%
+     anti_join(vaccines %>% filter(seq>2) %>%
+                 select(person_id, cohort_start_date)) %>%
+     mutate(vaccination_status = "Two doses vaccination"),
+   vaccines %>% filter(seq >2) %>%
+     mutate(vaccination_status = "Booster doses")
+ ) %>%
+   select(person_id, cohort_start_date, vaccination_status)
  
-# get  dates and vaccines types for the different doses
-vaccines <- vaccines %>%
-      group_by(person_id) %>% 
-      arrange(drug_exposure_start_date) %>% 
-      mutate(seq=row_number())   %>%
-      mutate(second_dose_date = ifelse(seq==1,
-                                       lead(drug_exposure_start_date, order_by = c("drug_exposure_start_date")), NA)) %>%
-      ungroup() %>%
-  filter(seq!=2) %>%
-  group_by(person_id) %>%
-  arrange(drug_exposure_start_date) %>% 
-  mutate(third_dose_date = ifelse(seq==1, 
-                                  lead(drug_exposure_start_date, order_by = c("drug_exposure_start_date")), NA)) %>%
-  ungroup() %>%
-  filter(seq==1) %>%
-  rename(first_dose_date = drug_exposure_start_date) %>%
-  select(-seq) %>%
-  mutate(one_dose_vaccine = ifelse(is.na(first_dose_date), 0, 1)) %>%
-  mutate(fully_vaccinated = ifelse(is.na(second_dose_date), 0,1)) %>%
-  mutate(booster_doses = ifelse(is.na(third_dose_date), 0,1)) %>%
-  mutate(vaccination_status = ifelse(booster_doses==1, "Booster doses", 
-                              ifelse(fully_vaccinated ==1, "Two doses vaccination",
-                              ifelse(one_dose_vaccine == 1, "First dose vaccination", NA)
-                              ))) %>%
-  compute()
-
- 
-working_cohort <- working_cohort%>%
-  left_join(vaccines)%>% 
-  mutate(vaccination_status = ifelse(is.na(vaccination_status), "Non vaccinated", vaccination_status)) %>%
-  compute()
+ working_cohort <- working_cohort %>% 
+   left_join(doses_vaccines, copy = TRUE) %>%
+   mutate(vaccination_status = ifelse(is.na(vaccination_status), "Non vaccinated", vaccination_status)) %>% 
+   compute()
  
  #### Comorbidities at baseline
 autoimmune_disease.codes<- cdm$concept_ancestor %>% 

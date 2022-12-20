@@ -1,0 +1,19 @@
+"order","exclusion_reason","n","N_current","cohort_definition_id"
+0,"Initial record of COVID-19 tests",2243620,2243620,22
+0,"Initial record of COVID-19 tests",13129903,13129903,28
+1,"<18 years",400251,1843369,22
+1,"<18 years",2405591,10724312,28
+2,"Without 180d of prior history",2455,1840914,22
+2,"Without 180d of prior history",14693,10709619,28
+3,"With a prior COVID-19 infection",262199,1578715,22
+3,"With a prior COVID-19 infection",3259054,7450565,28
+4,"With an influenza infection 42d before",2235,1576480,22
+4,"With an influenza infection 42d before",12187,7438378,28
+5,"With a COVID-19 negative test 42d before",2594407,4843971,28
+7,"Tests prior to 2020-09-01",130150,1446330,22
+7,"Tests prior to 2020-09-01",755961,4088010,28
+8,"Less than 120 days of follow-up",976827,469503,22
+8,"Less than 120 days of follow-up",1302123,2785887,28
+NA,"Population included",NA,456236,70
+NA,"Population included",NA,13267,71
+NA,"Population included",NA,1643589,75
