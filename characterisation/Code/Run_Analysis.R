@@ -125,12 +125,13 @@ print(paste0("- Skipping creating Long Covid cohorts"))
 print(paste0("- Creating Long Covid cohorts"))
 
 
-# cdm object to access the tables easily
-cdm <- cdm_from_con(db, 
-             cdm_schema = cdm_database_schema,
-             write_schema = write_schema,
-             cohort_tables = c("er_cohorts_for_longcov"))
-
+  cdm <- cdm_from_con(
+    con = db,
+    cdm_schema = cdm_database_schema,
+    write_schema = write_schema,
+    cohort_tables = c("er_long_covid_attrition", "er_cohorts_for_longcov")
+  )
+  
 conn <- connect(connectionDetails)   
 
 # Ids for initial filtering
@@ -141,6 +142,225 @@ covid_censoring_id <- cohorts_ids %>% filter(type=="covid_censoring") %>% select
 influenza_id <- cohorts_ids %>% filter(type=="influenza") %>% select(cohort_definition_id) %>% pull()
 # symptoms cohorts
 symptoms_ids <- cohorts_ids %>% filter(type=="symptom") %>% select(cohort_definition_id) %>% pull()
+
+# get attrition table ----
+addLastEvent <- function(x,
+                         cdm,
+                         eventTableName,
+                         eventCohortId,
+                         eventName = "event",
+                         window = c(NA, NA),
+                         targetDateReference = "cohort_start_date",
+                         eventDateReference = "cohort_start_date") {
+  eventTable <- cdm[[eventTableName]] %>%
+    dplyr::filter(.data$cohort_definition_id == eventCohortId)
+  xx <- x %>%
+    dplyr::select(dplyr::all_of(c("subject_id", targetDateReference))) %>%
+    dplyr::inner_join(
+      eventTable %>%
+        dplyr::select("subject_id", "event" = eventDateReference),
+      by = "subject_id"
+    ) %>%
+    dplyr::mutate(dif_time = !!CDMConnector::datediff(targetDateReference, "event"))
+  if (!is.na(window[1])) {
+    xx <- xx %>%
+      dplyr::filter(.data$dif_time >= !!window[1])
+  }
+  if (!is.na(window[2])) {
+    xx <- xx %>%
+      dplyr::filter(.data$dif_time <= !!window[2])
+  }
+  xx <- xx %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(c("subject_id", targetDateReference)))) %>%
+    dplyr::summarise(
+      !!eventName := max(.data$event, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    dplyr::right_join(x, by = c("subject_id", targetDateReference))
+  return(xx)
+}
+
+
+
+target <- cdm$er_long_covid_attrition %>%
+  filter(cohort_definition_id == 1) %>%
+  compute() %>%
+  DrugUtilisation:::addAge(cdm) %>%
+  compute() %>%
+  addLastEvent(cdm, "er_long_covid_attrition", 1, "previous_covid", window = c(NA, -1)) %>%
+  compute() %>%
+  addLastEvent(cdm, "er_cohorts_for_longcov", influenza_id, "previous_flu", window = c(NA, 0)) %>%
+  compute() %>%
+  DrugUtilisation:::addPriorHistory(cdm) %>%
+  mutate(previous_covid = !!datediff("cohort_start_date", "previous_covid")) %>%
+  mutate(previous_flu = !!datediff("cohort_start_date", "previous_flu")) %>%
+  compute()
+
+attrition <- dplyr::tibble(
+  number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+  reason = "Starting events"
+)
+
+target <- target %>%
+  filter(age >= 18) %>%
+  compute()
+
+attrition <- rbind(
+  attrition,
+  dplyr::tibble(
+    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+    reason = "Aged 18 years or older"
+  )
+)
+
+target <- target %>%
+  filter(prior_history >= 180) %>%
+  compute()
+
+attrition <- rbind(
+  attrition,
+  dplyr::tibble(
+    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+    reason = "180 days of prior history"
+  )
+)
+
+target <- target %>%
+  filter(is.na(previous_covid) | previous_covid < -42) %>%
+  compute()
+
+attrition <- rbind(
+  attrition,
+  dplyr::tibble(
+    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+    reason = "No prior target in the previous 42 days"  )
+)
+
+target <- target %>%
+  filter(is.na(previous_flu) | previous_flu < -42) %>%
+  compute()
+
+attrition <- rbind(
+  attrition,
+  dplyr::tibble(
+    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+    reason = "No prior influenza infection in the previous 42 days"
+  )
+)
+
+attrition <- attrition %>%
+  mutate(cohort = "COVID-19 infection")
+
+# tested negative ----
+
+target <- cdm$er_long_covid_attrition %>%
+  filter(cohort_definition_id == 2) %>%
+  compute() %>%
+  DrugUtilisation:::addAge(cdm) %>%
+  compute() %>%
+  addLastEvent(cdm, "er_long_covid_attrition", 2, "previous_test_negative", window = c(NA, -1)) %>%
+  compute() %>%
+  addLastEvent(cdm, "er_cohorts_for_longcov", 15, "previous_flu", window = c(NA, 0)) %>%
+  compute() %>%
+  DrugUtilisation:::addPriorHistory(cdm) %>%
+  mutate(previous_test_negative = !!datediff("cohort_start_date", "previous_test_negative")) %>%
+  mutate(previous_flu = !!datediff("cohort_start_date", "previous_flu")) %>%
+  compute()
+
+
+attrition <- rbind(
+  attrition,
+  dplyr::tibble(
+    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+    reason = "Starting events",
+    cohort = "Tested negative"
+  )
+)
+
+target <- target %>%
+  filter(age >= 18) %>%
+  compute()
+
+attrition <- rbind(
+  attrition,
+  dplyr::tibble(
+    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+    reason = "Aged 18 years or older",
+    cohort = "Tested negative"
+  )
+)
+
+target <- target %>%
+  filter(prior_history >= 180) %>%
+  compute()
+
+attrition <- rbind(
+  attrition,
+  dplyr::tibble(
+    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+    reason = "180 days of prior history",
+    cohort = "Tested negative"
+  )
+)
+
+## add prior covid diagnoses
+prior_covid <- target %>%
+  left_join(cdm$er_cohorts_for_longcov %>% 
+              filter(cohort_definition_id == covid_censoring_id) %>%
+              select(subject_id,
+                     prior_covid_date = cohort_start_date)) %>%
+  filter(prior_covid_date<= cohort_start_date) %>%
+  mutate(prior_covid = 1) %>%
+  select(subject_id, prior_covid, cohort_start_date) %>%
+  distinct() %>%
+  compute()
+
+target <- target %>%
+  left_join(prior_covid) %>% 
+  compute()
+
+target  <- target %>%
+  filter(is.na(prior_covid))%>% 
+  compute()
+
+attrition <- rbind(
+  attrition,
+  dplyr::tibble(
+    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+    reason = "No prior COVID-19 infection",
+    cohort = "Tested negative"
+  )
+)
+
+
+target <- target %>%
+  filter(is.na(previous_flu) | previous_flu < -42) %>%
+  compute()
+
+attrition <- rbind(
+  attrition,
+  dplyr::tibble(
+    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+    reason = "No prior influenza infection in the previous 42 days",
+    cohort = "Tested negative"
+  )
+)
+
+target <- target %>%
+  filter(is.na(previous_test_negative) | previous_test_negative < -42) %>%
+  compute()
+
+attrition <- rbind(
+  attrition,
+  dplyr::tibble(
+    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
+    reason = "No prior target in the previous 42 days",
+    cohort = "Tested negative"
+  )
+)
+
+rm(target, addLastEvent)
+
 
 ## get initial cohorts ----
 cohorts <- cdm$er_cohorts_for_longcov %>% compute()
@@ -374,22 +594,29 @@ tested_negative_earliest <- negative_infections[[2]]
 appendPermanent(tested_negative_all, name = "er_long_covid_final_cohorts",  schema = write_schema)
 appendPermanent(tested_negative_earliest, name = "er_long_covid_final_cohorts",  schema = write_schema)
 
-#get exclusion table and save
-exclusion_table <- rbind(confirmed_infections[[4]], negative_infections[[4]]) %>% 
-  filter(!(cohort_definition_id == tested_negative_re))
-
-excluded_shorter_follow_up <- rbind(confirmed_infections[[5]] %>% mutate(cohort= "COVID-19"),
-                                    negative_infections[[5]]%>% mutate(cohort= "Negative"))
-
 
 #get exclusion table and save ----
 exclusion_table <- rbind(confirmed_infections[[4]], negative_infections[[4]]) %>% 
   filter(!(cohort_definition_id == tested_negative_re))
+
+exclusion_table <- exclusion_table %>%
+  mutate(cohort = ifelse(cohort_definition_id == new_infection_id, "COVID-19 infection",
+                  ifelse(cohort_definition_id == first_infection_id, "First infection",
+                  ifelse(cohort_definition_id == reinfection_id, "Reinfections",
+                  ifelse(cohort_definition_id == tested_negative_all_id, "Tested negative",
+                  ifelse(cohort_definition_id == tested_negative_earliest_id, "First test negative", NA
+                         )))))) %>%
+  select(number_observations = N_current,
+         reason = exclusion_reason,
+         cohort) %>%
+  filter(reason!= "initial pop")
+
+attrition <- rbind(attrition, exclusion_table)
 # save also reason for censoring
 excluded_shorter_follow_up <- rbind(confirmed_infections[[5]] %>% mutate(cohort= "COVID-19"),
                                     negative_infections[[5]]%>% mutate(cohort= "Negative"))
 
-write.csv(exclusion_table,here(paste0("results/exclusion_table_", database_name,".csv")), row.names = FALSE)
+write.csv(attrition,here(paste0("results/exclusion_table_", database_name,".csv")), row.names = FALSE)
 write.csv(excluded_shorter_follow_up, here(paste0("results/exclusions_followup_", database_name, ".csv")), row.names = FALSE)
 
 

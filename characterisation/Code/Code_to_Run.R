@@ -24,6 +24,7 @@ library(epitools)
 library(fmsb)
 library(DescTools)
 library(IncidencePrevalence)
+library(DrugUtilisation)
 # if (!require("pacman")) install.packages("pacman")
 # library(pacman)
 # p_load(SqlRender,
@@ -50,9 +51,8 @@ library(IncidencePrevalence)
 #        remotes)
 # when getting error instlling from Github - 
 # options(download.file.method = "libcurl")
-# remotes::install_github("darwin-eu/IncidencePrevalence")
-
-
+# remotes::install_github("darwin-eu-dev/IncidencePrevalence")
+# remotes::install_github("darwin-eu-dev/DrugUtilisation")
 
 # Connection details - to change locally  ----
 
