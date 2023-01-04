@@ -124,13 +124,19 @@ print(paste0("- Skipping creating Long Covid cohorts"))
 } else { 
 print(paste0("- Creating Long Covid cohorts"))
 
-
-  cdm <- cdm_from_con(
-    con = db,
-    cdm_schema = cdm_database_schema,
-    write_schema = write_schema,
-    cohort_tables = c("er_long_covid_attrition", "er_cohorts_for_longcov")
-  )
+  cdm <- cdm_from_con(db, 
+                      cdm_schema = cdm_database_schema,
+                      write_schema = write_schema)
+  
+# generte two additional cohorts to get the exclusion table  
+cohortSet <- CDMConnector::readCohortSet(here("Cohort_Dx_initial","1_InstantiateCohorts", "Attrition_cohort"))
+CDMConnector::generateCohortSet(cdm, cohortSet = cohortSet, 
+                                  cohortTableName = "er_long_covid_attrition",
+                                   overwrite = TRUE)
+cdm <- cdm_from_con(db,
+                    cdm_schema = cdm_database_schema,
+                    write_schema = write_schema, 
+                    cohort_tables = c("er_long_covid_attrition", "er_cohorts_for_longcov"))
   
 conn <- connect(connectionDetails)   
 
@@ -1057,16 +1063,18 @@ working_cohort <-   cdm$er_long_covid_final_cohorts %>%
      filter(cohort_definition_id == janssen_id) %>%
      collect()
  ) %>% 
-   distinct() %>%
    rename(drug_exposure_start_date = cohort_start_date,
           person_id = subject_id) %>%
    select(-cohort_end_date, -cohort_definition_id) %>%
+   distinct() %>%
    group_by(person_id) %>%
    arrange(drug_exposure_start_date) %>% 
    mutate(seq = row_number()) %>%
+   ungroup() %>%
    left_join(working_cohort %>% 
                collect()) %>% # only vaccines administered prior to the cohort start date
-   filter(drug_exposure_start_date < cohort_start_date)
+   filter(drug_exposure_start_date < cohort_start_date) 
+ 
  # get vaccination status per individual % cohort start date
  doses_vaccines <- rbind(
    vaccines %>% anti_join(vaccines %>% 
@@ -1081,7 +1089,8 @@ working_cohort <-   cdm$er_long_covid_final_cohorts %>%
    vaccines %>% filter(seq >2) %>%
      mutate(vaccination_status = "Booster doses")
  ) %>%
-   select(person_id, cohort_start_date, vaccination_status)
+   select(person_id, cohort_start_date, vaccination_status) %>%
+   distinct()
  
  working_cohort <- working_cohort %>% 
    left_join(doses_vaccines, copy = TRUE) %>%
