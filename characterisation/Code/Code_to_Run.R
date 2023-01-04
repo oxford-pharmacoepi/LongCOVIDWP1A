@@ -70,21 +70,6 @@ vocabulary_database_schema <- "omop21t2_cmbd"
 write_schema               <- "results22t2_cmbd"
 
 
-# server    <- Sys.getenv("SERVER_Long_test")
-# server_dbi<- Sys.getenv("SERVER_DBI_Long_test")
-# user      <- Sys.getenv("DB_USER_Long_test")
-# password  <- Sys.getenv("DB_PASSWORD_Long_test")
-# port      <- Sys.getenv("DB_PORT_Long_test") 
-# host      <- Sys.getenv("DB_HOST_Long_test") 
-# 
-# targetDialect              <- "postgresql"
-# cdm_database_schema        <- "omop21t2_test" 
-# vocabulary_database_schema <- "omop21t2_test" 
-# 
-# # schema to save results in the database
-# write_schema               <- "results21t2_test"
-
-
 db <- dbConnect(RPostgres::Postgres(), 
                 dbname = server_dbi,
                 port = port,
@@ -110,7 +95,7 @@ covid_start_date    <- as.Date("2020-09-01", "%Y-%m-%d")
 covid_end_date      <- as.Date("2022-03-28", "%Y-%m-%d")
 
 ## Code steps -- all set to True for the first run
-create_initial_json_cohorts     <- TRUE
+create_initial_json_cohorts     <- FALSE
 create_long_covid_cohorts       <- TRUE
 generate_data_baseline_char     <- TRUE
 match_cohorts                   <- TRUE
