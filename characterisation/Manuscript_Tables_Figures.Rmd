@@ -37,6 +37,9 @@ for (i in 1:length(files)){
   assign(files[i], read.csv(paste0(folder, "/", files[i], ".csv"), header = TRUE, sep = ","))
 } 
 
+col1 <- "#3A6D82"
+col2 <- "#9F5339"
+
 # CPRD results
 database_name <- "CPRD"
 folder <- paste0("Results_", database_name)
@@ -238,7 +241,7 @@ plot <- RR_data  %>%
     scale_x_log10(breaks = c(0.5, 0.8, 1,2, 4, 6),
                   labels = c("0.5","0.8", "1","2", "4", "6"),
                   limits = c(0.5, 8)) +  
-    scale_colour_manual(values = c( "#3F8D47","#AE221E",  "#1E27AE")) +
+    scale_colour_manual(values = c(col1, col2)) +
     geom_vline(
       xintercept = 1, colour = "#000000",
       linetype = 1
@@ -272,7 +275,7 @@ plot <- RR_data  %>%
                    labels = c("0.1", "0.2", "0.4","0.6", "0.8", "1"),
                   limits = c(0.04, 1.2)
                   ) +  
-    scale_colour_manual(values = c( "#3F8D47","#AE221E",  "#1E27AE")) +
+    scale_colour_manual(values = c(col1, col2)) +
     geom_vline(
       xintercept = 1, colour = "#000000",
       linetype = 1
@@ -296,17 +299,13 @@ plot
 
 ## Main results
 ### Table 1: Baseline characteristics of individuals with COVID-19 and tested negative (earliest record)
-
 ```{r echo=FALSE}
 table1 <- get_baseline_main_table(sidiap_data = Table1_90days_SIDIAP,
                                   cprd_data = Table1_90days_CPRD)
 table1
 ```
 
-
-
 ### Figure 1: Incidence rates of COVID-19 and long-COVID-19
-
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 Incidence_rates_Covid_LongCov_SIDIAP$time <- NULL
 Incidence_rates_Covid_LongCov_CPRD <- Incidence_rates_Covid_LongCov_CPRD %>%
@@ -363,7 +362,7 @@ scale_y_continuous(limits = c(0,NA)) +
 scale_x_date(date_breaks = "2 month",
                date_labels = ("%b %y"),
                expand = c(0,0)) +
-        scale_colour_manual(values = c( "#3F8D47","#AE221E",  "#1E27AE")) +
+        scale_colour_manual(values = c(col1, col2)) +
   theme_bw()+
   theme(legend.position="top",
         plot.margin = unit(c(0.1, 0.5, 0.1, 0.1), "cm"),
@@ -385,7 +384,6 @@ fig_IR_overall
 ```
 
 ### Figure 2: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 90 days
-
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 ## Relative risks figure
  RR_data <- rbind(RR_new_covid_tested_negative_earliest_90days_SIDIAP,
@@ -409,7 +407,6 @@ gg.rr.covid_negative_both
 ```
 
 ### Figure 3: RR of long-COVID symptoms: first infection vs re-infection - 90 days
-
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 RR_data <- rbind(RR_first_infection_reinfections_90days_SIDIAP,
                   RR_first_infection_reinfections_90days_CPRD) %>%
@@ -431,7 +428,6 @@ RR_data <- rbind(RR_first_infection_reinfections_90days_SIDIAP,
 ## Supplementary
 ### Baseline characteristics and symptoms distribution
 #### 1. Table: Baseline characteristics of first infections, re-infections and all negative SARS-CoV-2 tests records
-
 ```{r}
 table1_sup <- get_baseline_sup_table(sidiap_data = Table1_90days_SIDIAP,
                                   cprd_data = Table1_90days_CPRD)
@@ -439,23 +435,18 @@ table1_sup
 ```
 
 #### 2. Table: Symptoms distribution across cohorts (unmatched) - 90 days
-
 ```{r}
 get_symptoms_main_table(sidiap_data = Table1_90days_SIDIAP, 
                         cprd_data = Table1_90days_CPRD)
 ```
 
-
 #### 3. Table: Symptoms distribution across cohorts (unmatched) - 28 days
-
 ```{r}
 get_symptoms_main_table(sidiap_data = Table1_28days_SIDIAP, 
                         cprd_data = Table1_28days_CPRD)
 ```
 
-
 #### 4. Table: Baseline characteristics - COVID-19 infection vs first negative test matched 3:1
-
 ```{r echo=FALSE}
 Sup_table_matched_negative_90 <- get_matched_table_negative(
   sidiap_data = Table_Matched_Infection_Tested_Negative_earliest_90days_SIDIAP,
@@ -464,16 +455,15 @@ Sup_table_matched_negative_90
 ```
 
 #### 5. Table: Baseline characteristics: first COVID-19 infection vs re-infections matched 1:3
-
 ```{r echo=FALSE}
 Sup_table_matched_first_reinfection_90 <- get_matched_table_first_reinfection(
   sidiap_data = Table_Matched_First_infection_Reinfections_90days_SIDIAP,
   cprd_data = Table_Matched_First_infection_Reinfections_90days_CPRD)
 Sup_table_matched_first_reinfection_90 
 ```
+
 ### Incidence Rates
 #### 1. Table: Incidence Rates of COVID-19 & long COVID symptoms
-
 ```{r}
 
 data_table_IR <- data_IR_fig90 %>% 
@@ -510,7 +500,6 @@ Table_IR
 
 #### 2. Figure: Incidence Rates by Sex and Age group
 ##### A. SIDIAP
-
 ```{r echo=FALSE}
 
 brk_vec <- seq.Date(as.Date("2020-10-01"),
@@ -564,7 +553,6 @@ fig_IR_age_sex_SIDIAP  <- plot_IR(data = data_IR_fig90 %>% filter(database == "S
 fig_IR_age_sex_SIDIAP 
 ```
 
-
 ```{r include=FALSE}
 
 ggsave(paste0(here(),"/Results/Figures/IR_Sex_Age_SIDIAP.tiff"),
@@ -573,10 +561,7 @@ fig_IR_age_sex_SIDIAP ,
        width = 9, height = 6)
 ```
 
-
-
 ##### B. CPRD
-
 ```{r echo=FALSE}
 
 brk_vec <- seq.Date(as.Date("2020-10-01"),
@@ -642,7 +627,6 @@ table_RR_90
 
 
 #### 2. Table: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 28 days
-
 ```{r}
 table_RR_28 <- get_RR(sidiap_data = RR_new_covid_tested_negative_earliest_28days_SIDIAP,
                   cprd_data = RR_new_covid_tested_negative_earliest_28days_CPRD)
@@ -650,7 +634,6 @@ table_RR_28
 ```
 
 #### 3. Figure: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 28 days
-
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 ## Relative risks figure
  RR_data <- rbind(RR_new_covid_tested_negative_earliest_28days_SIDIAP,
@@ -667,7 +650,6 @@ gg.rr.covid_negative_both_28
 
 ### Relative Risks - re-infections vs first infection
 #### 1. Table: RR of long-COVID symptoms, first infection vs re-infection - 90 days
-
 ```{r}
 get_RR_numbers_re_infec <- function(sidiap_data, cprd_data) {
   RR_infections <- rbind(sidiap_data, cprd_data
@@ -707,8 +689,6 @@ table_RR_re_90 <- get_RR_numbers_re_infec(sidiap_data = RR_first_infection_reinf
  table_RR_re_90 
 ```
 
-
-
 #### 2. Table: RR of long-COVID symptoms, first infection vs re-infection - 28 days
 ```{r}
 table_RR_re_28 <- get_RR_numbers_re_infec(sidiap_data = RR_first_infection_reinfections_28days_SIDIAP,
@@ -716,9 +696,7 @@ table_RR_re_28 <- get_RR_numbers_re_infec(sidiap_data = RR_first_infection_reinf
  table_RR_re_28
 ```
 
-
 #### 3. Figure: RR of long-COVID symptoms, first infection vs re-infection - 28 days
-
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 
 RR_data <- rbind(RR_first_infection_reinfections_28days_SIDIAP,   RR_first_infection_reinfections_28days_CPRD) %>%
@@ -742,7 +720,6 @@ gg.rr.first_reinfection_28
 
 ```
 
-
 ### Relative Risks - infections vs all negative tests
 #### 1. Table: RR of long COVID symptoms, COVID-19 infection vs all SARS-CoV-2 negative tests - 90 days
 ```{r}
@@ -752,7 +729,6 @@ table_RR_90
 ```
 
 #### 2. Figure: RR of long COVID symptoms, COVID-19 infection vs SARS-CoV-2 negative tests (all records) - 90 days
-
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 
 RR_data <- rbind(RR_new_covid_tested_negative_all_90days_SIDIAP,
@@ -772,7 +748,6 @@ gg.rr.covid_negative_all_90 <- get_rr_infection_negative_plot(data = RR_data)
 gg.rr.covid_negative_all_90
 ```
 
-
 #### 3. Table: RR of long COVID symptoms, COVID-19 infection vs all SARS-CoV-2 negative tests - 28 days
 ```{r}
 table_RR_28 <- get_RR(sidiap_data = RR_new_covid_tested_negative_earliest_28days_SIDIAP,
@@ -780,9 +755,7 @@ table_RR_28 <- get_RR(sidiap_data = RR_new_covid_tested_negative_earliest_28days
 table_RR_28
 ```
 
-
 #### 4. Figure: RR of long COVID symptoms, COVID-19 infection vs SARS-CoV-2 negative tests (all records) - 28 days
-
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 
 RR_data <- rbind(RR_new_covid_tested_negative_all_28days_SIDIAP,
@@ -801,4 +774,3 @@ RR_data <- rbind(RR_new_covid_tested_negative_all_28days_SIDIAP,
 gg.rr.covid_negative_all_28 <- get_rr_infection_negative_plot(data = RR_data)
 gg.rr.covid_negative_all_28
 ```
-
