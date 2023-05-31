@@ -273,7 +273,7 @@ plot <- RR_data  %>%
     scale_y_discrete(expand=c(0,0), position = "left") +
      scale_x_log10(breaks = c(0.1, 0.2, 0.4, 0.6, 0.8, 1),
                    labels = c("0.1", "0.2", "0.4","0.6", "0.8", "1"),
-                  limits = c(0.04, 1.2)
+                  limits = c(0.035, 1.2)
                   ) +  
     scale_colour_manual(values = c(col1, col2)) +
     geom_vline(
@@ -292,8 +292,6 @@ plot <- RR_data  %>%
     )
 plot
 }
-
-
 
 ```
 
@@ -421,8 +419,8 @@ RR_data <- rbind(RR_first_infection_reinfections_90days_SIDIAP,
                                         )))))
 
 
- gg.rr.first_reinfection_90 <-  get_rr_first_reinfection_plot(data = RR_data)
-  gg.rr.first_reinfection_90
+gg.rr.first_reinfection_90 <-  get_rr_first_reinfection_plot(data = RR_data)
+gg.rr.first_reinfection_90
 ```
 
 ## Supplementary
@@ -723,8 +721,8 @@ gg.rr.first_reinfection_28
 ### Relative Risks - infections vs all negative tests
 #### 1. Table: RR of long COVID symptoms, COVID-19 infection vs all SARS-CoV-2 negative tests - 90 days
 ```{r}
-table_RR_90 <- get_RR(sidiap_data = RR_new_covid_tested_negative_earliest_90days_SIDIAP,
-                  cprd_data = RR_new_covid_tested_negative_earliest_90days_CPRD)
+table_RR_90 <- get_RR(sidiap_data = RR_new_covid_tested_negative_all_90days_SIDIAP,
+                  cprd_data = RR_new_covid_tested_negative_all_90days_CPRD)
 table_RR_90
 ```
 
@@ -750,8 +748,8 @@ gg.rr.covid_negative_all_90
 
 #### 3. Table: RR of long COVID symptoms, COVID-19 infection vs all SARS-CoV-2 negative tests - 28 days
 ```{r}
-table_RR_28 <- get_RR(sidiap_data = RR_new_covid_tested_negative_earliest_28days_SIDIAP,
-                  cprd_data = RR_new_covid_tested_negative_earliest_28days_CPRD)
+table_RR_28 <- get_RR(sidiap_data = RR_new_covid_tested_negative_all_28days_SIDIAP,
+                  cprd_data = RR_new_covid_tested_negative_all_28days_CPRD)
 table_RR_28
 ```
 
