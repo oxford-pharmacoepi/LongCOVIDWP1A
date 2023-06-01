@@ -1,16 +1,16 @@
 {
   "ConceptSets": [
     {
-      "id": 17,
-      "name": "[Long COVID] Headache - PHOEBE'd",
+      "id": 20,
+      "name": "[Long COVID] Memory issues - V2",
       "expression": {
         "items": [
           {
             "concept": {
               "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "25064002",
-              "CONCEPT_ID": 378253,
-              "CONCEPT_NAME": "Headache",
+              "CONCEPT_CODE": "247612003",
+              "CONCEPT_ID": 4083457,
+              "CONCEPT_NAME": "Cannot remember names of intimates",
               "DOMAIN_ID": "Condition",
               "INVALID_REASON": "V",
               "INVALID_REASON_CAPTION": "Valid",
@@ -23,324 +23,9 @@
           {
             "concept": {
               "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "230461009",
-              "CONCEPT_ID": 375527,
-              "CONCEPT_NAME": "Headache disorder",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "includeDescendants": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Drug",
-              "CONCEPT_CODE": "308297",
-              "CONCEPT_ID": 19073408,
-              "CONCEPT_NAME": "acetaminophen 250 MG / aspirin 250 MG / caffeine 65 MG Oral Tablet",
-              "DOMAIN_ID": "Drug",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "RxNorm"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Drug",
-              "CONCEPT_CODE": "763116",
-              "CONCEPT_ID": 1135360,
-              "CONCEPT_NAME": "acetaminophen 260 MG / aspirin 520 MG / caffeine 32.5 MG Oral Powder",
-              "DOMAIN_ID": "Drug",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "RxNorm"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Drug",
-              "CONCEPT_CODE": "1046378",
-              "CONCEPT_ID": 40229103,
-              "CONCEPT_NAME": "acetaminophen 325 MG / phenylephrine hydrochloride 5 MG Oral Tablet",
-              "DOMAIN_ID": "Drug",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "RxNorm"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Branded Drug",
-              "CONCEPT_CODE": "1101523",
-              "CONCEPT_ID": 40238708,
-              "CONCEPT_NAME": "acetaminophen 325 MG / phenylephrine hydrochloride 5 MG Oral Tablet [Excedrin Sinus Headache]",
-              "DOMAIN_ID": "Drug",
-              "INVALID_REASON": "U",
-              "INVALID_REASON_CAPTION": "Invalid",
-              "STANDARD_CONCEPT": "N",
-              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
-              "VOCABULARY_ID": "RxNorm"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Branded Drug",
-              "CONCEPT_CODE": "1858398",
-              "CONCEPT_ID": 1718532,
-              "CONCEPT_NAME": "acetaminophen 325 MG / phenylephrine hydrochloride 5 MG Oral Tablet [Wal-Phed PE Sinus Headache]",
-              "DOMAIN_ID": "Drug",
-              "INVALID_REASON": "U",
-              "INVALID_REASON_CAPTION": "Invalid",
-              "STANDARD_CONCEPT": "N",
-              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
-              "VOCABULARY_ID": "RxNorm"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Drug",
-              "CONCEPT_CODE": "307686",
-              "CONCEPT_ID": 19072207,
-              "CONCEPT_NAME": "acetaminophen 500 MG / caffeine 65 MG Oral Tablet",
-              "DOMAIN_ID": "Drug",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "RxNorm"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Branded Drug",
-              "CONCEPT_CODE": "404172",
-              "CONCEPT_ID": 19102640,
-              "CONCEPT_NAME": "acetaminophen 500 MG / caffeine 65 MG Oral Tablet [Excedrin Tension Headache]",
-              "DOMAIN_ID": "Drug",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "RxNorm"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "129612002",
-              "CONCEPT_ID": 4030590,
-              "CONCEPT_NAME": "Anterior ethmoidal nerve syndrome",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Branded Drug",
-              "CONCEPT_CODE": "896893",
-              "CONCEPT_ID": 40169439,
-              "CONCEPT_NAME": "aspirin 325 MG / caffeine 16 MG / salicylamide 95 MG Oral Tablet [BC Headache]",
-              "DOMAIN_ID": "Drug",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "RxNorm"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "43242008",
-              "CONCEPT_ID": 4183441,
-              "CONCEPT_NAME": "Drug withdrawal headache",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "103010005",
-              "CONCEPT_ID": 374342,
-              "CONCEPT_NAME": "Headache associated with sexual activity",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "230483008",
-              "CONCEPT_ID": 4044237,
-              "CONCEPT_NAME": "Headache associated with substance abuse or withdrawal",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "294091000119104",
-              "CONCEPT_ID": 46270383,
-              "CONCEPT_NAME": "Headache caused by drug",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "294081000119102",
-              "CONCEPT_ID": 46270382,
-              "CONCEPT_NAME": "Intractable headache caused by drug",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "698803006",
-              "CONCEPT_ID": 44782806,
-              "CONCEPT_NAME": "Medication overuse headache",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "HCPCS",
-              "CONCEPT_CODE": "K0741",
-              "CONCEPT_ID": 40664860,
-              "CONCEPT_NAME": "Portable gaseous oxygen system, rental, includes portable container, regulator, flowmeter, humidifier, cannula or mask, and tubing, for cluster headaches",
-              "DOMAIN_ID": "Device",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "HCPCS"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "HCPCS",
-              "CONCEPT_CODE": "K0742",
-              "CONCEPT_ID": 40664828,
-              "CONCEPT_NAME": "Portable oxygen contents, gaseous, 1 month's supply = 1 unit, for cluster headaches, for initial months supply or to replace used contents",
-              "DOMAIN_ID": "Device",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "HCPCS"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "200076006",
-              "CONCEPT_ID": 4065627,
-              "CONCEPT_NAME": "Spinal and epidural anesthesia-induced headache during labor and delivery",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "200072008",
-              "CONCEPT_ID": 4061351,
-              "CONCEPT_NAME": "Spinal and epidural anesthesia-induced headache during pregnancy",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "200073003",
-              "CONCEPT_ID": 4065625,
-              "CONCEPT_NAME": "Spinal and epidural anesthesia-induced headache during the puerperium",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "isExcluded": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "162297001",
-              "CONCEPT_ID": 4037298,
-              "CONCEPT_NAME": "Headache site",
+              "CONCEPT_CODE": "1075691000000102",
+              "CONCEPT_ID": 42690369,
+              "CONCEPT_NAME": "Unable to remember people",
               "DOMAIN_ID": "Condition",
               "INVALID_REASON": "V",
               "INVALID_REASON_CAPTION": "Valid",
@@ -353,69 +38,9 @@
           {
             "concept": {
               "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "193031009",
-              "CONCEPT_ID": 381278,
-              "CONCEPT_NAME": "Cluster headache",
-              "DOMAIN_ID": "Condition",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "includeDescendants": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Observable Entity",
-              "CONCEPT_CODE": "162306000",
-              "CONCEPT_ID": 4038024,
-              "CONCEPT_NAME": "Headache character",
-              "DOMAIN_ID": "Observation",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "includeDescendants": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "103006007",
-              "CONCEPT_ID": 4011767,
-              "CONCEPT_NAME": "Unilateral headache",
-              "DOMAIN_ID": "Observation",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "includeDescendants": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Procedure",
-              "CONCEPT_CODE": "307051000000100",
-              "CONCEPT_ID": 44791956,
-              "CONCEPT_NAME": "Referral to headache special interest general practitioner",
-              "DOMAIN_ID": "Observation",
-              "INVALID_REASON": "V",
-              "INVALID_REASON_CAPTION": "Valid",
-              "STANDARD_CONCEPT": "S",
-              "STANDARD_CONCEPT_CAPTION": "Standard",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            "includeDescendants": true
-          },
-          {
-            "concept": {
-              "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "698803006",
-              "CONCEPT_ID": 44782806,
-              "CONCEPT_NAME": "Medication overuse headache",
+              "CONCEPT_CODE": "285219002",
+              "CONCEPT_ID": 4111205,
+              "CONCEPT_NAME": "Unable to remember motor skills",
               "DOMAIN_ID": "Condition",
               "INVALID_REASON": "V",
               "INVALID_REASON_CAPTION": "Valid",
@@ -428,9 +53,459 @@
           {
             "concept": {
               "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "294091000119104",
-              "CONCEPT_ID": 46270383,
-              "CONCEPT_NAME": "Headache caused by drug",
+              "CONCEPT_CODE": "1075681000000104",
+              "CONCEPT_ID": 42690368,
+              "CONCEPT_NAME": "Unable to remember past events",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "1072501000000101",
+              "CONCEPT_ID": 42690112,
+              "CONCEPT_NAME": "Does not remember past events",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "285191007",
+              "CONCEPT_ID": 4110901,
+              "CONCEPT_NAME": "Unable to remember day of the week",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "1070821000000108",
+              "CONCEPT_ID": 42690615,
+              "CONCEPT_NAME": "Difficulty remembering past events",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "413088002",
+              "CONCEPT_ID": 4131380,
+              "CONCEPT_NAME": "Poor visual sequential memory",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "247609001",
+              "CONCEPT_ID": 4084416,
+              "CONCEPT_NAME": "Unable to remember name of reigning monarch",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "386807006",
+              "CONCEPT_ID": 4304008,
+              "CONCEPT_NAME": "Memory impairment",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "275278005",
+              "CONCEPT_ID": 4166591,
+              "CONCEPT_NAME": "Difficulty in remembering dates",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "247610006",
+              "CONCEPT_ID": 4092087,
+              "CONCEPT_NAME": "Unable to remember name of current prime minister",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "1068951000000102",
+              "CONCEPT_ID": 42689830,
+              "CONCEPT_NAME": "Difficulty remembering places",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "1075711000000100",
+              "CONCEPT_ID": 42690370,
+              "CONCEPT_NAME": "Unable to remember routines",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "247616000",
+              "CONCEPT_ID": 4083460,
+              "CONCEPT_NAME": "Cannot remember name of school",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "1070831000000105",
+              "CONCEPT_ID": 42689981,
+              "CONCEPT_NAME": "Difficulty remembering people",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "285188007",
+              "CONCEPT_ID": 4111194,
+              "CONCEPT_NAME": "Unable to remember own date of birth",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "247608009",
+              "CONCEPT_ID": 4084415,
+              "CONCEPT_NAME": "Unable to remember today's date",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "285197006",
+              "CONCEPT_ID": 4111198,
+              "CONCEPT_NAME": "Unable to remember current year",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "247615001",
+              "CONCEPT_ID": 4085500,
+              "CONCEPT_NAME": "Cannot remember birth dates of children",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "247614002",
+              "CONCEPT_ID": 4083459,
+              "CONCEPT_NAME": "Cannot remember wedding anniversary",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "1072521000000105",
+              "CONCEPT_ID": 42690113,
+              "CONCEPT_NAME": "Does not remember places",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "1075701000000102",
+              "CONCEPT_ID": 42690647,
+              "CONCEPT_NAME": "Unable to remember places",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "1072511000000104",
+              "CONCEPT_ID": 42690742,
+              "CONCEPT_NAME": "Does not remember people",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "442212003",
+              "CONCEPT_ID": 40482301,
+              "CONCEPT_NAME": "Residual cognitive deficit as late effect of cerebrovascular accident",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "1070841000000101",
+              "CONCEPT_ID": 42689982,
+              "CONCEPT_NAME": "Difficulty remembering routines",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "247613008",
+              "CONCEPT_ID": 4083458,
+              "CONCEPT_NAME": "Unable to remember own age",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "285194004",
+              "CONCEPT_ID": 4110903,
+              "CONCEPT_NAME": "Unable to remember month of year",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "285225003",
+              "CONCEPT_ID": 4115009,
+              "CONCEPT_NAME": "Unable to remember objects",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "1069191000000104",
+              "CONCEPT_ID": 42689849,
+              "CONCEPT_NAME": "Does not remember routines",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "285228001",
+              "CONCEPT_ID": 4115010,
+              "CONCEPT_NAME": "Unable to remember faces",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "413089005",
+              "CONCEPT_ID": 4135668,
+              "CONCEPT_NAME": "Poor auditory sequential memory",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "285230004",
+              "CONCEPT_ID": 4110912,
+              "CONCEPT_NAME": "Unable to remember sounds",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Clinical Finding",
+              "CONCEPT_CODE": "192072002",
+              "CONCEPT_ID": 4103572,
+              "CONCEPT_NAME": "Organic memory impairment",
               "DOMAIN_ID": "Condition",
               "INVALID_REASON": "V",
               "INVALID_REASON_CAPTION": "Valid",
@@ -448,12 +523,7 @@
     "CriteriaList": [
       {
         "ConditionOccurrence": {
-          "CodesetId": 17
-        }
-      },
-      {
-        "Observation": {
-          "CodesetId": 17
+          "CodesetId": 20
         }
       }
     ],
