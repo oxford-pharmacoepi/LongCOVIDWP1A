@@ -157,14 +157,16 @@ longnegative <- cdm[[indexCohortName]] %>%
   addIntersect(cdm, "observation_period", targetStartDate = "observation_period_end_date", targetEndDate = NULL, value = "date", window = c(1, Inf), nameStyle = "end_observation") %>%
   addIntersect(cdm, "death", targetStartDate = "death", targetEndDate = NULL, value = "date", window = c(1, Inf), nameStyle = "death") %>%
   mutate(
-    next_covid = next_covid - 1, next_influenza = next_influenza - 1,
-    one_year = cohort_start_date + 365, end_covid_testing = covid_end_date,
-    cohort_end_date = pmin(
+    next_covid = as.Date(next_covid - days(1)), 
+    next_influenza = as.Date(next_influenza - days(1)),
+    one_year = as.Date(cohort_start_date + days(365)), 
+    end_covid_testing = covid_end_date,
+    cohort_end_date = as.Date(pmin(
       end_observation, death, next_covid, next_influenza, one_year,
       end_covid_testing
-    ), follow_up = cohort_end_date - cohort_start_date
+    ))
   ) %>%
-  filter(cohort_start_date < cohort_end_date) %>%
+  mutate(follow_up = !!datediff("cohort_start_date", "cohort_end_date")) %>%
   filter(follow_up >= 120) %>%
   filter(cohort_start_date >= covid_start_date) %>%
   window_order(cohort_start_date) %>%
