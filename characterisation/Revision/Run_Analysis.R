@@ -31,407 +31,191 @@ rm(cohorts.folder)
 symptomCohortName <- paste0(cohortStem, "symptom")
 vaccinatedCohortName <- paste0(cohortStem, "vaccinated")
 indexCohortName <- paste0(cohortStem, "index")
-attritionCohortName <- paste0(cohortStem, "attrition_cohorts")
+longcovidCohortName <- paste0(cohortStem, "longcovid")
 
 # Initial Json cohorts ----
 cohorts <- readCohortSet(here("Cohorts", "Vaccinated"))
-cdm <- generateCohortSet(cdm, cohorts, vaccinatedCohortName)
+cdm <- generateCohortSet(cdm, cohorts, vaccinatedCohortName, overwrite = TRUE)
 
 cohorts <- readCohortSet(here("Cohorts", "Index"))
 cdm <- generateCohortSet(cdm, cohorts, indexCohortName, overwrite = TRUE)
 
-cohorts <- readCohortSet(here("Cohorts", "Attrition"))
-cdm <- generateCohortSet(cdm, cohorts, attritionCohortName)
-
 cohorts <- readCohortSet(here("Cohorts", "Symptoms"))
-cdm <- generateCohortSet(cdm, cohorts, symptomCohortName)
+cdm <- generateCohortSet(cdm, cohorts, symptomCohortName, overwrite = TRUE)
 
 # Creating Long Covid cohorts ----
 
 getId <- function(x, name) {
   cohortSet(x) %>% 
-    filter(grepl(name, cohort_name)) %>% 
+    filter(.data$cohort_name == .env$name) %>% 
     pull("cohort_definition_id")
 }
 
 influenza_id <- getId(cdm[[indexCohortName]], "influenza")
-covidAttrition_id <- getId(cdm[[attritionCohortName]], "covid")
+covidAttrition_id <- getId(cdm[[indexCohortName]], "any_covid")
+positiveTest_id <- getId(cdm[[indexCohortName]], "positive_test")
+negativeTest_id <- getId(cdm[[indexCohortName]], "negative_test")
 
-target <- cdm[[attritionCohortName]] %>%
-  filter(cohort_definition_id == 1) %>%
+target <- cdm[[indexCohortName]] %>%
+  filter(cohort_definition_id == positiveTest_id) %>%
   addDemographics(cdm, futureObservation = FALSE) %>%
-  addCohortIntersectDays(cdm, targetCohortTable = attritionCohortName, targetCohortId = covidAttrition_id, order = "last", window = c(-Inf, -1), nameStyle = "previous_covid") %>%
+  addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = positiveTest_id, order = "last", window = c(-Inf, -1), nameStyle = "previous_covid") %>%
   addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = influenza_id, order = "last", window = c(-Inf, 0), nameStyle = "previous_flu") 
-
-attritionCovid <- cohortAttrition(cdm[[indexCohortName]]) %>%
-  filter(cohort_definition_id == 2)
 attritionP <- computeCohortAttrition(target, cdm)
 
 target <- target %>%
   filter(age >= 18) %>%
   compute()
-
 attritionP <- computeCohortAttrition(target, cdm, attritionP, "Aged 18 years or older")
 
 target <- target %>%
   filter(prior_history >= 180) %>%
   compute()
-
 attritionP <- computeCohortAttrition(target, cdm, attritionP, "180 days of prior history")
 
 target <- target %>%
   filter(is.na(previous_covid) | previous_covid < -42) %>%
   compute()
-
-attritionP <- computeCohortAttrition(target, cdm, attritionP, "No prior target in the previous 42 days")
+attritionP <- computeCohortAttrition(target, cdm, attritionP, "No prior covid in the previous 42 days")
 
 target <- target %>%
   filter(is.na(previous_flu) | previous_flu < -42) %>%
   compute()
-
 attritionP <- computeCohortAttrition(target, cdm, attritionP, "No prior influenza infection in the previous 42 days")
 
-# tested negative ----
-
-target <- [] %>%
-  filter(cohort_definition_id == 2) %>%
-  compute() %>%
-  DrugUtilisation:::addAge(cdm) %>%
-  compute() %>%
-  addLastEvent(cdm, "er_long_covid_attrition", 2, "previous_test_negative", window = c(NA, -1)) %>%
-  compute() %>%
-  addLastEvent(cdm, "er_cohorts_for_longcov", 15, "previous_flu", window = c(NA, 0)) %>%
-  compute() %>%
-  DrugUtilisation:::addPriorHistory(cdm) %>%
-  mutate(previous_test_negative = !!datediff("cohort_start_date", "previous_test_negative")) %>%
-  mutate(previous_flu = !!datediff("cohort_start_date", "previous_flu")) %>%
-  compute()
-
-
-attrition <- rbind(
-  attrition,
-  dplyr::tibble(
-    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
-    reason = "Starting events",
-    cohort = "Tested negative"
-  )
-)
+target <- cdm[[indexCohortName]] %>%
+  filter(cohort_definition_id == negativeTest_id) %>%
+  addDemographics(cdm, futureObservation = FALSE) %>%
+  addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = negativeTest_id, order = "last", window = c(-Inf, -1), nameStyle = "previous_negative") %>%
+  addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = covidAttrition_id, order = "last", window = c(-Inf, 0), nameStyle = "previous_covid") %>%
+  addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = influenza_id, order = "last", window = c(-Inf, 0), nameStyle = "previous_flu") 
+attritionN <- computeCohortAttrition(target, cdm)
 
 target <- target %>%
   filter(age >= 18) %>%
   compute()
-
-attrition <- rbind(
-  attrition,
-  dplyr::tibble(
-    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
-    reason = "Aged 18 years or older",
-    cohort = "Tested negative"
-  )
-)
+attritionN <- computeCohortAttrition(target, cdm, attritionN, "Aged 18 years or older")
 
 target <- target %>%
   filter(prior_history >= 180) %>%
   compute()
-
-attrition <- rbind(
-  attrition,
-  dplyr::tibble(
-    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
-    reason = "180 days of prior history",
-    cohort = "Tested negative"
-  )
-)
-
-## add prior covid diagnoses
-prior_covid <- target %>%
-  left_join(cdm$er_cohorts_for_longcov %>% 
-              filter(cohort_definition_id == covid_censoring_id) %>%
-              select(subject_id,
-                     prior_covid_date = cohort_start_date)) %>%
-  filter(prior_covid_date<= cohort_start_date) %>%
-  mutate(prior_covid = 1) %>%
-  select(subject_id, prior_covid, cohort_start_date) %>%
-  distinct() %>%
-  compute()
+attritionN <- computeCohortAttrition(target, cdm, attritionN, "180 days of prior history")
 
 target <- target %>%
-  left_join(prior_covid) %>% 
+  filter(is.na(previous_covid)) %>%
   compute()
-
-target  <- target %>%
-  filter(is.na(prior_covid))%>% 
-  compute()
-
-attrition <- rbind(
-  attrition,
-  dplyr::tibble(
-    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
-    reason = "No prior COVID-19 infection",
-    cohort = "Tested negative"
-  )
-)
-
+attritionN <- computeCohortAttrition(target, cdm, attritionN, "No prior covid ")
 
 target <- target %>%
   filter(is.na(previous_flu) | previous_flu < -42) %>%
   compute()
-
-attrition <- rbind(
-  attrition,
-  dplyr::tibble(
-    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
-    reason = "No prior influenza infection in the previous 42 days",
-    cohort = "Tested negative"
-  )
-)
+attritionN <- computeCohortAttrition(target, cdm, attritionN, "No prior influenza infection in the previous 42 days")
 
 target <- target %>%
-  filter(is.na(previous_test_negative) | previous_test_negative < -42) %>%
+  filter(is.na(previous_negative) | previous_negative < -42) %>%
   compute()
+attritionN <- computeCohortAttrition(target, cdm, attritionN, "No prior test negative in the previous 42 days")
 
-attrition <- rbind(
-  attrition,
-  dplyr::tibble(
-    number_observations = target %>% dplyr::tally() %>% dplyr::pull(),
-    reason = "No prior target in the previous 42 days",
-    cohort = "Tested negative"
-  )
-)
+# export attrition ----
 
-rm(target, addLastEvent)
-
+write_csv(collect(attritionN), here("results", "tested_negative_index.csv"))
+write_csv(collect(attritionP), here("results", "testes_positive_index.csv"))
 
 ## get initial cohorts ----
 
-# combine observation period (to have observation period end date) and death with our study cohorts
-observation_death <- cdm$observation_period %>%
-  select(person_id, observation_period_end_date) %>%
-  left_join(cdm$death %>% select (person_id, death_date)) %>%
-  mutate(death = ifelse(!(is.na(death_date)), 1,0))%>%
-  compute()
+longcovid <- cdm[[indexCohortName]] %>%
+  filter(cohort_definition_id == !!getId(cdm[[indexCohortName]], "tested_positive_index")) %>%
+  addCohortIntersectDate(cdm, indexCohortName, getId(cdm[[indexCohortName]], "any_covid"), window = c(42, Inf), nameStyle = "next_covid") %>%
+  addCohortIntersectDate(cdm, indexCohortName, getId(cdm[[indexCohortName]], "influenza"), window = c(1, Inf), nameStyle = "next_influenza") %>%
+  addIntersect(cdm, "observation_period", targetStartDate = "observation_period_end_date", targetEndDate = NULL, value = "date", window = c(1, Inf), nameStyle = "end_observation") %>%
+  addIntersect(cdm, "death", targetStartDate = "death_date", targetEndDate = NULL, value = "date", window = c(1, Inf), nameStyle = "death") %>%
+  mutate(
+    next_covid = as.Date(next_covid - days(1)), 
+    next_influenza = as.Date(next_influenza - days(1)),
+    one_year = as.Date(cohort_start_date + days(365)), 
+    end_covid_testing = covid_end_date,
+    cohort_end_date = as.Date(pmin(
+      end_observation, death, next_covid, next_influenza, one_year,
+      end_covid_testing
+    ))
+  ) %>%
+  mutate(follow_up = !!datediff("cohort_start_date", "cohort_end_date")) %>%
+  filter(follow_up >= 120) %>%
+  filter(cohort_start_date >= covid_start_date) %>%
+  window_order(cohort_start_date) %>%
+  mutate(seq = row_number()) %>%
+  select(seq, subject_id, cohort_start_date, cohort_end_date) %>%
+  computeQuery()
 
-generate_tested_cohorts <- function(cohorts_interest, covid_id, first_infection_id, reinfection_id, days_censor_covid){
-  # get the cohort of interest
-  covid_infection <- cohorts_interest %>%
-    # not needed at this point but could be escalated to have different covid cohorts
-    filter(cohort_definition_id == covid_id) %>%
-    group_by(subject_id) %>% 
-    arrange(cohort_start_date) %>%
-    # get number of infection per person
-    mutate(seq=row_number()) %>% 
-    distinct() %>%
-    ungroup() %>%
-    compute()
-  
-  # Censor on new Covid infections 42 days or 0 days after first infection
-  censoring_covid <- covid_censoring_cohort %>%
-    inner_join(covid_infection) %>%
-    select(covid_censoring_date, cohort_start_date, subject_id) %>%
-    filter(covid_censoring_date> cohort_start_date+ lubridate::days(days_censor_covid)) %>%
-    distinct() %>%
-    #  keep first covid record per person and cohort start date
-    group_by(subject_id, cohort_start_date) %>%
-    filter(covid_censoring_date== min(covid_censoring_date)) %>%
-    ungroup() %>%
-    compute()
-  #  Censor on influenza infections
-  influenza_covid <- influenza_cohort %>%
-    inner_join(covid_infection) %>%
-    select(influenza_start_date, cohort_start_date, subject_id) %>%
-    filter(influenza_start_date>cohort_start_date) %>%
-    distinct() %>%
-    # keep firt influenza record per person and cohort start date
-    group_by(subject_id, cohort_start_date) %>%
-    filter(influenza_start_date == min(influenza_start_date)) %>%
-    ungroup() %>%
-    compute()
-  
-  # add dates of covid and influenza for censoring
-  covid_infection <- covid_infection %>%
-    left_join(censoring_covid) %>%
-    left_join(influenza_covid) %>%
-    compute()
-  
-  # add date one year after infection & end of testing - country specific
-  covid_infection <- covid_infection %>%
-    mutate(one_year_date = lubridate::as_date(cohort_start_date+lubridate::days(365))) %>%
-    mutate(end_covid_testing_date =  as_date(covid_end_date)) %>%
-    compute()
-  
-  # add cohort end date, considering censoring options
-  # death, observation end, next covid infection, influenza, one year followup
-  covid_infection  <- covid_infection %>% 
-    mutate(cohort_end_date = lubridate::as_date(pmin(
-      observation_period_end_date, 
-      death_date, 
-      covid_censoring_date-lubridate::days(1), 
-      influenza_start_date-lubridate::days(1), 
-      one_year_date,
-      end_covid_testing_date-lubridate::days(1),
-      na.rm = F))) %>%
-    mutate(follow_up_days = cohort_end_date - cohort_start_date) %>% 
-    mutate(reason_censoring = ifelse(!(is.na(covid_censoring_date)) & cohort_end_date == covid_censoring_date-lubridate::days(1), 
-                                     "COVID-19", 
-                                     ifelse(!(is.na(influenza_start_date)) & cohort_end_date == influenza_start_date-lubridate::days(1),
-                                            "influenza",
-                                            ifelse(!(is.na(death_date)) & cohort_end_date == death_date, 
-                                                   "death",
-                                                   ifelse(cohort_end_date == one_year_date,
-                                                          "one year of follow_up", 
-                                                          ifelse(cohort_end_date == end_covid_testing_date,
-                                                                 "End of COVID-19 testing",
-                                                                 ifelse(cohort_end_date == observation_period_end_date,
-                                                                        "end of data collection or exit from database",
-                                                                        NA ))))))) %>%
-    compute()
-  
-  covid_infection <- covid_infection %>% 
-    select(cohort_definition_id, subject_id, cohort_start_date, cohort_end_date, seq, follow_up_days, reason_censoring) %>%
-    compute()
-  
-  # exclusion table
-  exclusion_table <- tibble(N_current=covid_infection %>%tally()%>%collect()%>%pull(), 
-                            exclusion_reason="initial pop",
-                            cohort_definition_id = covid_id)
-  # keep only infections after covid start date - defined in Code to Run
-  covid_infection <- covid_infection %>%
-    filter(cohort_start_date>=covid_start_date) %>%
-    compute()
-  
-  exclusion_table<-rbind(exclusion_table,
-                         tibble(N_current=covid_infection %>%tally()%>%collect()%>%pull(), 
-                                exclusion_reason=paste0("Tests prior to ", covid_start_date),
-                                cohort_definition_id = covid_id
-                         ))
-  
-  # keep only records with at least 120 days of follow-up
-  excluded_less_120 <- covid_infection %>%
-    filter(follow_up_days <120) %>%
-    compute()
-  # get the reasons for exclusion due to <120d follow-up - we'll save that
-  reason_exclusion <-  excluded_less_120 %>%
-    group_by(reason_censoring) %>%
-    tally()%>%
-    collect()
-  
-  covid_infection <- covid_infection %>%
-    filter(!(follow_up_days<120))%>%
-    select(-follow_up_days, -reason_censoring) %>%
-    compute()
-  
-  exclusion_table<-rbind(exclusion_table,
-                         tibble(N_current=covid_infection %>%tally()%>%collect()%>%pull(), 
-                                exclusion_reason="Less than 120 days of follow-up",
-                                cohort_definition_id = covid_id
-                         ))
-  
-  ### First COVID-19 infection  
-  first_infection <- covid_infection   %>%
-    filter(seq==1) %>% 
-    select(-seq) %>%
-    # we change cohort definition id 
-    mutate(cohort_definition_id=as.integer(first_infection_id)) %>%
-    compute() 
-  
-  # check we have one row per person
-  # first_infection %>%tally()    
-  # first_infection %>% select(subject_id)%>% distinct() %>%tally() 
-  exclusion_table<-rbind(exclusion_table,
-                         tibble(N_current=first_infection %>%tally()%>%collect()%>%pull(), 
-                                exclusion_reason="Population included",
-                                cohort_definition_id = first_infection_id
-                         ))
-  
-  ### Reinfections
-  reinfection <- covid_infection  %>%
-    filter(seq!=1)%>% 
-    select(-seq) %>%
-    # we change cohort definition id so that is has its own id
-    mutate(cohort_definition_id=as.integer(reinfection_id)) %>%
-    compute()
-  
-  exclusion_table<-rbind(exclusion_table,
-                         tibble(N_current=reinfection %>%tally()%>%collect()%>%pull(), 
-                                exclusion_reason="Population included",
-                                cohort_definition_id = reinfection_id
-                         ))
-  # get rid of seq in covid infection
-  covid_infection <- covid_infection %>%
-    select(-seq) %>%
-    mutate(cohort_definition_id= as.integer(cohort_definition_id))%>%
-    compute()
-  
-  result <- list(covid_infection, first_infection, reinfection, exclusion_table, reason_exclusion) 
-  result
-} 
+longnegative <- cdm[[indexCohortName]] %>%
+  filter(cohort_definition_id == !!getId(cdm[[indexCohortName]], "tested_negative_index")) %>%
+  addCohortIntersectDate(cdm, indexCohortName, getId(cdm[[indexCohortName]], "any_covid"), window = c(1, Inf), nameStyle = "next_covid") %>%
+  addCohortIntersectDate(cdm, indexCohortName, getId(cdm[[indexCohortName]], "influenza"), window = c(1, Inf), nameStyle = "next_influenza") %>%
+  addIntersect(cdm, "observation_period", targetStartDate = "observation_period_end_date", targetEndDate = NULL, value = "date", window = c(1, Inf), nameStyle = "end_observation") %>%
+  addIntersect(cdm, "death", targetStartDate = "death", targetEndDate = NULL, value = "date", window = c(1, Inf), nameStyle = "death") %>%
+  mutate(
+    next_covid = next_covid - 1, next_influenza = next_influenza - 1,
+    one_year = cohort_start_date + 365, end_covid_testing = covid_end_date,
+    cohort_end_date = pmin(
+      end_observation, death, next_covid, next_influenza, one_year,
+      end_covid_testing
+    ), follow_up = cohort_end_date - cohort_start_date
+  ) %>%
+  filter(cohort_start_date < cohort_end_date) %>%
+  filter(follow_up >= 120) %>%
+  filter(cohort_start_date >= covid_start_date) %>%
+  window_order(cohort_start_date) %>%
+  mutate(seq = row_number()) %>%
+  select(seq, subject_id, cohort_start_date, cohort_end_date) %>%
+  computeQuery()
 
-## getting COVID-19 cohorts ----
-covid_infection <- cdm[[indexCohortName]] %>%
-  filter(cohort_definition_id == getId(cdm[[indexCohortName]], "new_infection")) %>%
-  addCohortIntersectDays(cdm)
+cohortRef <- longcovid %>%
+  mutate(cohort_definition_id = 1) %>%
+  select(-"seq") %>%
+  union_all(
+    longcovid %>%
+      mutate(cohort_definition_id = 2) %>%
+      filter(seq == 1) %>%
+      select(-"seq")
+  ) %>%
+  union_all(
+    longcovid %>%
+      mutate(cohort_definition_id = 3) %>%
+      filter(seq > 1) %>%
+      select(-"seq")
+  ) %>%
+  union_all(
+    longnegative %>%
+      mutate(cohort_definition_id = 4) %>%
+      select(-"seq")
+  ) %>%
+  union_all(
+    longnegative %>%
+      mutate(cohort_definition_id = 5) %>%
+      filter(seq == 1) %>%
+      select(-"seq")
+  ) %>%
+  union_all(
+    longnegative %>%
+      mutate(cohort_definition_id = 6) %>%
+      filter(seq > 1) %>%
+      select(-"seq")
+  )
 
-confirmed_infections <- generate_tested_cohorts(cohorts_interest = covid_cohorts,
-                                                covid_id = new_infection_id,
-                                                first_infection_id = first_infection_id,
-                                                reinfection_id = reinfection_id,
-                                                days_censor_covid = 42
+cohortSetRef <- tibble(
+  cohort_definition_id = 1:6,
+  cohort_name = c(
+    "positive", "positive first", "positive repeat", "negative", 
+    "negative first", "negative repeat"
+  )
 )
-covid_infection <- confirmed_infections[[1]]
-first_infection <- confirmed_infections[[2]]
-reinfections    <- confirmed_infections[[3]]
-## save these cohorts into the database
-computePermanent(covid_infection, name = "er_long_covid_final_cohorts", 
-                 schema = write_schema,   overwrite = TRUE)
-appendPermanent(first_infection, name = "er_long_covid_final_cohorts", schema = write_schema)
-appendPermanent(reinfections,    name = "er_long_covid_final_cohorts", schema = write_schema)
+dbWriteTable(db, inSchema(write_schema, longcovidCohortName), .x)
+cohortSetRef <- tbl(db, inSchema(write_schema, longcovidCohortName))
 
-## getting Tested negative cohorts ----
-### PCR and antigen negative _all events 
-# id of interest
-tested_negative_re <- 1250 # we don't care repeated tests negatives - we would not use that
-negative_infections <- generate_tested_cohorts(cohorts_interest = control_cohort,
-                                               covid_id = tested_negative_all_id,
-                                               first_infection_id = tested_negative_earliest_id,
-                                               reinfection_id = tested_negative_re,
-                                               days_censor_covid = 0)
+cdm[[longcovidCohortName]] <- newGeneratedCohortSet(
+  
+)
 
-
-tested_negative_all      <- negative_infections[[1]]
-tested_negative_earliest <- negative_infections[[2]]
-
-# add tested negative cohorts to db
-appendPermanent(tested_negative_all, name = "er_long_covid_final_cohorts",  schema = write_schema)
-appendPermanent(tested_negative_earliest, name = "er_long_covid_final_cohorts",  schema = write_schema)
-
-
-#get exclusion table and save ----
-exclusion_table <- rbind(confirmed_infections[[4]], negative_infections[[4]]) %>% 
-  filter(!(cohort_definition_id == tested_negative_re))
-
-exclusion_table <- exclusion_table %>%
-  mutate(cohort = ifelse(cohort_definition_id == new_infection_id, "COVID-19 infection",
-                         ifelse(cohort_definition_id == first_infection_id, "First infection",
-                                ifelse(cohort_definition_id == reinfection_id, "Reinfections",
-                                       ifelse(cohort_definition_id == tested_negative_all_id, "Tested negative",
-                                              ifelse(cohort_definition_id == tested_negative_earliest_id, "First test negative", NA
-                                              )))))) %>%
-  select(number_observations = N_current,
-         reason = exclusion_reason,
-         cohort) %>%
-  filter(reason!= "initial pop")
-
-attrition <- rbind(attrition, exclusion_table)
-# save also reason for censoring
-excluded_shorter_follow_up <- rbind(confirmed_infections[[5]] %>% mutate(cohort= "COVID-19"),
-                                    negative_infections[[5]]%>% mutate(cohort= "Negative"))
-
-write.csv(attrition,here(paste0("results/exclusion_table_", database_name,".csv")), row.names = FALSE)
-write.csv(excluded_shorter_follow_up, here(paste0("results/exclusions_followup_", database_name, ".csv")), row.names = FALSE)
-
-
-
-## getting Symptoms cohorts  ----
 ### parameters for loop
 symptoms_ids   <- cohorts_ids %>% filter(type=="symptom") %>% select(cohort_definition_id) %>% pull()
 window_longCov <- c(28,90)
@@ -1974,4 +1758,3 @@ if(generate_results  =="FALSE" & get_incidence_rate== "FALSE"){
   print("Thank you for running the study!")
   
 } 
-

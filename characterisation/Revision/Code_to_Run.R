@@ -21,6 +21,7 @@ library(fmsb)
 library(DescTools)
 library(IncidencePrevalence)
 library(PatientProfiles)
+library(readr)
 
 #remotes::install_github("darwin-eu-dev/DrugUtilisation")
 library(DrugUtilisation)
