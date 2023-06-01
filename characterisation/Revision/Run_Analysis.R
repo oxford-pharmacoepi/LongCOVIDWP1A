@@ -142,8 +142,11 @@ longcovid <- cdm[[indexCohortName]] %>%
   mutate(follow_up = !!datediff("cohort_start_date", "cohort_end_date")) %>%
   filter(follow_up >= 120) %>%
   filter(cohort_start_date >= covid_start_date) %>%
+  group_by(subject_id) %>%
   window_order(cohort_start_date) %>%
   mutate(seq = row_number()) %>%
+  ungroup() %>%
+  window_order() %>%
   select(seq, subject_id, cohort_start_date, cohort_end_date) %>%
   computeQuery()
 
