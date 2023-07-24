@@ -11,20 +11,9 @@ library(CDMConnector)
 library(stringr)
 library(lubridate)
 library(MatchIt)
-library(tsibble)
-library(survey)
-library(gtsummary)
-library(tableone)
-library(forcats)
-library(epitools)
-library(fmsb)
-library(DescTools)
-library(IncidencePrevalence)
 library(PatientProfiles)
-library(readr)
-
-#remotes::install_github("darwin-eu-dev/DrugUtilisation")
 library(DrugUtilisation)
+library(CodelistGenerator)
 
 # Connection details - to change locally  ----
 database_name <- "CPRD AURUM"

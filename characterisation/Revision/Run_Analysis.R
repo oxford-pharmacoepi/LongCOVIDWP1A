@@ -52,74 +52,103 @@ getId <- function(x, name) {
 }
 
 influenza_id <- getId(cdm[[indexCohortName]], "influenza")
-covidAttrition_id <- getId(cdm[[indexCohortName]], "any_covid")
+covid_id <- getId(cdm[[indexCohortName]], "any_covid")
 positiveTest_id <- getId(cdm[[indexCohortName]], "positive_test")
 negativeTest_id <- getId(cdm[[indexCohortName]], "negative_test")
 
-target <- cdm[[indexCohortName]] %>%
+targetP <- cdm[[indexCohortName]] %>%
   filter(cohort_definition_id == positiveTest_id) %>%
   addDemographics(cdm, futureObservation = FALSE) %>%
   addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = positiveTest_id, order = "last", window = c(-Inf, -1), nameStyle = "previous_covid") %>%
-  addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = influenza_id, order = "last", window = c(-Inf, 0), nameStyle = "previous_flu") 
-attritionP <- computeCohortAttrition(target, cdm)
+  addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = influenza_id, order = "last", window = c(-Inf, 0), nameStyle = "previous_flu")
 
-target <- target %>%
+targetP <- targetP %>%
+  mutate(cohort_definition_id = 1) %>%
+  union_all(targetP %>% mutate(cohort_definition_id = 2)) %>%
+  union_all(targetP %>% mutate(cohort_definition_id = 3)) %>%
+  compute2() %>%
+  appendCohortAttributes(
+    cohortSet = tibble(
+      cohort_definition_id = c(1, 2, 3), 
+      cohort_name = c(
+        "test_positive", "test_positive_first", "test_positive_reinfection"
+      )
+    )
+  )
+
+targetP <- targetP %>%
   filter(age >= 18) %>%
-  compute()
-attritionP <- computeCohortAttrition(target, cdm, attritionP, "Aged 18 years or older")
+  compute2() %>%
+  appendCohortAttributes("Aged 18 years or older")
 
-target <- target %>%
+targetP <- targetP %>%
   filter(prior_history >= 180) %>%
-  compute()
-attritionP <- computeCohortAttrition(target, cdm, attritionP, "180 days of prior history")
+  compute2() %>%
+  appendCohortAttributes("180 days of prior history")
 
-target <- target %>%
+targetP <- targetP %>%
   filter(is.na(previous_covid) | previous_covid < -42) %>%
-  compute()
-attritionP <- computeCohortAttrition(target, cdm, attritionP, "No prior covid in the previous 42 days")
+  compute2() %>%
+  appendCohortAttributes("No prior covid in the previous 42 days")
 
-target <- target %>%
+targetP <- targetP %>%
   filter(is.na(previous_flu) | previous_flu < -42) %>%
-  compute()
-attritionP <- computeCohortAttrition(target, cdm, attritionP, "No prior influenza infection in the previous 42 days")
+  compute2() %>%
+  appendCohortAttributes("No prior influenza infection in the previous 42 days")
 
-target <- cdm[[indexCohortName]] %>%
+targetN <- cdm[[indexCohortName]] %>%
   filter(cohort_definition_id == negativeTest_id) %>%
   addDemographics(cdm, futureObservation = FALSE) %>%
   addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = negativeTest_id, order = "last", window = c(-Inf, -1), nameStyle = "previous_negative") %>%
   addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = covidAttrition_id, order = "last", window = c(-Inf, 0), nameStyle = "previous_covid") %>%
   addCohortIntersectDays(cdm, targetCohortTable = indexCohortName, targetCohortId = influenza_id, order = "last", window = c(-Inf, 0), nameStyle = "previous_flu") 
-attritionN <- computeCohortAttrition(target, cdm)
 
-target <- target %>%
+targetN <- targetN %>%
+  mutate(cohort_definition_id = 1) %>%
+  union_all(targetN %>% mutate(cohort_definition_id = 2)) %>%
+  compute2() %>%
+  appendCohortAttributes(
+    cohortSet = tibble(
+      cohort_definition_id = c(1, 2), 
+      cohort_name = c("test_negative", "test_negativee_first")
+    )
+  )
+
+targetN <- targetN %>%
   filter(age >= 18) %>%
-  compute()
-attritionN <- computeCohortAttrition(target, cdm, attritionN, "Aged 18 years or older")
+  compute2() %>%
+  appendCohortAttributes("Aged 18 years or older")
 
-target <- target %>%
+targetN <- targetN %>%
   filter(prior_history >= 180) %>%
-  compute()
-attritionN <- computeCohortAttrition(target, cdm, attritionN, "180 days of prior history")
+  compute2() %>%
+  appendCohortAttributes("180 days of prior history")
 
-target <- target %>%
+targetN <- targetN %>%
   filter(is.na(previous_covid)) %>%
-  compute()
-attritionN <- computeCohortAttrition(target, cdm, attritionN, "No prior covid ")
+  compute2() %>%
+  appendCohortAttributes("No prior covid ")
 
-target <- target %>%
+targetN <- targetN %>%
   filter(is.na(previous_flu) | previous_flu < -42) %>%
-  compute()
-attritionN <- computeCohortAttrition(target, cdm, attritionN, "No prior influenza infection in the previous 42 days")
+  compute2() %>%
+  appendCohortAttributes("No prior influenza infection in the previous 42 days")
 
-target <- target %>%
+targetN <- targetN %>%
   filter(is.na(previous_negative) | previous_negative < -42) %>%
-  compute()
-attritionN <- computeCohortAttrition(target, cdm, attritionN, "No prior test negative in the previous 42 days")
+  compute2() %>% 
+  appendCohortAttributes("No prior test negative in the previous 42 days")
 
 # export attrition ----
 
-write_csv(collect(attritionN), here("results", "tested_negative_index.csv"))
-write_csv(collect(attritionP), here("results", "testes_positive_index.csv"))
+targetN %>%
+  cohortAttrition() %>% 
+  collect() %>%
+  write_csv(here("results", "tested_negative_index.csv"))
+targetP %>%
+  cohortAttrition() %>% 
+  collect() %>%
+  write_csv(here("results", "tested_positive_index.csv"))
 
 ## get initial cohorts ----
 
