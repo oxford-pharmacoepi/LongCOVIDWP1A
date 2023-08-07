@@ -5,13 +5,19 @@
  {
  "ConditionOccurrence": {
  "CodesetId":                        9,
-"ConditionTypeExclude": false 
+          "OccurrenceStartDate": {
+            "Value": "2020-01-01",
+            "Op": "gt"
+          }
 } 
 },
 {
  "Observation": {
  "CodesetId":                        9,
-"ObservationTypeExclude": false 
+          "OccurrenceStartDate": {
+            "Value": "2020-01-01",
+            "Op": "gt"
+          }
 } 
 } 
 ],

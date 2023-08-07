@@ -1,7 +1,4 @@
-# Long Covid Characterisation study
-# First check that the project "characterisation" is open
-
-# # packages
+# packages
 library(here)
 library(DBI)
 library(tidyr)
@@ -23,7 +20,7 @@ password  <- Sys.getenv("DB_PASSWORD")
 port      <- Sys.getenv("DB_PORT") 
 host      <- Sys.getenv("DB_HOST") 
 
-cdm_database_schema        <- "public_100k"
+cdm_database_schema        <- "public"
 write_schema               <- "results"
 
 db <- dbConnect(RPostgres::Postgres(), 
@@ -49,5 +46,5 @@ covid_end_date      <- as.Date("2022-03-28", "%Y-%m-%d")
 cohortStem <- "lcwp1_"
 
 # Run analysis
-source(here("Code/Run_Analysis.R"))
+source(here("Run_Analysis.R"))
 

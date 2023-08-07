@@ -5,7 +5,10 @@
  {
  "ConditionOccurrence": {
  "CodesetId":                        8,
-"ConditionTypeExclude": false 
+          "OccurrenceStartDate": {
+            "Value": "2020-01-01",
+            "Op": "gt"
+          }
 } 
 } 
 ],
