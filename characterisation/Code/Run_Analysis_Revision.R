@@ -26,39 +26,20 @@ if (!file.exists(cohorts.folder)){
 }
 rm(cohorts.folder)
 
-#  IDs of the cohorts of interest ----
-# Cohort ids are in a csv with all cohorts ids
-cohorts_ids  <- read.csv2(here("ATLAS Cohort Definitions_LongCovid.csv")) %>%
-  mutate(name= paste(sub(".*LongCov-ER_", "", name)))
-
-get_id_interest <- function(name_id) {
-  cohorts_ids %>%
-    filter(name == name_id) %>% 
-    select(cohort_definition_id) %>%
-    pull()
-}
-
-new_infection_id            <- get_id_interest("New_Infection") 
-first_infection_id          <- get_id_interest("First_infection")
-reinfection_id              <- get_id_interest("Reinfection") 
-tested_negative_all_id      <- get_id_interest("Tested_Negative_all_events") 
-tested_negative_earliest_id <- get_id_interest("Tested negative, earliest") 
-long_covid_id               <- get_id_interest("Long COVID-19 symptoms (with test start date)")
-long_covid_symptom_id       <- get_id_interest("Long COVID-19 symptoms (with symptom start date)") 
-
 # Initial Json cohorts ----
-# Tables in the write_schema to save Inital Json cohorts
-initialCohorts <- "initial"
-cohorts <- readCohortSet(here("Cohort_Dx_initial","1_InstantiateCohorts", "Cohorts"))  
+cohorts <- readCohortSet(here("Code", "Cohorts", "Index"))  
 cdm <- generateCohortSet(
-  cdm = cdm, cohortSet = cohorts, name = initialCohorts, overwrite = TRUE
+  cdm = cdm, cohortSet = cohorts, name = "index", overwrite = TRUE
 )
 
-# for exclusion table
-exclusionCohorts <- "exclusion"
-cohorts <- readCohortSet(here("Cohort_Dx_initial","1_InstantiateCohorts", "Attrition_cohort"))
+cohorts <- readCohortSet(here("Code", "Cohorts", "Vaccinated"))  
 cdm <- generateCohortSet(
-  cdm = cdm, cohortSet = cohorts, name = exclusionCohorts, overwrite = TRUE
+  cdm = cdm, cohortSet = cohorts, name = "vaccinated", overwrite = TRUE
+)
+
+cohorts <- readCohortSet(here("Code", "Cohorts", "Symptoms"))
+cdm <- generateCohortSet(
+  cdm = cdm, cohortSet = cohorts, name = "symptoms", overwrite = TRUE
 )
 
 # Ids for initial filtering

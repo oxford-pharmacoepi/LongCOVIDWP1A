@@ -4112,15 +4112,15 @@
     },
     {
       "id": 8,
-      "name": "po cprd",
+      "name": "test neg",
       "expression": {
         "items": [
           {
             "concept": {
               "CONCEPT_CLASS_ID": "Clinical Finding",
-              "CONCEPT_CODE": "1240581000000104",
-              "CONCEPT_ID": 37310282,
-              "CONCEPT_NAME": "Severe acute respiratory syndrome coronavirus 2 detected",
+              "CONCEPT_CODE": "1240591000000102",
+              "CONCEPT_ID": 37310281,
+              "CONCEPT_NAME": "Severe acute respiratory syndrome coronavirus 2 not detected",
               "DOMAIN_ID": "Measurement",
               "INVALID_REASON": "V",
               "INVALID_REASON_CAPTION": "Valid",
@@ -4140,75 +4140,60 @@
           "CodesetId": 4,
           "ValueAsConcept": [
             {
-              "CONCEPT_CODE": "10828004",
-              "CONCEPT_ID": 9191,
-              "CONCEPT_NAME": "Positive",
-              "DOMAIN_ID": "Meas Value",
-              "INVALID_REASON_CAPTION": "Unknown",
-              "STANDARD_CONCEPT_CAPTION": "Unknown",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            {
-              "CONCEPT_CODE": "260373001",
-              "CONCEPT_ID": 4126681,
-              "CONCEPT_NAME": "Detected",
-              "DOMAIN_ID": "Meas Value",
-              "INVALID_REASON_CAPTION": "Unknown",
-              "STANDARD_CONCEPT_CAPTION": "Unknown",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            {
-              "CONCEPT_CODE": "52101004",
-              "CONCEPT_ID": 4181412,
-              "CONCEPT_NAME": "Present",
-              "DOMAIN_ID": "Meas Value",
-              "INVALID_REASON_CAPTION": "Unknown",
-              "STANDARD_CONCEPT_CAPTION": "Unknown",
-              "VOCABULARY_ID": "SNOMED"
-            },
-            {
-              "CONCEPT_CODE": "LA9633-4",
-              "CONCEPT_ID": 45879438,
-              "CONCEPT_NAME": "Present",
+              "CONCEPT_CODE": "LA11883-8",
+              "CONCEPT_ID": 45880296,
+              "CONCEPT_NAME": "Not detected",
               "DOMAIN_ID": "Meas Value",
               "INVALID_REASON_CAPTION": "Unknown",
               "STANDARD_CONCEPT_CAPTION": "Unknown",
               "VOCABULARY_ID": "LOINC"
             },
             {
-              "CONCEPT_CODE": "LA6576-8",
-              "CONCEPT_ID": 45884084,
-              "CONCEPT_NAME": "Positive",
+              "CONCEPT_CODE": "LA6577-6",
+              "CONCEPT_ID": 45878583,
+              "CONCEPT_NAME": "Negative",
               "DOMAIN_ID": "Meas Value",
               "INVALID_REASON_CAPTION": "Unknown",
               "STANDARD_CONCEPT_CAPTION": "Unknown",
               "VOCABULARY_ID": "LOINC"
             },
             {
-              "CONCEPT_CODE": "LA11882-0",
-              "CONCEPT_ID": 45877985,
-              "CONCEPT_NAME": "Detected",
+              "CONCEPT_CODE": "LA9634-2",
+              "CONCEPT_ID": 45884086,
+              "CONCEPT_NAME": "Absent",
               "DOMAIN_ID": "Meas Value",
               "INVALID_REASON_CAPTION": "Unknown",
               "STANDARD_CONCEPT_CAPTION": "Unknown",
               "VOCABULARY_ID": "LOINC"
+            },
+            {
+              "CONCEPT_CODE": "260385009",
+              "CONCEPT_ID": 9189,
+              "CONCEPT_NAME": "Negative",
+              "DOMAIN_ID": "Meas Value",
+              "INVALID_REASON_CAPTION": "Unknown",
+              "STANDARD_CONCEPT_CAPTION": "Unknown",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            {
+              "CONCEPT_CODE": "2667000",
+              "CONCEPT_ID": 4132135,
+              "CONCEPT_NAME": "Absent",
+              "DOMAIN_ID": "Meas Value",
+              "INVALID_REASON_CAPTION": "Unknown",
+              "STANDARD_CONCEPT_CAPTION": "Unknown",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            {
+              "CONCEPT_CODE": "260415000",
+              "CONCEPT_ID": 9190,
+              "CONCEPT_NAME": "Not detected",
+              "DOMAIN_ID": "Meas Value",
+              "INVALID_REASON_CAPTION": "Unknown",
+              "STANDARD_CONCEPT_CAPTION": "Unknown",
+              "VOCABULARY_ID": "SNOMED"
             }
           ]
-        }
-      },
-      {
-        "ConditionOccurrence": {
-          "CodesetId": 2
-        }
-      },
-      {
-        "Observation": {
-          "CodesetId": 2
-        }
-      },
-      {
-        "Observation": {
-          "CodesetId": 4
         }
       },
       {
