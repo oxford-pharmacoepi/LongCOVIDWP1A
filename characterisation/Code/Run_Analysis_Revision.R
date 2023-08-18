@@ -628,8 +628,8 @@ cdm$long <- cdm$long_neg %>% union_all(cdm$long_pos) %>% computeQuery()
 # prepare covariates
 covariates <- tibble(
   covariate_name = c(
-    "autoimmune disease", "asthma", "malignant neoplastic disease", 
-    "diabetes", "heart disease", "gypertensive disease", "renal impairment",
+    "autoimmune_disease", "asthma", "malignant_neoplastic_disease", 
+    "diabetes", "heart_disease", "gypertensive_disease", "renal_impairment",
     "copd", "dementia"
   ),
   ancestor_concept_id = c(
@@ -708,7 +708,8 @@ baseline_characteristics <- cdm$final %>%
   computeQuery()
 
 # get symptoms
-symptom_names <- cohortSet(cdm$symptoms) %>% pull(cohort_name)
+symptom_names <- cohortSet(cdm$symptoms) %>% 
+  pull(cohort_name)
 symp_cohort <- cdm$long %>%
   mutate(cohort_definition_id = round(cohort_definition_id)) %>%
   mutate(
@@ -759,8 +760,8 @@ baseline_characteristics_symptoms <- baseline_characteristics_symptoms %>%
 
 baseline_characteristics_symptoms <- baseline_characteristics_symptoms %>%
   rename(
-    "hypertension" = "gypertensive disease",
-    "cancer" = "malignant neoplastic disease",
+    "hypertension" = "gypertensive_disease",
+    "cancer" = "malignant_neoplastic_disease",
     "all_symp" = "all_sympt"
   ) %>%
   mutate(
@@ -933,14 +934,14 @@ other_factor_vars <- c( "age_gr2",
                         "pcr",
                         #comorbidities
                         "asthma",
-                        "autoimmune disease",
+                        "autoimmune_disease",
                         "copd",
                         "dementia",
                         "diabetes",
-                        "heart disease",
+                        "heart_disease",
                         "cancer",
                         "hypertension",
-                        "renal impairment",
+                        "renal_impairment",
                         # long covid + symptoms
                         "long_covid")
 
@@ -955,7 +956,8 @@ load(here("data/table1_data_matched_90.Rdata"))
 
 # function to create descriptive tables for matched data
 get_characteristics_matched <- function(df){
-  summary_characteristics <-print(CreateTableOne(
+  
+  summary_characteristics <-print(svyCreateTableOne(
     vars =  vars,
     factorVars = factor.vars,
     includeNA=F,
@@ -1123,7 +1125,7 @@ get_descriptive_tables <- function(window_id){
                              mutate(prop = long_covid/n*100) %>%
                              mutate(ir = long_covid/follow_up*100000*365) %>%
                              mutate(cohort = "COVID-19 infection") %>%
-                             mutate(gender= "Both") %>%
+                             mutate(sex= "Both") %>%
                              mutate(age_gr2 = "Overall"), 
                            # by age group & sex
                            table1_data_new_infections %>%
@@ -1131,7 +1133,7 @@ get_descriptive_tables <- function(window_id){
                                                        days_symptom_record, 
                                                        total_days_followup)) %>%
                              mutate(month_year = format(as.Date(cohort_start_date),"%Y-%m" )) %>%
-                             group_by(month_year, age_gr2, gender) %>%
+                             group_by(month_year, age_gr2, sex) %>%
                              summarise(n = n(),
                                        long_covid = sum(long_covid),
                                        follow_up = sum(follow_up)) %>%
@@ -1151,7 +1153,7 @@ get_descriptive_tables <- function(window_id){
                              mutate(prop = long_covid/n*100) %>%
                              mutate(ir = long_covid/follow_up*100000*365) %>%
                              mutate(cohort = "First negative test") %>%
-                             mutate(gender = "Both") %>%
+                             mutate(sex = "Both") %>%
                              mutate(age_gr2 = "Overall"), 
                            # by age group % sex
                            table1_data_tested_negative_earliest %>%
@@ -1159,7 +1161,7 @@ get_descriptive_tables <- function(window_id){
                                                        days_symptom_record, 
                                                        total_days_followup)) %>%
                              mutate(month_year = format(as.Date(cohort_start_date),"%Y-%m" )) %>%
-                             group_by(month_year, age_gr2, gender) %>%
+                             group_by(month_year, age_gr2, sex) %>%
                              summarise(n = n(),
                                        long_covid = sum(long_covid),
                                        follow_up = sum(follow_up)) %>%
@@ -1176,7 +1178,7 @@ get_descriptive_tables <- function(window_id){
            incidence_start_date,
            person_days = follow_up,
            ir_100000_pys = ir,
-           sex = gender,
+           sex = sex,
            age_group = age_gr2,
            database)
   
@@ -1196,70 +1198,77 @@ get_descriptive_tables(window_id = 90)
 get_descriptive_tables(window_id = 28) 
 
 # function to get RR and AR ----
-get_rr <- function(data){
-  results_rr<- list()
-  # for each symptom
-  for (i in 1:length(symptoms)){
-    symptom_id <-symptoms[i]
-    message(paste0("working on ", symptom_id))
-    # get number of events & number of people per cohort
-    counts_1 <- data %>%
-      mutate(symptom =paste0(symptom_id)) %>%
-      rename(name_1 = name) %>%
-      filter(cohort==1) %>%
-      mutate(total_pop_1 = length(person_id)) %>% # get total pop
-      filter((!!sym(symptom_id))==1) %>%
-      mutate(events_1= length(person_id))%>% # get number of people with the symtpom
-      select(symptom, name_1, events_1, total_pop_1) %>% 
-      distinct()  %>%
-      mutate(prop_1 = (events_1/total_pop_1)*100)  # get proportion of people with the symtpmm
-    
-    counts_2<- data %>%
-      mutate(symptom =paste0(symptom_id)) %>%
-      rename(name_2 = name) %>%
-      filter(cohort==0) %>%
-      mutate(total_pop_2 = length(person_id)) %>% 
-      filter((!!sym(symptom_id))==1) %>%
-      mutate(events_2= length(person_id))%>% 
-      select(symptom, name_2, events_2, total_pop_2) %>% 
-      distinct()  %>%
-      mutate(prop_2 = (events_2/total_pop_2)*100) 
-    
-    data_rr <- counts_1 %>%
-      left_join(counts_2) %>%
-      mutate(database = database_name) %>%
-      mutate(symptom = str_to_sentence(str_replace_all(symptom, "_", " "))) 
-    
-    # getting relative risl with 95%Ci
-    getting_rr <- fmsb::riskratio(data_rr$events_1,
-                                  data_rr$events_2,
-                                  data_rr$total_pop_1,
-                                  data_rr$total_pop_2,
-                                  conf.level = 0.95)
-    
-    data_rr$relative_risk <- getting_rr$estimate
-    data_rr$low_ci <- getting_rr$conf.int[1]
-    data_rr$up_ci <- getting_rr$conf.int[2]
-    
-    # # getting absolute risk difference with 95%C
-    # getting_ar <- BinomDiffCI(
-    #   data_rr$events_1,   # events exposed
-    #   data_rr$total_pop_1,# pop exposed
-    #   data_rr$events_2,
-    #   data_rr$total_pop_2,
-    #   conf.level = 0.95, 
-    #   sides = "two.sided",
-    #   method = "wald")
-    # data_rr$absolute_risk <- getting_ar[1]*100
-    # data_rr$ar_low_ci <- getting_ar[2]*100
-    # data_rr$ar_up_ci <- getting_ar[3]*100
-    
-    # keep only RR for events >=5
-    data_rr <- data_rr %>% filter(events_1 >=5 & events_2 >=5)
-    data_rr 
-    results_rr[[i]] <- data_rr      
+get_rr <- function(x){
+  results_rr <- NULL
+  for (k in c("overall", "wild", "alpha", "delta", "omicron")) {
+    if (k == "overall") {
+      data <- x
+    } else {
+      data <- x %>%
+        filter(wave == k)
+    }
+    # for each symptom
+    for (symptom_id in symptom_names){
+      message(paste0("working on ", symptom_id))
+      # get number of events & number of people per cohort
+      counts_1 <- data %>%
+        mutate(symptom =paste0(symptom_id)) %>%
+        rename(name_1 = name) %>%
+        filter(cohort==1) %>%
+        mutate(total_pop_1 = length(subject_id)) %>% # get total pop
+        filter((!!sym(symptom_id))==1) %>%
+        mutate(events_1= length(subject_id))%>% # get number of people with the symtpom
+        select(symptom, name_1, events_1, total_pop_1) %>% 
+        distinct()  %>%
+        mutate(prop_1 = (events_1/total_pop_1)*100)  # get proportion of people with the symtpmm
+      
+      counts_2<- data %>%
+        mutate(symptom =paste0(symptom_id)) %>%
+        rename(name_2 = name) %>%
+        filter(cohort==0) %>%
+        mutate(total_pop_2 = length(subject_id)) %>% 
+        filter((!!sym(symptom_id))==1) %>%
+        mutate(events_2= length(subject_id))%>% 
+        select(symptom, name_2, events_2, total_pop_2) %>% 
+        distinct()  %>%
+        mutate(prop_2 = (events_2/total_pop_2)*100) 
+      
+      data_rr <- counts_1 %>%
+        left_join(counts_2) %>%
+        mutate(database = database_name) %>%
+        mutate(symptom = str_to_sentence(str_replace_all(symptom, "_", " "))) %>%
+        mutate(wave = k)
+      
+      # getting relative risl with 95%Ci
+      getting_rr <- fmsb::riskratio(data_rr$events_1,
+                                    data_rr$events_2,
+                                    data_rr$total_pop_1,
+                                    data_rr$total_pop_2,
+                                    conf.level = 0.95)
+      
+      data_rr$relative_risk <- getting_rr$estimate
+      data_rr$low_ci <- getting_rr$conf.int[1]
+      data_rr$up_ci <- getting_rr$conf.int[2]
+      
+      # # getting absolute risk difference with 95%C
+      # getting_ar <- BinomDiffCI(
+      #   data_rr$events_1,   # events exposed
+      #   data_rr$total_pop_1,# pop exposed
+      #   data_rr$events_2,
+      #   data_rr$total_pop_2,
+      #   conf.level = 0.95, 
+      #   sides = "two.sided",
+      #   method = "wald")
+      # data_rr$absolute_risk <- getting_ar[1]*100
+      # data_rr$ar_low_ci <- getting_ar[2]*100
+      # data_rr$ar_up_ci <- getting_ar[3]*100
+      
+      # keep only RR for events >=5
+      data_rr <- data_rr %>% filter(events_1 >=5 & events_2 >=5)
+      results_rr <- bind_rows(results_rr, data_rr)      
+    }
   }
-  results_rr
+  return(results_rr)
 }
 save_rr <- function(window_id){
   m.covid_tested_neg_earliest    <-  get(paste0("m.new_covid_tested_negative_earliest_", window_id))[[2]] 
@@ -1267,10 +1276,10 @@ save_rr <- function(window_id){
   m.covid_tested_neg_all         <-  get(paste0("m.new_covid_tested_negative_all_", window_id))[[2]]
   m.first_infection_reinfections <-  get(paste0("m.first_infection_reinfections_", window_id))[[2]]
   
-  rr_new_covid_tested_negative_earliest <- bind_rows(get_rr(data = m.covid_tested_neg_earliest))
-  rr_first_infection_tested_negative_earliest <- bind_rows(get_rr(data = m.first_infection_tested_neg_earliest)) 
-  rr_new_covid_tested_negative_all      <- bind_rows(get_rr(data = m.covid_tested_neg_all))
-  rr_first_infection_reinfections       <- bind_rows(get_rr(data = m.first_infection_reinfections)) 
+  rr_new_covid_tested_negative_earliest <- bind_rows(get_rr(x = m.covid_tested_neg_earliest))
+  rr_first_infection_tested_negative_earliest <- bind_rows(get_rr(x = m.first_infection_tested_neg_earliest)) 
+  rr_new_covid_tested_negative_all      <- bind_rows(get_rr(x = m.covid_tested_neg_all))
+  rr_first_infection_reinfections       <- bind_rows(get_rr(x = m.first_infection_reinfections)) 
   
   write.csv(rr_new_covid_tested_negative_earliest,
             here(paste0("results/RR_new_covid_tested_negative_earliest_", window_id, "days_",
@@ -1301,25 +1310,26 @@ save_rr(window_id = 28)
 # Generate incidence rates  ----
 
 # parameters 
-study_start_date <- covid_start_date # needed to get the gen pop denominator 
+study_start_date <- as.Date(c(covid_start_date, NA)) # needed to get the gen pop denominator 
 study_days_prior_history <- 180  # needed for the gen pop denominator
 # age and sex stratas, first overal
 study_age_stratas <- list(c(18,150))
 study_sex_stratas <- "Both"
 # get denominators
-cdm$denominator <- generateDenominatorCohortSet(cdm = cdm,
-                                                startDate = study_start_date,
-                                                daysPriorHistory = study_days_prior_history,
-                                                ageGroup = study_age_stratas,
-                                                sex = study_sex_stratas)
-excluded <- attrition(cdm$denominator)
+cdm <- generateDenominatorCohortSet(cdm = cdm,
+                                    cohortDateRange = study_start_date,
+                                    daysPriorHistory = study_days_prior_history,
+                                    ageGroup = study_age_stratas,
+                                    sex = study_sex_stratas)
+excluded <- cohortAttrition(cdm$denominator)
 
-get_ir <- function(main_cohort_id){
+get_ir <- function(cdm, cohortTableName, cohortId){
   
-  cdm[["outcome"]] <- cdm[["er_long_covid_final_cohorts"]] %>% 
-    filter(cohort_definition_id == main_cohort_id) %>%
+  outcome <- cdm[[cohortTableName]] %>% 
+    filter(cohort_definition_id == cohortId) %>%
     mutate(cohort_end_date = as_date(cohort_start_date + lubridate::days(42))) %>% 
     computeQuery()
+  cdm[["outcome"]] <- newGeneratedCohortSet(outcome)
   
   ## get incidence rates
   inc <- estimateIncidence(
