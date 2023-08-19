@@ -32,24 +32,24 @@ cohorts <- readCohortSet(here("Code", "Cohorts", "Index"))
 cdm <- generateCohortSet(
   cdm = cdm, cohortSet = cohorts, name = "index", overwrite = TRUE
 )
-# 
-# cohorts <- readCohortSet(here("Code", "Cohorts", "Vaccinated"))  
-# cdm <- generateCohortSet(
-#   cdm = cdm, cohortSet = cohorts, name = "vaccinated", overwrite = TRUE
-# )
-# 
-# cohorts <- readCohortSet(here("Code", "Cohorts", "Symptoms"))
-# cdm <- generateCohortSet(
-#   cdm = cdm, cohortSet = cohorts, name = "symptoms", overwrite = TRUE
-# )
 
-cdm <- cdmFromCon(
-  con = db, 
-  cdmSchema = cdm_database_schema, 
-  writeSchema = c("schema" = write_schema, "prefix" = write_stem),
-  cohortTables = c("index", "vaccinated", "symptoms"),
-  cdmName = database_name
+cohorts <- readCohortSet(here("Code", "Cohorts", "Vaccinated"))
+cdm <- generateCohortSet(
+  cdm = cdm, cohortSet = cohorts, name = "vaccinated", overwrite = TRUE
 )
+
+cohorts <- readCohortSet(here("Code", "Cohorts", "Symptoms"))
+cdm <- generateCohortSet(
+  cdm = cdm, cohortSet = cohorts, name = "symptoms", overwrite = TRUE
+)
+
+# cdm <- cdmFromCon(
+#   con = db, 
+#   cdmSchema = cdm_database_schema, 
+#   writeSchema = c("schema" = write_schema, "prefix" = write_stem),
+#   cohortTables = c("index", "vaccinated", "symptoms"),
+#   cdmName = database_name
+# )
 
 # attrition ----
 
@@ -377,12 +377,25 @@ negative_infections <- generate_tested_cohorts(
 tested_negative_all <- negative_infections[[1]]
 tested_negative_earliest <- negative_infections[[2]]
 
-cdm$final <- covid_infection %>%
+cohort_ref <- covid_infection %>%
   union_all(first_infection) %>%
   union_all(reinfections) %>%
   union_all(tested_negative_all) %>%
   union_all(tested_negative_earliest) %>%
-  computeQuery()
+  computeQuery(name = "final", temporary = FALSE, schema = attr(cdm, "write_schema"), overwrite = TRUE)
+cohort_set_ref <- cohort_ref %>%
+  select(cohort_definition_id) %>%
+  distinct() %>%
+  mutate(cohort_name = case_when(
+    cohort_definition_id == 1 ~ "covid_infection",
+    cohort_definition_id == 2 ~ "first_infection",
+    cohort_definition_id == 3 ~ "reinfections",
+    cohort_definition_id == 4 ~ "tested_negative_all",
+    cohort_definition_id == 5 ~ "tested_negative_earliest"
+  )) %>%
+  computeQuery(name = "final_set", temporary = FALSE, schema = attr(cdm, "write_schema"), overwrite = TRUE)
+
+cdm$final <- newGeneratedCohortSet(cohortRef = cohort_ref, cohortSetRef = cohort_set_ref, overwrite = TRUE)
 
 #get exclusion table and save ---
 exclusion_table <- rbind(confirmed_infections[[4]], negative_infections[[4]]) %>% 
@@ -1323,13 +1336,26 @@ cdm <- generateDenominatorCohortSet(cdm = cdm,
                                     sex = study_sex_stratas)
 excluded <- cohortAttrition(cdm$denominator)
 
-get_ir <- function(cdm, cohortTableName, cohortId){
+get_ir <- function(cdm, cohortTableName, cohortId, name){
   
-  outcome <- cdm[[cohortTableName]] %>% 
+  cohort_ref <- cdm[[cohortTableName]] %>% 
     filter(cohort_definition_id == cohortId) %>%
     mutate(cohort_end_date = as_date(cohort_start_date + lubridate::days(42))) %>% 
-    computeQuery()
-  cdm[["outcome"]] <- newGeneratedCohortSet(outcome)
+    computeQuery(
+      name = "cohort_incidence", temporary = FALSE, 
+      schema = attr(cdm, "write_schema"), overwrite = TRUE
+    )
+  cohort_set_ref <- cohort_ref %>% 
+    select(cohort_definition_id) %>% 
+    distinct() %>% 
+    mutate(cohort_name = name) %>%
+    computeQuery(
+      name = "cohort_incidence_set", temporary = FALSE, 
+      schema = attr(cdm, "write_schema"), overwrite = TRUE
+    )
+  cdm[["outcome"]] <- newGeneratedCohortSet(
+    cohortRef = cohort_ref, cohortSetRef = cohort_set_ref, overwrite = TRUE
+  )
   
   ## get incidence rates
   inc <- estimateIncidence(
@@ -1340,31 +1366,23 @@ get_ir <- function(cdm, cohortTableName, cohortId){
     interval = c("months"),
     repeatedEvents = TRUE,
     minCellCount = 5,
-    outcomeWashout = 0,
-    verbose = TRUE
-  ) 
-  inc <- inc %>%
-    left_join(settings(inc) %>%
-                select(analysis_id, denominator_age_group, denominator_sex) %>%
-                rename(age_group = denominator_age_group,
-                       sex = denominator_sex))
-  inc
+    outcomeWashout = 0
+  ) %>%
+    rename(
+      age_group = denominator_age_group, sex = denominator_sex, 
+      cohort = outcome_cohort_name
+    )
+  return(inc)
 }
 
 ## get IR
-covid_genpop <- get_ir(main_cohort_id = new_infection_id) %>% 
-  mutate(cohort = "COVID-19 infections")
-longCov_genpop_90 <- get_ir(main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+90)) %>%
-  mutate(cohort = "Long COVID-19 (90 days)")
-longCov_genpop_28 <- get_ir(main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+28))%>%
-  mutate(cohort = "Long COVID-19 (28 days)")
+covid_genpop <- get_ir(cdm, "final", 1, "COVID-19 infections") 
+longCov_genpop_90 <- get_ir(cdm, "long", 10090, "Long COVID-19 (90 days)")
+longCov_genpop_28 <- get_ir(cdm, "long", 10028, "Long COVID-19 (28 days)")
 
-neg_test_genpop <- get_ir(main_cohort_id = tested_negative_all_id) %>% 
-  mutate(cohort = "Tested negative")
-longCov_genpop_negative_90 <- get_ir(main_cohort_id = paste0(tested_negative_all_id*10^4+long_covid_id*10^2+90)) %>%
-  mutate(cohort = "Long COVID symptoms, tested negative (90 days)")
-longCov_genpop_negative_28 <- get_ir(main_cohort_id = paste0(tested_negative_all_id*10^4+long_covid_id*10^2+28)) %>%
-  mutate(cohort = "Long COVID-19 symptoms, tested negative (28 days)")
+neg_test_genpop <- get_ir(cdm, "final", 4, "Tested negative")
+longCov_genpop_negative_90 <- get_ir(cdm, "long", 40090, "Long COVID symptoms, tested negative (90 days)")
+longCov_genpop_negative_28 <- get_ir(cdm, "long", 40028, "Long COVID-19 symptoms, tested negative (28 days)")
 
 # stratified by age group and sex
 study_age_stratas <- list(c(18,34), # only adults for this study
@@ -1373,27 +1391,19 @@ study_age_stratas <- list(c(18,34), # only adults for this study
                           c(65,79),
                           c(80,150))
 study_sex_stratas <- c("Female", "Male")
-cdm$denominator <- generateDenominatorCohortSet(cdm = cdm,
-                                                startDate = study_start_date,
-                                                daysPriorHistory = study_days_prior_history,
-                                                ageGroup = study_age_stratas,
-                                                sex = study_sex_stratas)
+cdm <- generateDenominatorCohortSet(cdm = cdm,
+                                    cohortDateRange = study_start_date,
+                                    daysPriorHistory = study_days_prior_history,
+                                    ageGroup = study_age_stratas,
+                                    sex = study_sex_stratas)
 
-covid_genpop_strat <- get_ir( main_cohort_id = new_infection_id) %>%
-  mutate(cohort = "COVID-19 infections")
+covid_genpop_strat <- get_ir(cdm, "final", 1, "COVID-19 infections")
+longCov_genpop_strat_90 <- get_ir(cdm, "long", 10090, "Long COVID-19 (90 days)")
+longCov_genpop_strat_28 <- get_ir(cdm, "long", 10028, "Long COVID-19 (28 days)")
 
-longCov_genpop_strat_90 <- get_ir(main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+90)) %>%
-  mutate(cohort = "Long COVID-19 (90 days)")
-
-longCov_genpop_strat_28 <- get_ir( main_cohort_id = paste0(new_infection_id*10^4+long_covid_id*10^2+28)) %>%
-  mutate(cohort = "Long COVID-19 (28 days)")
-
-neg_test_genpop_strat <- get_ir(main_cohort_id = tested_negative_all_id) %>% 
-  mutate(cohort = "Tested negative")
-longCov_genpop_negative_strat_90 <- get_ir(main_cohort_id = paste0(tested_negative_all_id*10^4+long_covid_id*10^2+90)) %>%
-  mutate(cohort = "Long COVID symptoms, tested negative (90 days)")
-longCov_genpop_negative_strat_28 <- get_ir(main_cohort_id = paste0(tested_negative_all_id*10^4+long_covid_id*10^2+28)) %>%
-  mutate(cohort = "Long COVID-19 symptoms, tested negative (28 days)")
+neg_test_genpop_strat <- get_ir(cdm, "final", 4, "Tested negative")
+longCov_genpop_negative_strat_90 <- get_ir(cdm, "long", 40090, "Long COVID symptoms, tested negative (90 days)")
+longCov_genpop_negative_strat_28 <- get_ir(cdm, "long", 40028, "Long COVID-19 symptoms, tested negative (28 days)")
 
 
 # save results 
