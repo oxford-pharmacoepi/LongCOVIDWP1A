@@ -1439,10 +1439,8 @@ write.csv(incidence_estimates_negative,
 file <-c(paste0(here(), "/results"))
 
 zipName <- paste0("Results_", database_name, ".zip")
-createZipFile(zipFile = zipName,
-              rootFolder= paste0(here(), "/results"),
-              files = file)
-rm(list = ls())
+zip::zipr(files = file, zipfile = zipName)
+
 print("Done!")
 print("If all has worked, you should have a Zip file with your results to share in the project folder")
 print("Thank you for running the study!")
