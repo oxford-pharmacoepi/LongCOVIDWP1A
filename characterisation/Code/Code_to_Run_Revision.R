@@ -18,14 +18,15 @@ library(DescTools)
 library(IncidencePrevalence)
 library(DrugUtilisation)
 library(PatientProfiles)
+library(zip)
 
 # Connection details - to change locally  ----
 
 server_dbi <- "cdm_aurum_p21_000557"
 user <- Sys.getenv("DB_USER")
-password <- Sys.getenv("DB_PASSWORD")
+password <- "martics33"#Sys.getenv("DB_PASSWORD")
 port <- Sys.getenv("DB_PORT")
-host <- Sys.getenv("DB_HOST")
+host <- "163.1.64.2"#Sys.getenv("DB_HOST")
 
 db <- dbConnect(
   RPostgres::Postgres(),
@@ -46,7 +47,7 @@ covid_end_date      <- as.Date("2022-03-28", "%Y-%m-%d")
 
 cdm_database_schema <- "public"#"omop22t2_cmbd"
 write_schema        <- "results"#"results22t2_cmbd"
-write_stem          <- "lcwp1_"
+write_stem          <- "lcwp1a_"
 
 cdm <- cdmFromCon(
   con = db, 
