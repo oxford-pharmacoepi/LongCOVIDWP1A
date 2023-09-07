@@ -28,28 +28,28 @@ if (!file.exists(cohorts.folder)){
 rm(cohorts.folder)
 
 # Initial Json cohorts ----
-cohorts <- readCohortSet(here("Code", "Cohorts", "Index"))
-cdm <- generateCohortSet(
-  cdm = cdm, cohortSet = cohorts, name = "index", overwrite = TRUE
-)
-
-cohorts <- readCohortSet(here("Code", "Cohorts", "Vaccinated"))
-cdm <- generateCohortSet(
-  cdm = cdm, cohortSet = cohorts, name = "vaccinated", overwrite = TRUE
-)
-
-cohorts <- readCohortSet(here("Code", "Cohorts", "Symptoms"))
-cdm <- generateCohortSet(
-  cdm = cdm, cohortSet = cohorts, name = "symptoms", overwrite = TRUE
-)
-
-# cdm <- cdmFromCon(
-#   con = db, 
-#   cdmSchema = cdm_database_schema, 
-#   writeSchema = c("schema" = write_schema, "prefix" = write_stem),
-#   cohortTables = c("index", "vaccinated", "symptoms"),
-#   cdmName = database_name
+# cohorts <- readCohortSet(here("Code", "Cohorts", "Index"))
+# cdm <- generateCohortSet(
+#   cdm = cdm, cohortSet = cohorts, name = "index", overwrite = TRUE
 # )
+# 
+# cohorts <- readCohortSet(here("Code", "Cohorts", "Vaccinated"))
+# cdm <- generateCohortSet(
+#   cdm = cdm, cohortSet = cohorts, name = "vaccinated", overwrite = TRUE
+# )
+# 
+# cohorts <- readCohortSet(here("Code", "Cohorts", "Symptoms"))
+# cdm <- generateCohortSet(
+#   cdm = cdm, cohortSet = cohorts, name = "symptoms", overwrite = TRUE
+# )
+
+cdm <- cdmFromCon(
+  con = db,
+  cdmSchema = cdm_database_schema,
+  writeSchema = c("schema" = write_schema, "prefix" = write_stem),
+  cohortTables = c("index", "vaccinated", "symptoms"),
+  cdmName = database_name
+)
 
 # attrition ----
 
@@ -358,7 +358,7 @@ generate_tested_cohorts <- function(index_id, cohort_ids, days_censor_covid){
 } 
 
 confirmed_infections <- generate_tested_cohorts(
-  index_id = covid_id,
+  index_id = getId(cdm$index, "any_covid_index"),
   cohort_ids = c(1, 2, 3),
   days_censor_covid = 42
 )
@@ -369,7 +369,7 @@ reinfections    <- confirmed_infections[[3]]
 ### PCR and antigen negative _all events 
 # id of interest
 negative_infections <- generate_tested_cohorts(
-  index_id = negative_id,
+  index_id = getId(cdm$index, "tested_negative_index"),
   cohort_ids = c(4, 5, 6),
   days_censor_covid = 0
 )
@@ -1213,72 +1213,80 @@ get_descriptive_tables(window_id = 28)
 # function to get RR and AR ----
 get_rr <- function(x){
   results_rr <- NULL
-  for (k in c("overall", "wild", "alpha", "delta", "omicron")) {
-    if (k == "overall") {
-      data <- x
+  for (stat in c("overall", "First dose vaccination", "Booster doses", "Non vaccinated", "Two doses vaccination")) {
+    if (stat == "overall") {
+      y <- x
     } else {
-      data <- x %>%
-        filter(wave == k)
+      y <- x %>%
+        filter(vaccination_status == stat)
     }
-    # for each symptom
-    for (symptom_id in symptom_names){
-      message(paste0("working on ", symptom_id))
-      # get number of events & number of people per cohort
-      counts_1 <- data %>%
-        mutate(symptom =paste0(symptom_id)) %>%
-        rename(name_1 = name) %>%
-        filter(cohort==1) %>%
-        mutate(total_pop_1 = length(subject_id)) %>% # get total pop
-        filter((!!sym(symptom_id))==1) %>%
-        mutate(events_1= length(subject_id))%>% # get number of people with the symtpom
-        select(symptom, name_1, events_1, total_pop_1) %>% 
-        distinct()  %>%
-        mutate(prop_1 = (events_1/total_pop_1)*100)  # get proportion of people with the symtpmm
-      
-      counts_2<- data %>%
-        mutate(symptom =paste0(symptom_id)) %>%
-        rename(name_2 = name) %>%
-        filter(cohort==0) %>%
-        mutate(total_pop_2 = length(subject_id)) %>% 
-        filter((!!sym(symptom_id))==1) %>%
-        mutate(events_2= length(subject_id))%>% 
-        select(symptom, name_2, events_2, total_pop_2) %>% 
-        distinct()  %>%
-        mutate(prop_2 = (events_2/total_pop_2)*100) 
-      
-      data_rr <- counts_1 %>%
-        left_join(counts_2) %>%
-        mutate(database = database_name) %>%
-        mutate(symptom = str_to_sentence(str_replace_all(symptom, "_", " "))) %>%
-        mutate(wave = k)
-      
-      # getting relative risl with 95%Ci
-      getting_rr <- fmsb::riskratio(data_rr$events_1,
-                                    data_rr$events_2,
-                                    data_rr$total_pop_1,
-                                    data_rr$total_pop_2,
-                                    conf.level = 0.95)
-      
-      data_rr$relative_risk <- getting_rr$estimate
-      data_rr$low_ci <- getting_rr$conf.int[1]
-      data_rr$up_ci <- getting_rr$conf.int[2]
-      
-      # # getting absolute risk difference with 95%C
-      # getting_ar <- BinomDiffCI(
-      #   data_rr$events_1,   # events exposed
-      #   data_rr$total_pop_1,# pop exposed
-      #   data_rr$events_2,
-      #   data_rr$total_pop_2,
-      #   conf.level = 0.95, 
-      #   sides = "two.sided",
-      #   method = "wald")
-      # data_rr$absolute_risk <- getting_ar[1]*100
-      # data_rr$ar_low_ci <- getting_ar[2]*100
-      # data_rr$ar_up_ci <- getting_ar[3]*100
-      
-      # keep only RR for events >=5
-      data_rr <- data_rr %>% filter(events_1 >=5 & events_2 >=5)
-      results_rr <- bind_rows(results_rr, data_rr)      
+    for (k in c("overall", "wild", "alpha", "delta", "omicron")) {
+      if (k == "overall") {
+        data <- y
+      } else {
+        data <- y %>%
+          filter(wave == k)
+      }
+      # for each symptom
+      for (symptom_id in symptom_names){
+        message(paste0("working on ", symptom_id))
+        # get number of events & number of people per cohort
+        counts_1 <- data %>%
+          mutate(symptom =paste0(symptom_id)) %>%
+          rename(name_1 = name) %>%
+          filter(cohort==1) %>%
+          mutate(total_pop_1 = length(subject_id)) %>% # get total pop
+          filter((!!sym(symptom_id))==1) %>%
+          mutate(events_1= length(subject_id))%>% # get number of people with the symtpom
+          select(symptom, name_1, events_1, total_pop_1) %>% 
+          distinct()  %>%
+          mutate(prop_1 = (events_1/total_pop_1)*100)  # get proportion of people with the symtpmm
+        
+        counts_2<- data %>%
+          mutate(symptom =paste0(symptom_id)) %>%
+          rename(name_2 = name) %>%
+          filter(cohort==0) %>%
+          mutate(total_pop_2 = length(subject_id)) %>% 
+          filter((!!sym(symptom_id))==1) %>%
+          mutate(events_2= length(subject_id))%>% 
+          select(symptom, name_2, events_2, total_pop_2) %>% 
+          distinct()  %>%
+          mutate(prop_2 = (events_2/total_pop_2)*100) 
+        
+        data_rr <- counts_1 %>%
+          left_join(counts_2) %>%
+          mutate(database = database_name) %>%
+          mutate(symptom = str_to_sentence(str_replace_all(symptom, "_", " "))) %>%
+          mutate(wave = k, vaccine = stat)
+        
+        # getting relative risl with 95%Ci
+        getting_rr <- fmsb::riskratio(data_rr$events_1,
+                                      data_rr$events_2,
+                                      data_rr$total_pop_1,
+                                      data_rr$total_pop_2,
+                                      conf.level = 0.95)
+        
+        data_rr$relative_risk <- getting_rr$estimate
+        data_rr$low_ci <- getting_rr$conf.int[1]
+        data_rr$up_ci <- getting_rr$conf.int[2]
+        
+        # # getting absolute risk difference with 95%C
+        # getting_ar <- BinomDiffCI(
+        #   data_rr$events_1,   # events exposed
+        #   data_rr$total_pop_1,# pop exposed
+        #   data_rr$events_2,
+        #   data_rr$total_pop_2,
+        #   conf.level = 0.95, 
+        #   sides = "two.sided",
+        #   method = "wald")
+        # data_rr$absolute_risk <- getting_ar[1]*100
+        # data_rr$ar_low_ci <- getting_ar[2]*100
+        # data_rr$ar_up_ci <- getting_ar[3]*100
+        
+        # keep only RR for events >=5
+        data_rr <- data_rr %>% filter(events_1 >=5 & events_2 >=5)
+        results_rr <- bind_rows(results_rr, data_rr)      
+      }
     }
   }
   return(results_rr)

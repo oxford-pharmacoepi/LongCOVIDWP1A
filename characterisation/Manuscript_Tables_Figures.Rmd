@@ -34,7 +34,10 @@ files <-list.files(path= folder, pattern="*.csv")
 files <- str_remove(files, paste0(".csv"))
 
 for (i in 1:length(files)){
-  assign(files[i], read.csv(paste0(folder, "/", files[i], ".csv"), header = TRUE, sep = ","))
+  assign(
+    files[i], 
+    read.csv(paste0(folder, "/", files[i], ".csv"), header = TRUE, sep = ",")
+  )
 } 
 
 col1 <- "#3A6D82"
@@ -49,13 +52,16 @@ files <- str_remove(files, paste0(".csv"))
 
 
 for (i in 1:length(files)){
-  assign(files[i], read.csv(paste0(folder, "/", files[i], ".csv"), header = TRUE, sep = ","))
+  assign(
+    files[i], 
+    read.csv(paste0(folder, "/", files[i], ".csv"), header = TRUE, sep = ",")
+  )
 }
 
 get_baseline_main_table <- function(sidiap_data, cprd_data) {
   Table <- sidiap_data %>%
     select(X, COVID.19.infection, Tested.negative..earliest) %>%
-    left_join(cprd_data%>%
+    full_join(cprd_data%>%
                 select("X",
                        "COVID.infection.CPRD" = "COVID.19.infection"  ,
                        "Tested.negative.CPRD" = "Tested.negative..earliest"
@@ -63,7 +69,7 @@ get_baseline_main_table <- function(sidiap_data, cprd_data) {
           mutate(X = ifelse(X == "Trimester = jan-apr 2021 (%)",
                             "   Jan-apr 2021"  ,
                             ifelse(X == "Vaccination status = first dose vaccination (%)",                "   First dose vaccination", X)))) 
-  Table1 <- kable(Table[c(1:30),],
+  Table1 <- kable(Table[c(1:34),],
                   col.names = c("", 
                                 "COVID-19\ninfection", 
                                 "First SARS-CoV-2 negative test ",
@@ -74,7 +80,7 @@ get_baseline_main_table <- function(sidiap_data, cprd_data) {
                   fixed_thead = T
     ) %>%
     add_header_above(c(" ", "SIDIAP" = 2, "CPRD" = 2)) %>%
-    pack_rows("Comorbidities",22, 30) 
+    pack_rows("Comorbidities",26, 34) 
   Table1
 }
 
@@ -92,7 +98,7 @@ get_baseline_sup_table <- function(sidiap_data, cprd_data) {
                             "   Jan-apr 2021"  ,
                      ifelse(X == "Vaccination status = first dose vaccination (%)",
                                    "   First dose vaccination", X)))) 
-  Table1 <- kable(Table[c(1:30),],
+  Table1 <- kable(Table[c(1:34),],
                   col.names = c("",
                                 "First infection",
                                 "Re-infections",
@@ -106,7 +112,7 @@ get_baseline_sup_table <- function(sidiap_data, cprd_data) {
                   fixed_thead = T
     ) %>%
     add_header_above(c(" ", "SIDIAP" = 3, "CPRD" = 3)) %>%
-    pack_rows("Comorbidities",22, 30) 
+    pack_rows("Comorbidities",26, 34) 
   Table1
 }
 
@@ -122,7 +128,7 @@ get_matched_table_negative <- function(sidiap_data, cprd_data) {
                             "   Jan-apr 2021"  ,
                             ifelse(X == "Vaccination status = first dose vaccination (%)",
                                    "   First dose vaccination", X))))
-Table1 <- kable(Table[c(1:30),],
+Table1 <- kable(Table[c(1:34),],
                 col.names = c("", "COVID-19\ninfection",
                               "First SARS-CoV-2 negative test ", "SMD", 
                               "COVID-19\ninfection",
@@ -132,7 +138,7 @@ Table1 <- kable(Table[c(1:30),],
                 fixed_thead = T
   ) %>%
   add_header_above(c(" ", "SIDIAP" = 3, "CPRD" = 3)) %>%
-  pack_rows("Comorbidities",22, 30) 
+  pack_rows("Comorbidities",26, 34) 
 Table1
 }
 
@@ -148,7 +154,7 @@ get_matched_table_first_reinfection <- function(sidiap_data, cprd_data) {
                             "   Jan-apr 2021"  ,
                    ifelse(X == "Vaccination status = first dose vaccination (%)",
                                    "   First dose vaccination", X))))
-  Table1 <- kable(Table[c(1:30),],
+  Table1 <- kable(Table[c(1:34),],
                   col.names = c("", "First\ninfection", 
                                 "Re-infections", "SMD",
                                 "First\ninfection",
@@ -158,7 +164,7 @@ get_matched_table_first_reinfection <- function(sidiap_data, cprd_data) {
                   fixed_thead = T
     ) %>%
     add_header_above(c(" ", "SIDIAP" = 3, "CPRD" = 3)) %>%
-    pack_rows("Comorbidities",22, 30) 
+    pack_rows("Comorbidities",26, 34) 
   Table1
 }
 
@@ -204,7 +210,7 @@ get_symptoms_main_table <- function(sidiap_data, cprd_data) {
                             "   Jan-apr 2021"  ,
                      ifelse(X == "Vaccination status = first dose vaccination (%)",
                                    "   First dose vaccination", X)))) 
-  Table1 <- kable(Table[c(1,31:69),],
+  Table1 <- kable(Table[c(1,35:74),],
                   col.names = c("",
                                 "COVID-19\ninfection", 
                                 "First infection",
@@ -227,7 +233,7 @@ get_symptoms_main_table <- function(sidiap_data, cprd_data) {
 }
 
 get_rr_infection_negative_plot <- function(data){
-plot <- RR_data  %>%
+plot <- data  %>%
     ggplot(aes(
       x = relative_risk,
       y = reorder(symptom, relative_risk),
@@ -259,22 +265,22 @@ plot <- RR_data  %>%
 plot
 }
 
-get_rr_first_reinfection_plot <- function(data){
-plot <- RR_data  %>%
+get_rr_infection_negative_plot_facet <- function(data){
+plot <- data  %>%
     ggplot(aes(
       x = relative_risk,
-      y = reorder(symptom, -relative_risk),
+      y = reorder(symptom, relative_risk),
       xmin = low_ci,
       xmax = up_ci,
       shape = database,
       color = database)) +
     geom_point(size = 2, position = position_dodge(width = 1)) +
     geom_errorbar(width = 0, size = 1, position = position_dodge(width = 1)) +
+    facet_grid(cols = vars(wave)) +
     scale_y_discrete(expand=c(0,0), position = "left") +
-     scale_x_log10(breaks = c(0.1, 0.2, 0.4, 0.6, 0.8, 1),
-                   labels = c("0.1", "0.2", "0.4","0.6", "0.8", "1"),
-                  limits = c(0.04, 1.2)
-                  ) +  
+    scale_x_log10(breaks = c(0.5, 0.8, 1,2, 4, 6),
+                  labels = c("0.5","0.8", "1","2", "4", "6"),
+                  limits = c(0.5, 8)) +  
     scale_colour_manual(values = c(col1, col2)) +
     geom_vline(
       xintercept = 1, colour = "#000000",
@@ -294,6 +300,85 @@ plot
 }
 
 
+get_rr_first_reinfection_plot <- function(data){
+plot <- data  %>%
+    ggplot(aes(
+      x = relative_risk,
+      y = reorder(symptom, -relative_risk),
+      xmin = low_ci,
+      xmax = up_ci,
+      shape = database,
+      color = database)) +
+    geom_point(size = 2, position = position_dodge(width = 1)) +
+    geom_errorbar(width = 0, size = 1, position = position_dodge(width = 1)) +
+    scale_y_discrete(expand=c(0,0), position = "left") +
+     scale_x_log10(breaks = c(0.6, 0.8, 1, 2),
+                   labels = c("0.6", "0.8", "1", "2"),
+                  limits = c(0.5, 2)
+                  ) +  
+    scale_colour_manual(values = c(col1, col2)) +
+    geom_vline(
+      xintercept = 1, colour = "#000000",
+      linetype = 1
+    ) +
+    mytheme +
+    xlab("\nRR (with 95% CI)") +
+    ylab("")  +
+    guides(color = guide_legend(title = "Database"),
+           shape = guide_legend(title = "Database")) +
+    geom_hline(yintercept = c(1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5,10.5,11.5,
+                     12.5,13.5,14.5,15.5,16.5,17.5,18.5,19.5,20.5,21.5,22.5,23.5),
+                linetype = "dashed",
+               color = "#D2D6DB"
+    )
+plot
+}
+
+get_rr_first_reinfection_plot_facet <- function(data){
+plot <- data  %>%
+    ggplot(aes(
+      x = relative_risk,
+      y = reorder(symptom, -relative_risk),
+      xmin = low_ci,
+      xmax = up_ci,
+      shape = database,
+      color = database)) +
+    geom_point(size = 2, position = position_dodge(width = 1)) +
+    geom_errorbar(width = 0, size = 1, position = position_dodge(width = 1)) +
+    facet_grid(cols = vars(wave)) +
+    scale_y_discrete(expand=c(0,0), position = "left") +
+     scale_x_log10(breaks = c(0.1, 0.2, 0.4, 0.6, 0.8, 1, 2),
+                   labels = c("0.1", "0.2", "0.4","0.6", "0.8", "1", "2"),
+                  limits = c(0.04, 2)
+                  ) +  
+    scale_colour_manual(values = c(col1, col2)) +
+    geom_vline(
+      xintercept = 1, colour = "#000000",
+      linetype = 1
+    ) +
+    mytheme +
+    xlab("\nRR (with 95% CI)") +
+    ylab("")  +
+    guides(color = guide_legend(title = "Database"),
+           shape = guide_legend(title = "Database")) +
+    geom_hline(yintercept = c(1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5,10.5,11.5,
+                     12.5,13.5,14.5,15.5,16.5,17.5,18.5,19.5,20.5,21.5,22.5,23.5),
+                linetype = "dashed",
+               color = "#D2D6DB"
+    )
+plot
+}
+
+variables <- ls()
+for (variable in variables) {
+  x <- get(variable)
+  if ("vaccine" %in% colnames(x)) {
+    x <- x %>% 
+      dplyr::filter(.data$vaccine == "overall") %>% 
+      dplyr::select(-"vaccine")
+    assign(variable, x)
+  }
+}
 
 ```
 
@@ -307,11 +392,6 @@ table1
 
 ### Figure 1: Incidence rates of COVID-19 and long-COVID-19
 ```{r, fig.dim = c(8, 8), echo = FALSE}
-Incidence_rates_Covid_LongCov_SIDIAP$time <- NULL
-Incidence_rates_Covid_LongCov_CPRD <- Incidence_rates_Covid_LongCov_CPRD %>%
-  rename(ir_100000_pys = incidence_100000_pys,
-         ir_100000_pys_95CI_lower = incidence_100000_pys_95CI_lower,
-         ir_100000_pys_95CI_upper = incidence_100000_pys_95CI_upper)
 IR_data <- rbind(Incidence_rates_Covid_LongCov_CPRD, Incidence_rates_Covid_LongCov_SIDIAP)
 Proportion_data <- rbind(Proportion_LongCovid_90days_CPRD, Proportion_LongCovid_90days_SIDIAP)
 
@@ -320,24 +400,23 @@ data_IR_fig90 <- IR_data %>%
   filter(!(is.na(n_events))) %>%
   mutate(sex= as.character(sex)) %>%
   mutate(incidence_start_date = as.Date(incidence_start_date)) %>%
-  select(incidence_start_date, n_persons, n_events, person_years, ir_100000_pys,  ir_100000_pys_95CI_lower,  ir_100000_pys_95CI_upper, age_group, sex, cohort, database) %>%
+  select(
+    incidence_start_date, n_persons, n_events, person_years, 
+    ir_100000_pys = incidence_100000_pys,  
+    ir_100000_pys_95CI_lower = incidence_100000_pys_95CI_lower, 
+    ir_100000_pys_95CI_upper = incidence_100000_pys_95CI_upper, 
+    age_group, sex, cohort, database
+  ) %>%
   rbind(Proportion_data %>%
           mutate(person_years = person_days/365) %>%
           select(-person_days) %>%
           filter(cohort=="COVID-19 infection") %>%
-          mutate(age_group = ifelse(age_group == "<=34", "18;34",
-                              ifelse(age_group == "35-49", "35;49", 
-                              ifelse(age_group == "50-64", "50;64",
-                              ifelse(age_group == "65-79", "65;79",
-                              ifelse(age_group == ">=80", "80;150",
-                              ifelse(age_group == "Overall", "Overall", 
-                                     NA))))))) %>%
           mutate(cohort = "Long COVID-19 among those with COVID-19, 90 days")
   ) %>%
-  mutate(age_group = ifelse(age_group == "18;150", "Overall", 
-                            ifelse(age_group == "80;150", "\u226580", age_group))) %>%
+  mutate(age_group = ifelse(age_group == "18 to 150", "Overall", 
+                            ifelse(age_group == "80 to 150", "\u226580", age_group))) %>%
   mutate(age_group = factor(age_group,
-                            levels = c("Overall", "18;34", "35;49", "50;64", "65;79", "\u226580"))) %>%
+                            levels = c("Overall", "18 to 34", "35 to 49", "50 to 64", "65 to 79", "\u226580"))) %>%
       mutate(cohort = ifelse(cohort == "Long COVID-19 among those with COVID-19, 90 days", 
                            "Long COVID symptoms among those with COVID-19",
                            ifelse(cohort == "Long COVID-19 (90 days)", "Long COVID symptoms after COVID-19 among the general population", cohort))) %>%
@@ -383,11 +462,13 @@ fig_IR_overall <- plot_IR_overall(age_to_filter = "Overall", data = data_IR_fig9
 fig_IR_overall
 ```
 
-### Figure 2: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 90 days
+### Figure 2A: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 90 days, overall
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 ## Relative risks figure
  RR_data <- rbind(RR_new_covid_tested_negative_earliest_90days_SIDIAP,
                   RR_new_covid_tested_negative_earliest_90days_CPRD) %>%
+  filter(wave == "overall") %>%
+  select(-"wave") %>%
   mutate(symptom = ifelse(symptom == "Altered smell taste", "Altered smell or taste",
                           ifelse(symptom =="Cognitive dysfunction brain fog", "Cognitive dysfunction",
                                  ifelse(symptom == "Fatigue malaise", "Fatigue or malaise",
@@ -406,10 +487,39 @@ gg.rr.covid_negative_both <-  gg.rr.covid_negative_both_90 +
 gg.rr.covid_negative_both
 ```
 
+### Figure 2B: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 90 days, by waves
+
+```{r, fig.dim = c(24, 8), echo = FALSE}
+## Relative risks figure
+ RR_data <- rbind(RR_new_covid_tested_negative_earliest_90days_SIDIAP,
+                  RR_new_covid_tested_negative_earliest_90days_CPRD) %>%
+  filter(wave != "overall") %>%
+  mutate(symptom = ifelse(symptom == "Altered smell taste", "Altered smell or taste",
+                          ifelse(symptom =="Cognitive dysfunction brain fog", "Cognitive dysfunction",
+                                 ifelse(symptom == "Fatigue malaise", "Fatigue or malaise",
+                                        ifelse(symptom == "Muscle spams pain", "Muscle spasms or pain", symptom
+                                        ))))) %>%
+  mutate(wave = factor(wave, levels = c("wild", "alpha", "delta", "omicron")))
+
+gg.rr.covid_negative_both_90 <- get_rr_infection_negative_plot_facet(data = RR_data)
+gg.rr.covid_negative_both_90 
+ 
+```
+
+```{r, fig.dim = c(8, 8), echo = FALSE}
+gg.rr.covid_negative_both <-  gg.rr.covid_negative_both_90 + 
+   theme(axis.text.x = element_text(size = 14, angle = 90,hjust=0.95,vjust=0.2)) +
+  coord_flip()
+gg.rr.covid_negative_both
+```
+
+
 ### Figure 3: RR of long-COVID symptoms: first infection vs re-infection - 90 days
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 RR_data <- rbind(RR_first_infection_reinfections_90days_SIDIAP,
                   RR_first_infection_reinfections_90days_CPRD) %>%
+  filter(wave == "overall") %>%
+  select(-"wave") %>%
   mutate(symptom = ifelse(symptom == "Altered smell taste",
                           "Altered smell or taste",
                     ifelse(symptom =="Cognitive dysfunction brain fog",
@@ -422,7 +532,7 @@ RR_data <- rbind(RR_first_infection_reinfections_90days_SIDIAP,
 
 
  gg.rr.first_reinfection_90 <-  get_rr_first_reinfection_plot(data = RR_data)
-  gg.rr.first_reinfection_90
+gg.rr.first_reinfection_90
 ```
 
 ## Supplementary
@@ -544,10 +654,10 @@ scale_colour_manual(values = c("#90e0ef","#00b4d8","#0077b6","#023E8A", "#01022F
 
 
 fig_IR_age_sex_SIDIAP  <- plot_IR(data = data_IR_fig90 %>% filter(database == "SIDIAP"),
-                                     age_to_filter = c("18;34",
-                                             "35;49",
-                                             "50;64",
-                                             "65;79",
+                                     age_to_filter = c("18 to 34",
+                                             "35 to 49",
+                                             "50 to 64",
+                                             "65 to 79",
                                              "\u226580"),
                                   brk_vec = brk_vec)
 fig_IR_age_sex_SIDIAP 
@@ -568,12 +678,12 @@ brk_vec <- seq.Date(as.Date("2020-10-01"),
                     as.Date("2020-12-01"),by="1 month")
 
 
-fig_IR_age_sex_CPRD <-  plot_IR(data = data_IR_fig90 %>% filter(database == "CPRD"),
+fig_IR_age_sex_CPRD <-  plot_IR(data = data_IR_fig90 %>% filter(database == "CPRD AURUM"),
                                      age_to_filter = c(
-                                       "18;34",
-                                             "35;49",
-                                             "50;64",
-                                             "65;79",
+                                       "18 to 34",
+                                             "35 to 49",
+                                             "50 to 64",
+                                             "65 to 79",
                                              "\u226580"),
                                 brk_vec = brk_vec)
 fig_IR_age_sex_CPRD
@@ -590,6 +700,8 @@ fig_IR_age_sex_CPRD,
 get_RR <- function(sidiap_data, cprd_data) {
   RR_infections <- rbind(sidiap_data, cprd_data
                       ) %>%
+    filter(wave == "overall") %>%
+    select(-"wave") %>%
   mutate(name_1 = "COVID-19 infection") %>%
   mutate(relative_risk = paste0(sprintf(relative_risk, fmt = '%.2f'),
                                 " [",
@@ -638,6 +750,8 @@ table_RR_28
 ## Relative risks figure
  RR_data <- rbind(RR_new_covid_tested_negative_earliest_28days_SIDIAP,
                   RR_new_covid_tested_negative_earliest_28days_CPRD) %>%
+  filter(wave == "overall") %>%
+  select(-"wave") %>%
   mutate(symptom = ifelse(symptom == "Altered smell taste", "Altered smell or taste",
                           ifelse(symptom =="Cognitive dysfunction brain fog", "Cognitive dysfunction",
                                  ifelse(symptom == "Fatigue malaise", "Fatigue or malaise",
@@ -654,6 +768,8 @@ gg.rr.covid_negative_both_28
 get_RR_numbers_re_infec <- function(sidiap_data, cprd_data) {
   RR_infections <- rbind(sidiap_data, cprd_data
                       ) %>%
+    filter(wave == "overall") %>%
+    select(-"wave") %>%
   mutate(relative_risk = paste0(sprintf(relative_risk, fmt = '%.2f'),
                                 " [",
                                 sprintf(low_ci, fmt = '%.2f'),
@@ -700,6 +816,7 @@ table_RR_re_28 <- get_RR_numbers_re_infec(sidiap_data = RR_first_infection_reinf
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 
 RR_data <- rbind(RR_first_infection_reinfections_28days_SIDIAP,   RR_first_infection_reinfections_28days_CPRD) %>%
+  filter(wave == "overall") %>% select(-"wave") %>%
   mutate(symptom = ifelse(symptom == "Altered smell taste",
                           "Altered smell or taste",
                     ifelse(symptom =="Cognitive dysfunction brain fog",
@@ -733,6 +850,8 @@ table_RR_90
 
 RR_data <- rbind(RR_new_covid_tested_negative_all_90days_SIDIAP,
                  RR_new_covid_tested_negative_all_90days_CPRD) %>%
+  filter(wave == "overall") %>%
+  select(-"wave") %>%
   mutate(symptom = ifelse(symptom == "Altered smell taste",
                           "Altered smell or taste",
                     ifelse(symptom =="Cognitive dysfunction brain fog",
@@ -760,6 +879,8 @@ table_RR_28
 
 RR_data <- rbind(RR_new_covid_tested_negative_all_28days_SIDIAP,
                  RR_new_covid_tested_negative_all_28days_CPRD) %>%
+  filter(wave == "overall") %>%
+  select(-"wave") %>%
   mutate(symptom = ifelse(symptom == "Altered smell taste",
                           "Altered smell or taste",
                     ifelse(symptom =="Cognitive dysfunction brain fog",
