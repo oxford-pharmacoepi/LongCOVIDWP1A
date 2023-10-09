@@ -50,6 +50,25 @@ folder <- paste0("Results_", database_name)
 files <-list.files(path= folder, pattern="*.csv")
 files <- str_remove(files, paste0(".csv"))
 
+correctSymptomNames <- function(x, column = "symptom") {
+  pairs <- c(
+    "Altered smell taste" = "Altered smell or taste",
+    "Cognitive dysfunction brain fog" = "Cognitive dysfunction",
+    "Fatigue malaise" = "Fatigue or malaise",
+    "Muscle spams pain" = "Muscle spasms or pain",
+    "Depression wo recurrence" = "Depression",
+    "Dyspnea" = "Dyspnoea"
+  )
+  for (k in seq_along(pairs)) {
+    x <- x |>
+      mutate(!!column := gsub(
+        pattern = names(pairs)[k], 
+        replacement = unname(pairs[k]), 
+        x = .data[[column]]
+      ))
+  }
+  return(x)
+}
 
 for (i in 1:length(files)){
   assign(
@@ -68,7 +87,8 @@ get_baseline_main_table <- function(sidiap_data, cprd_data) {
                 ) %>% 
           mutate(X = ifelse(X == "Trimester = jan-apr 2021 (%)",
                             "   Jan-apr 2021"  ,
-                            ifelse(X == "Vaccination status = first dose vaccination (%)",                "   First dose vaccination", X)))) 
+                            ifelse(X == "Vaccination status = first dose vaccination (%)",                "   First dose vaccination", X)))) %>%
+    correctSymptomNames(column = "X")
   Table1 <- kable(Table[c(1:34),],
                   col.names = c("", 
                                 "COVID-19\ninfection", 
@@ -209,7 +229,8 @@ get_symptoms_main_table <- function(sidiap_data, cprd_data) {
           mutate(X = ifelse(X == "Trimester = jan-apr 2021 (%)",
                             "   Jan-apr 2021"  ,
                      ifelse(X == "Vaccination status = first dose vaccination (%)",
-                                   "   First dose vaccination", X)))) 
+                                   "   First dose vaccination", X)))) %>%
+    correctSymptomNames(column = "X")
   Table1 <- kable(Table[c(1,35:74),],
                   col.names = c("",
                                 "COVID-19\ninfection", 
@@ -234,6 +255,7 @@ get_symptoms_main_table <- function(sidiap_data, cprd_data) {
 
 get_rr_infection_negative_plot <- function(data){
 plot <- data  %>%
+  correctSymptomNames() %>%
     ggplot(aes(
       x = relative_risk,
       y = reorder(symptom, relative_risk),
@@ -267,6 +289,7 @@ plot
 
 get_rr_infection_negative_plot_facet <- function(data){
 plot <- data  %>%
+  correctSymptomNames() %>%
     ggplot(aes(
       x = relative_risk,
       y = reorder(symptom, relative_risk),
@@ -302,6 +325,7 @@ plot
 
 get_rr_first_reinfection_plot <- function(data){
 plot <- data  %>%
+  correctSymptomNames() %>%
     ggplot(aes(
       x = relative_risk,
       y = reorder(symptom, -relative_risk),
@@ -336,6 +360,7 @@ plot
 
 get_rr_first_reinfection_plot_facet <- function(data){
 plot <- data  %>%
+  correctSymptomNames() %>%
     ggplot(aes(
       x = relative_risk,
       y = reorder(symptom, -relative_risk),
@@ -390,7 +415,7 @@ table1 <- get_baseline_main_table(sidiap_data = Table1_90days_SIDIAP,
 table1
 ```
 
-### Figure 1: Incidence rates of COVID-19 and long-COVID-19
+### Figure 1: Incidence rates of COVID-19 and Post-acute COVID-19 symptoms
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 IR_data <- rbind(Incidence_rates_Covid_LongCov_CPRD, Incidence_rates_Covid_LongCov_SIDIAP)
 Proportion_data <- rbind(Proportion_LongCovid_90days_CPRD, Proportion_LongCovid_90days_SIDIAP)
@@ -418,12 +443,12 @@ data_IR_fig90 <- IR_data %>%
   mutate(age_group = factor(age_group,
                             levels = c("Overall", "18 to 34", "35 to 49", "50 to 64", "65 to 79", "\u226580"))) %>%
       mutate(cohort = ifelse(cohort == "Long COVID-19 among those with COVID-19, 90 days", 
-                           "Long COVID symptoms among those with COVID-19",
-                           ifelse(cohort == "Long COVID-19 (90 days)", "Long COVID symptoms after COVID-19 among the general population", cohort))) %>%
+                           "Post-acute COVID-19 symptoms among those with COVID-19",
+                           ifelse(cohort == "Long COVID-19 (90 days)", "Post-acute COVID-19 symptoms after COVID-19 among the general population", cohort))) %>%
   mutate(cohort = factor(cohort, levels = c(
     "COVID-19 infections",
-     "Long COVID symptoms after COVID-19 among the general population",
-     "Long COVID symptoms among those with COVID-19"
+     "Post-acute COVID-19 symptoms after COVID-19 among the general population",
+     "Post-acute COVID-19 symptoms among those with COVID-19"
   )))
 
 
@@ -462,21 +487,19 @@ fig_IR_overall <- plot_IR_overall(age_to_filter = "Overall", data = data_IR_fig9
 fig_IR_overall
 ```
 
-### Figure 2A: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 90 days, overall
+### Figure 2A: RR of Post-acute COVID-19 symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 90 days, overall
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 ## Relative risks figure
  RR_data <- rbind(RR_new_covid_tested_negative_earliest_90days_SIDIAP,
                   RR_new_covid_tested_negative_earliest_90days_CPRD) %>%
   filter(wave == "overall") %>%
   select(-"wave") %>%
-  mutate(symptom = ifelse(symptom == "Altered smell taste", "Altered smell or taste",
-                          ifelse(symptom =="Cognitive dysfunction brain fog", "Cognitive dysfunction",
-                                 ifelse(symptom == "Fatigue malaise", "Fatigue or malaise",
-                                        ifelse(symptom == "Muscle spams pain", "Muscle spasms or pain", symptom
-                                        )))))
+  correctSymptomNames()
 
 gg.rr.covid_negative_both_90 <- get_rr_infection_negative_plot(data = RR_data)
 gg.rr.covid_negative_both_90 
+
+ggsave(file="Figure2.svg", plot=gg.rr.covid_negative_both_90, width=10, height=8)
  
 ```
 
@@ -487,22 +510,19 @@ gg.rr.covid_negative_both <-  gg.rr.covid_negative_both_90 +
 gg.rr.covid_negative_both
 ```
 
-### Figure 2B: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 90 days, by waves
+### Figure 2B: RR of Post-acute COVID-19 symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 90 days, by waves
 
 ```{r, fig.dim = c(24, 8), echo = FALSE}
 ## Relative risks figure
  RR_data <- rbind(RR_new_covid_tested_negative_earliest_90days_SIDIAP,
                   RR_new_covid_tested_negative_earliest_90days_CPRD) %>%
   filter(wave != "overall") %>%
-  mutate(symptom = ifelse(symptom == "Altered smell taste", "Altered smell or taste",
-                          ifelse(symptom =="Cognitive dysfunction brain fog", "Cognitive dysfunction",
-                                 ifelse(symptom == "Fatigue malaise", "Fatigue or malaise",
-                                        ifelse(symptom == "Muscle spams pain", "Muscle spasms or pain", symptom
-                                        ))))) %>%
+  correctSymptomNames() %>%
   mutate(wave = factor(wave, levels = c("wild", "alpha", "delta", "omicron")))
 
 gg.rr.covid_negative_both_90 <- get_rr_infection_negative_plot_facet(data = RR_data)
 gg.rr.covid_negative_both_90 
+ggsave(file="Figure3.svg", plot=gg.rr.covid_negative_both_90, width=10, height=8)
  
 ```
 
@@ -513,26 +533,19 @@ gg.rr.covid_negative_both <-  gg.rr.covid_negative_both_90 +
 gg.rr.covid_negative_both
 ```
 
-
-### Figure 3: RR of long-COVID symptoms: first infection vs re-infection - 90 days
+### Figure 3: RR of Post-acute COVID-19 symptoms: first infection vs re-infection - 90 days
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 RR_data <- rbind(RR_first_infection_reinfections_90days_SIDIAP,
                   RR_first_infection_reinfections_90days_CPRD) %>%
   filter(wave == "overall") %>%
   select(-"wave") %>%
-  mutate(symptom = ifelse(symptom == "Altered smell taste",
-                          "Altered smell or taste",
-                    ifelse(symptom =="Cognitive dysfunction brain fog",
-                           "Cognitive dysfunction",
-                    ifelse(symptom == "Fatigue malaise",
-                           "Fatigue or malaise",
-                    ifelse(symptom == "Muscle spams pain",
-                           "Muscle spasms or pain", symptom
-                                        )))))
+  correctSymptomNames()
 
 
  gg.rr.first_reinfection_90 <-  get_rr_first_reinfection_plot(data = RR_data)
 gg.rr.first_reinfection_90
+
+ggsave(file="Figure4.svg", plot=gg.rr.first_reinfection_90, width=10, height=8)
 ```
 
 ## Supplementary
@@ -573,7 +586,7 @@ Sup_table_matched_first_reinfection_90
 ```
 
 ### Incidence Rates
-#### 1. Table: Incidence Rates of COVID-19 & long COVID symptoms
+#### 1. Table: Incidence Rates of COVID-19 & Post-acute COVID-19 symptoms
 ```{r}
 
 data_table_IR <- data_IR_fig90 %>% 
@@ -619,7 +632,7 @@ plot_IR <- function(age_to_filter, data, brk_vec){
   plot <- data %>%
   filter(age_group %in% age_to_filter) %>%
     mutate(cohort = ifelse(cohort == "COVID-19 infections", "COVID-19 infections",
-                           ifelse(cohort == "Long COVID symptoms after COVID-19 among the general population", "Long COVID among\nthe general population", "Long COVID among\nthose infected"))) %>%
+                           ifelse(cohort == "Long COVID symptoms after COVID-19 among the general population", "Post-acute COVID-19\nsymptoms among\nthe general population", "Post-acute COVID-19\nsymptoms among\nthose infected"))) %>%
   ggplot() +
 #  geom_smooth(aes(x =incidence_start_date, y =  ir_100000_pys), method="auto", se=TRUE, fullrange=FALSE, level=0.95)+
 geom_line(aes(x =incidence_start_date,
@@ -675,7 +688,7 @@ fig_IR_age_sex_SIDIAP ,
 ```{r echo=FALSE}
 
 brk_vec <- seq.Date(as.Date("2020-10-01"),
-                    as.Date("2020-12-01"),by="1 month")
+                    as.Date("2021-12-01"),by="2 month")
 
 
 fig_IR_age_sex_CPRD <-  plot_IR(data = data_IR_fig90 %>% filter(database == "CPRD AURUM"),
@@ -695,7 +708,7 @@ fig_IR_age_sex_CPRD,
 ```
 
 ### Relative Risks - infections vs first negative test 
-#### 1. Table: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 90 days
+#### 1. Table: RR of Post-acute COVID-19 symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 90 days
 ```{r}
 get_RR <- function(sidiap_data, cprd_data) {
   RR_infections <- rbind(sidiap_data, cprd_data
@@ -713,6 +726,7 @@ get_RR <- function(sidiap_data, cprd_data) {
     select (-prop_1, -prop_2, -low_ci, -up_ci, 
                         -name_1, -name_2, -total_pop_1, -total_pop_2,) %>%
     relocate(database, .before = symptom)  %>%
+    correctSymptomNames() %>%
     arrange(desc(database), desc(relative_risk))
 
 
@@ -738,32 +752,28 @@ table_RR_90
 ```
 
 
-#### 2. Table: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 28 days
+#### 2. Table: RR of Post-acute COVID-19 symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 28 days
 ```{r}
 table_RR_28 <- get_RR(sidiap_data = RR_new_covid_tested_negative_earliest_28days_SIDIAP,
                   cprd_data = RR_new_covid_tested_negative_earliest_28days_CPRD)
 table_RR_28
 ```
 
-#### 3. Figure: RR of long COVID symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 28 days
+#### 3. Figure: RR of Post-acute COVID-19 symptoms: COVID-19 infection vs first SARS-CoV-2 negative test - 28 days
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 ## Relative risks figure
  RR_data <- rbind(RR_new_covid_tested_negative_earliest_28days_SIDIAP,
                   RR_new_covid_tested_negative_earliest_28days_CPRD) %>%
   filter(wave == "overall") %>%
   select(-"wave") %>%
-  mutate(symptom = ifelse(symptom == "Altered smell taste", "Altered smell or taste",
-                          ifelse(symptom =="Cognitive dysfunction brain fog", "Cognitive dysfunction",
-                                 ifelse(symptom == "Fatigue malaise", "Fatigue or malaise",
-                                        ifelse(symptom == "Muscle spams pain", "Muscle spasms or pain", symptom
-                                        )))))
+  correctSymptomNames()
 
 gg.rr.covid_negative_both_28 <- get_rr_infection_negative_plot(data = RR_data)
 gg.rr.covid_negative_both_28 
 ```
 
 ### Relative Risks - re-infections vs first infection
-#### 1. Table: RR of long-COVID symptoms, first infection vs re-infection - 90 days
+#### 1. Table: RR of Post-acute COVID-19 symptoms, first infection vs re-infection - 90 days
 ```{r}
 get_RR_numbers_re_infec <- function(sidiap_data, cprd_data) {
   RR_infections <- rbind(sidiap_data, cprd_data
@@ -780,7 +790,8 @@ get_RR_numbers_re_infec <- function(sidiap_data, cprd_data) {
     select (-prop_1, -prop_2, -low_ci, -up_ci, 
                         -name_1, -name_2, -total_pop_1, -total_pop_2,) %>%
     relocate(database,.before = symptom)  %>%
-    arrange(desc(database),relative_risk)
+    arrange(desc(database),relative_risk) %>%
+    correctSymptomNames()
 
 table_RR_re <- kable(RR_infections,  col.names = c(
      "Database",
@@ -805,27 +816,19 @@ table_RR_re_90 <- get_RR_numbers_re_infec(sidiap_data = RR_first_infection_reinf
  table_RR_re_90 
 ```
 
-#### 2. Table: RR of long-COVID symptoms, first infection vs re-infection - 28 days
+#### 2. Table: RR of Post-acute COVID-19 symptoms, first infection vs re-infection - 28 days
 ```{r}
 table_RR_re_28 <- get_RR_numbers_re_infec(sidiap_data = RR_first_infection_reinfections_28days_SIDIAP,
                                        cprd_data = RR_first_infection_reinfections_28days_CPRD)
  table_RR_re_28
 ```
 
-#### 3. Figure: RR of long-COVID symptoms, first infection vs re-infection - 28 days
+#### 3. Figure: RR of Post-acute COVID-19 symptoms, first infection vs re-infection - 28 days
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 
 RR_data <- rbind(RR_first_infection_reinfections_28days_SIDIAP,   RR_first_infection_reinfections_28days_CPRD) %>%
   filter(wave == "overall") %>% select(-"wave") %>%
-  mutate(symptom = ifelse(symptom == "Altered smell taste",
-                          "Altered smell or taste",
-                    ifelse(symptom =="Cognitive dysfunction brain fog",
-                           "Cognitive dysfunction",
-                    ifelse(symptom == "Fatigue malaise",
-                           "Fatigue or malaise",
-                    ifelse(symptom == "Muscle spams pain",
-                           "Muscle spasms or pain", symptom
-                                        ))))) 
+  correctSymptomNames()
 
 
 gg.rr.first_reinfection_28 <-  get_rr_first_reinfection_plot(data = RR_data) +  
@@ -838,58 +841,41 @@ gg.rr.first_reinfection_28
 ```
 
 ### Relative Risks - infections vs all negative tests
-#### 1. Table: RR of long COVID symptoms, COVID-19 infection vs all SARS-CoV-2 negative tests - 90 days
+#### 1. Table: RR of Post-acute COVID-19 symptoms, COVID-19 infection vs all SARS-CoV-2 negative tests - 90 days
 ```{r}
 table_RR_90 <- get_RR(sidiap_data = RR_new_covid_tested_negative_earliest_90days_SIDIAP,
                   cprd_data = RR_new_covid_tested_negative_earliest_90days_CPRD)
 table_RR_90
 ```
 
-#### 2. Figure: RR of long COVID symptoms, COVID-19 infection vs SARS-CoV-2 negative tests (all records) - 90 days
+#### 2. Figure: RR of Post-acute COVID-19 symptoms, COVID-19 infection vs SARS-CoV-2 negative tests (all records) - 90 days
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 
 RR_data <- rbind(RR_new_covid_tested_negative_all_90days_SIDIAP,
                  RR_new_covid_tested_negative_all_90days_CPRD) %>%
   filter(wave == "overall") %>%
   select(-"wave") %>%
-  mutate(symptom = ifelse(symptom == "Altered smell taste",
-                          "Altered smell or taste",
-                    ifelse(symptom =="Cognitive dysfunction brain fog",
-                           "Cognitive dysfunction",
-                    ifelse(symptom == "Fatigue malaise",
-                           "Fatigue or malaise",
-                    ifelse(symptom == "Muscle spams pain",
-                           "Muscle spasms or pain", symptom
-                                        )))))
-
+  correctSymptomNames()
 
 gg.rr.covid_negative_all_90 <- get_rr_infection_negative_plot(data = RR_data)
 gg.rr.covid_negative_all_90
 ```
 
-#### 3. Table: RR of long COVID symptoms, COVID-19 infection vs all SARS-CoV-2 negative tests - 28 days
+#### 3. Table: RR of Post-acute COVID-19 symptoms, COVID-19 infection vs all SARS-CoV-2 negative tests - 28 days
 ```{r}
 table_RR_28 <- get_RR(sidiap_data = RR_new_covid_tested_negative_earliest_28days_SIDIAP,
                   cprd_data = RR_new_covid_tested_negative_earliest_28days_CPRD)
 table_RR_28
 ```
 
-#### 4. Figure: RR of long COVID symptoms, COVID-19 infection vs SARS-CoV-2 negative tests (all records) - 28 days
+#### 4. Figure: RR of Post-acute COVID-19 symptoms, COVID-19 infection vs SARS-CoV-2 negative tests (all records) - 28 days
 ```{r, fig.dim = c(8, 8), echo = FALSE}
 
 RR_data <- rbind(RR_new_covid_tested_negative_all_28days_SIDIAP,
                  RR_new_covid_tested_negative_all_28days_CPRD) %>%
   filter(wave == "overall") %>%
   select(-"wave") %>%
-  mutate(symptom = ifelse(symptom == "Altered smell taste",
-                          "Altered smell or taste",
-                    ifelse(symptom =="Cognitive dysfunction brain fog",
-                           "Cognitive dysfunction",
-                    ifelse(symptom == "Fatigue malaise",
-                           "Fatigue or malaise",
-                    ifelse(symptom == "Muscle spams pain",
-                           "Muscle spasms or pain", symptom
-                                        )))))
+  correctSymptomNames()
 
 
 gg.rr.covid_negative_all_28 <- get_rr_infection_negative_plot(data = RR_data)
